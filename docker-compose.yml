@@ -1,0 +1,32 @@
+services:
+
+  # Express.js Backend
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: uni_server
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./server/logs:/app/logs
+    command: >
+      sh -c "npm run prisma:generate && 
+             npm start"
+
+  # Next.js Frontend
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    container_name: uni_client
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - NEXT_PUBLIC_API_URL=http://server:8000/api/v1
+    ports:
+      - "3000:3000"
+    depends_on:
+      - server
+
