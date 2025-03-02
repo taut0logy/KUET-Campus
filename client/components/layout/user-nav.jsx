@@ -13,11 +13,13 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 
 export function UserNav() {
   // Get user and logout directly from the store
   const user = useAuthStore(state => state.user);
   const logout = useAuthStore(state => state.logout);
+  const getUserRoles = useAuthStore(state => state.getUserRoles);
 
   // If no user or the user isn't fully loaded yet, don't render the dropdown
   if (!user) return null;
@@ -38,6 +40,9 @@ export function UserNav() {
   const fullName = [user.firstName, user.lastName]
     // .filter(Boolean)
     .join(' ') || 'User';
+    
+  // Get user roles
+  const userRoles = getUserRoles();
 
   return (
     <DropdownMenu>
@@ -57,6 +62,13 @@ export function UserNav() {
             <p className="text-xs leading-none text-muted-foreground">
               {user.email || ''}
             </p>
+            <div className="flex flex-wrap gap-1 mt-2">
+              {userRoles.map((role, index) => (
+                <Badge key={index} variant="outline" className="text-xs">
+                  {role.toLowerCase().replace('_', ' ')}
+                </Badge>
+              ))}
+            </div>
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />

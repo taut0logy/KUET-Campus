@@ -22,15 +22,18 @@ export function AuthProvider({ children }) {
     verifyEmail,
     refreshUser,
     hasRole: hasRoleFn,
+    getUserRoles,
+    getPrimaryRole,
   } = useAuthStore();
 
   // Adapter for the register function to match the expected signature in the registration form
-  const register = async (firstName, lastName, email, password, captchaToken = "test-token") => {
+  const register = async (firstName, lastName, email, password, roles = ["STUDENT"], captchaToken = "test-token") => {
     const userData = {
       firstName,
       lastName,
       email,
       password,
+      roles: Array.isArray(roles) ? roles : [roles],
       captchaToken
     };
     return registerStore(userData);
@@ -50,6 +53,8 @@ export function AuthProvider({ children }) {
     verifyEmail,
     refreshUser,
     hasRole: hasRoleFn,
+    getUserRoles,
+    getPrimaryRole,
   };
 
   return (

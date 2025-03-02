@@ -36,7 +36,7 @@ model User {
   password          String?
   firstName         String?
   lastName          String?
-  role              UserRole     @default(STUDENT)
+  roles             UserRole[]   @default([STUDENT])
   status            UserStatus   @default(PENDING_VERIFICATION)
   emailVerified     Boolean      @default(false)
   verificationToken String?

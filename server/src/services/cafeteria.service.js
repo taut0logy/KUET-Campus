@@ -6,6 +6,8 @@ const { logger } = require('../utils/logger.util');
  */
 const getAllMeals = async () => {
   try {
+    logger.debug('Retrieving all meals');
+    
     return await prisma.meal.findMany();
   } catch (error) {
     logger.error('Error retrieving meals:', error);
@@ -18,6 +20,8 @@ const getAllMeals = async () => {
  */
 const getMealById = async (id) => {
   try {
+    logger.debug(`Getting meal with ID: ${id}`);
+    
     return await prisma.meal.findUnique({
       where: { id: parseInt(id) }
     });
@@ -32,6 +36,8 @@ const getMealById = async (id) => {
  */
 const createMeal = async (mealData) => {
   try {
+    logger.debug('Creating a new meal', mealData);
+    
     return await prisma.meal.create({
       data: mealData
     });
@@ -46,6 +52,8 @@ const createMeal = async (mealData) => {
  */
 const updateMeal = async (id, mealData) => {
   try {
+    logger.debug(`Updating meal with ID: ${id}`, mealData);
+    
     return await prisma.meal.update({
       where: { id: parseInt(id) },
       data: mealData
@@ -61,6 +69,8 @@ const updateMeal = async (id, mealData) => {
  */
 const deleteMeal = async (id) => {
   try {
+    logger.debug(`Deleting meal with ID: ${id}`);
+    
     return await prisma.meal.delete({
       where: { id: parseInt(id) }
     });
@@ -75,6 +85,9 @@ const deleteMeal = async (id) => {
  */
 const getMenus = async (date) => {
   try {
+    logger.debug('Retrieving menus', date ? { date } : 'all');
+    
+    
     let query = {
       include: {
         menuMeals: {
@@ -112,6 +125,8 @@ const getMenus = async (date) => {
  */
 const getMenuById = async (id) => {
   try {
+    logger.debug(`Getting menu with ID: ${id}`);
+    
     return await prisma.menu.findUnique({
       where: { id: parseInt(id) },
       include: {
@@ -133,6 +148,9 @@ const getMenuById = async (id) => {
  */
 const getTodayMenu = async () => {
   try {
+    logger.debug('Getting today\'s menu');
+    
+    
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     
@@ -318,6 +336,9 @@ const deleteMenu = async (id) => {
  */
 const toggleMealAvailability = async (menuMealId, available) => {
   try {
+    logger.debug(`Toggling availability for menu meal ID ${menuMealId} to ${available}`);
+    
+    
     return await prisma.menuMeal.update({
       where: { id: parseInt(menuMealId) },
       data: { available },
@@ -334,6 +355,9 @@ const toggleMealAvailability = async (menuMealId, available) => {
  */
 const createPreorder = async (userId, menuMealId) => {
   try {
+    logger.debug(`Creating preorder for user ${userId} and menu meal ${menuMealId}`);
+    
+    
     // Check if menu meal exists and is available
     const menuMeal = await prisma.menuMeal.findUnique({
       where: { id: parseInt(menuMealId) },
@@ -385,6 +409,9 @@ const createPreorder = async (userId, menuMealId) => {
  */
 const getUserPreorders = async (userId) => {
   try {
+    logger.debug(`Getting preorders for user ${userId}`);
+    
+    
     return await prisma.preorder.findMany({
       where: { userId },
       include: {

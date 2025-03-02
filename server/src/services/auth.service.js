@@ -32,10 +32,10 @@ const comparePassword = async (password, hashedPassword) => {
 };
 
 // Generate JWT tokens
-const generateTokens = (userId, role) => {
+const generateTokens = (userId, roles) => {
   // Access token
   const accessToken = jwt.sign(
-    { userId, role },
+    { userId, roles },
     process.env.JWT_SECRET,
     { expiresIn: process.env.JWT_EXPIRES_IN }
   );
@@ -82,7 +82,7 @@ const verifyCaptcha = async (token) => {
 // Register a new user
 const register = async (userData) => {
   try {
-    const { email, password, firstName, lastName, role = 'STUDENT', captchaToken } = userData;
+    const { email, password, firstName, lastName, roles = ['STUDENT'], captchaToken } = userData;
     
     // Verify captcha
     //await verifyCaptcha(captchaToken);
@@ -99,14 +99,14 @@ const register = async (userData) => {
     // Hash password
     const hashedPassword = await hashPassword(password);
     
-    // Create user in database
+    // Create user in database with roles
     const user = await prisma.user.create({
       data: {
         email,
         password: hashedPassword,
         firstName,
         lastName,
-        role,
+        roles: roles || ['STUDENT']
       },
     });
 
@@ -147,7 +147,7 @@ const register = async (userData) => {
         lastName: user.lastName,
         email: user.email,
         status: user.status,
-        role: user.role,
+        roles: user.roles,
         profile: user.profile
       }
     };
@@ -205,13 +205,13 @@ const login = async (email, password, captchaToken) => {
     });
     
     if (!user) {
-      throw new Error('Invalid email or password');
+      throw new Error('No user found with this email');
     }
     
     // Check password
     const isPasswordValid = await comparePassword(password, user.password);
     if (!isPasswordValid) {
-      throw new Error('Invalid email or password');
+      throw new Error('Wrong password');
     }
     
     // Format user data for response, ensuring firstName and lastName are included
@@ -221,13 +221,13 @@ const login = async (email, password, captchaToken) => {
       firstName: user.firstName,
       lastName: user.lastName,
       status: user.status,
-      role: user.role,
+      roles: user.roles,
       emailVerified: user.emailVerified,
       profile: user.profile
     };
 
     // Generate tokens
-    const { accessToken, refreshToken } = generateTokens(user.id, user.role);
+    const { accessToken, refreshToken } = generateTokens(user.id, user.roles);
     
     // Create session
     await prisma.session.create({
@@ -250,9 +250,9 @@ const login = async (email, password, captchaToken) => {
     // }
     
     return { 
-      user: userData,
       accessToken,
-      refreshToken
+      refreshToken,
+      user: userData
     };
   } catch (error) {
     console.error('Error logging in:', error);
@@ -310,7 +310,7 @@ const refreshToken = async (token) => {
       where: { id: decoded.userId },
       select: {
         id: true,
-        role: true
+        roles: true
       }
     });
     
@@ -318,16 +318,13 @@ const refreshToken = async (token) => {
       throw new Error('User not found');
     }
     
-    // Generate new tokens with the user's current role
-    const tokens = generateTokens(user.id, user.role);
+    // Generate new tokens with the user's current roles
+    const tokens = generateTokens(user.id, user.roles);
     
     // Update session with new refresh token
     await prisma.session.update({
       where: { id: session.id },
-      data: {
-        token: tokens.refreshToken,
-        expiresAt: new Date(Date.now() + 60 * 60 * 1000) // 1 hour
-      }
+      data: { token: tokens.refreshToken, expiresAt: new Date(Date.now() + 60 * 60 * 1000) }
     });
     
     return {

@@ -21,11 +21,32 @@ const useAuthStore = create((set, get) => ({
     const user = get().user;
     if (!user) return false;
     
+    // Get user roles (use roles array if available, fallback to single role)
+    const userRoles = user.roles || [user.role];
+    
     if (Array.isArray(requiredRole)) {
-      return requiredRole.includes(user.role);
+      // Check if user has any of the required roles
+      return requiredRole.some(role => userRoles.includes(role));
     }
     
-    return user.role === requiredRole;
+    // Check if user has the specific role
+    return userRoles.includes(requiredRole);
+  },
+  
+  // Get all user roles
+  getUserRoles: () => {
+    const user = get().user;
+    if (!user) return [];
+    
+    return user.roles || [user.role];
+  },
+
+  // Check if user has primary role
+  getPrimaryRole: () => {
+    const user = get().user;
+    if (!user) return null;
+    
+    return user.roles && user.roles.length > 0 ? user.roles[0] : user.role;
   },
 
   // Actions
