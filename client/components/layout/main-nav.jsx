@@ -103,6 +103,12 @@ const getRoutes = (user) => {
       label: "Bus Schedule",
       requireAuth: true,
     },
+
+    {
+      href: "/cafeteria",
+      label: "Cafeteria",
+      requireAuth: true,
+    },
   ];
 };
 
