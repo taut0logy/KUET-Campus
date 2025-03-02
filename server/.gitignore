@@ -3,4 +3,6 @@ node_modules
 .env
 # Ignore build output
 build
-# Ignore coverage reports
+# Ignore coverage reports and logs
+logs/
+coverage/

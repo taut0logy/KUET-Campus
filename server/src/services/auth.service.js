@@ -99,9 +99,6 @@ const register = async (userData) => {
     // Hash password
     const hashedPassword = await hashPassword(password);
     
-    // Generate verification token
-    const { token: verificationToken, signedToken: signedVerificationToken } = generateVerificationToken(user.id);
-    
     // Create user in database
     const user = await prisma.user.create({
       data: {
@@ -110,32 +107,44 @@ const register = async (userData) => {
         firstName,
         lastName,
         role,
-        verificationToken,
       },
     });
+
+    // Generate verification token
+    const { token: verificationToken, signedToken: signedVerificationToken } = generateVerificationToken(user.id);
     
-    const { data: supabaseUser, error: supabaseError } = await supabaseAdmin.auth.admin.createUser({
-      email,
-      password,
-      email_confirm: true,
-      user_metadata: {
-        firstName,
-        lastName,
-        role
-      },
-      email_confirm_send: false
-    });
+    // const { data: supabaseUser, error: supabaseError } = await supabaseAdmin.auth.admin.createUser({
+    //   email,
+    //   password,
+    //   email_confirm: true,
+    //   user_metadata: {
+    //     firstName,
+    //     lastName,
+    //     role
+    //   },
+    //   email_confirm_send: false
+    // });
     
-    if (supabaseError) {
-      throw new Error(`Supabase auth error: ${supabaseError.message}`);
-    }
+    // if (supabaseError) {
+    //   throw new Error(`Supabase auth error: ${supabaseError.message}`);
+    // }
     
     // Send verification email
     await emailService.sendVerificationEmail(user, signedVerificationToken);
+
+    // Update verification token in database
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        verificationToken
+      }
+    });
     
     return { 
       user: {
         id: user.id,
+        firstName: user.firstName,
+        lastName: user.lastName,
         email: user.email,
         status: user.status,
         role: user.role,
@@ -225,20 +234,20 @@ const login = async (email, password, captchaToken) => {
       data: {
         userId: user.id,
         token: refreshToken,
-        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // 7 days
+        expiresAt: new Date(Date.now() + 60 * 60 * 1000) // 1 hour
       }
     });
 
-    // Try to login with Supabase as well to keep sessions in sync
-    try {
-      await supabaseAdmin.auth.signInWithPassword({
-        email,
-        password
-      });
-    } catch (supabaseError) {
-      // Just log the error but continue - we'll use our own auth system
-      console.error('Error logging in with Supabase (ignoring):', supabaseError);
-    }
+    // // Try to login with Supabase as well to keep sessions in sync
+    // try {
+    //   await supabaseAdmin.auth.signInWithPassword({
+    //     email,
+    //     password
+    //   });
+    // } catch (supabaseError) {
+    //   // Just log the error but continue - we'll use our own auth system
+    //   console.error('Error logging in with Supabase (ignoring):', supabaseError);
+    // }
     
     return { 
       user: userData,
@@ -263,10 +272,10 @@ const logout = async (userId, refreshToken) => {
     });
 
     // Logout from Supabase
-    const { error: supabaseError } = await supabaseAdmin.auth.signOut();
-    if (supabaseError) {
-      console.error('Error logging out from Supabase:', supabaseError);
-    }
+    // const { error: supabaseError } = await supabaseAdmin.auth.signOut();
+    // if (supabaseError) {
+    //   console.error('Error logging out from Supabase:', supabaseError);
+    // }
     
     return { success: true };
   } catch (error) {
@@ -317,7 +326,7 @@ const refreshToken = async (token) => {
       where: { id: session.id },
       data: {
         token: tokens.refreshToken,
-        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // 7 days
+        expiresAt: new Date(Date.now() + 60 * 60 * 1000) // 1 hour
       }
     });
     
@@ -435,10 +444,6 @@ const resendVerificationEmail = async (email) => {
       return { success: true };
     }
     
-    // Use Supabase to resend verification email
-    
-      
-      // Fallback to our own implementation
       const { token: verificationToken, signedToken: signedVerificationToken } = generateVerificationToken(user.id);
       
       // Update user with new verification token

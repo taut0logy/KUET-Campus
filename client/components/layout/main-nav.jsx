@@ -94,13 +94,13 @@ const getRoutes = (user) => {
       requireAuth: true,
     },
     {
-      href: "/donate",
-      label: "Donate",
+      href: "/notices",
+      label: "Notices & Announcements",
       requireAuth: true,
     },
     {
-      href: "/refer",
-      label: "Refer & Earn",
+      href: "/bus",
+      label: "Bus Schedule",
       requireAuth: true,
     },
   ];

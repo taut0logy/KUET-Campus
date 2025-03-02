@@ -11,7 +11,7 @@ export function Header() {
       <div className="container flex h-14 items-center mx-auto px-4">
         <MobileNav />
         <Link href="/" className="mr-6 flex items-center space-x-2">
-          <span className="font-bold text-xl">Serendipity</span>
+          <span className="font-bold text-xl">KUET Campus</span>
         </Link>
         <MainNav />
         <div className="flex flex-1 items-center justify-end space-x-4">
