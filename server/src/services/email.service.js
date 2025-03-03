@@ -1,6 +1,6 @@
 const nodemailer = require('nodemailer');
 require('dotenv').config();
-
+const { logger } = require('../utils/logger.util');
 // Create a transporter using environment variables
 const transporter = nodemailer.createTransport({
   host: process.env.EMAIL_HOST,
@@ -16,10 +16,10 @@ const transporter = nodemailer.createTransport({
 async function verifyConnection() {
   try {
     await transporter.verify();
-    console.log('Email service is ready to send messages');
+    logger.info('Email service is ready to send messages');
     return true;
   } catch (error) {
-    console.error('Email service connection error:', error);
+    logger.error('Email service connection error:', error);
     return false;
   }
 }
@@ -36,10 +36,10 @@ async function sendEmail({ to, subject, text, html }) {
     };
 
     const info = await transporter.sendMail(mailOptions);
-    console.log('Email sent successfully:', info.messageId);
+    logger.info('Email sent successfully:', info.messageId);
     return { success: true, messageId: info.messageId };
   } catch (error) {
-    console.error('Error sending email:', error);
+    logger.error('Error sending email:', error);
     return { success: false, error };
   }
 }

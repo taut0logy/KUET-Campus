@@ -1,4 +1,5 @@
 const { PrismaClient } = require('@prisma/client');
+const { logger } = require('../utils/logger.util');
 
 // Initialize Prisma client with logging during development
 const prisma = new PrismaClient({
@@ -16,9 +17,9 @@ async function connect() {
   try {
     await prisma.$connect();
     isConnected = true;
-    console.log('Connected to database successfully');
+    logger.info('Connected to database successfully');
   } catch (error) {
-    console.error('Failed to connect to database:', error);
+    logger.error('Failed to connect to database:', error);
     // Implement retry logic if needed
     process.exit(1);
   }

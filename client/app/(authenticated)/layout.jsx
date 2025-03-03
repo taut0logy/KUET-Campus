@@ -11,7 +11,7 @@ import { Protected } from "@/components/ui/protected";
  */
 export default function AuthenticatedLayout({ children }) {
   return (
-    <Protected>
+    <Protected redirectTo="/login" requireEmailVerified={true}>
       <div className="relative flex min-h-screen flex-col">
         <Header />
         <main className="flex-1">

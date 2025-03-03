@@ -3,6 +3,7 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import useAuthStore from '@/stores/auth-store';
+import { Icons } from './icons';
 
 /**
  * Protected component for role-based access control and authentication
@@ -28,6 +29,7 @@ export function Protected({
   const user = useAuthStore(state => state.user);
   const authState = useAuthStore(state => state.authState);
   const refreshUser = useAuthStore(state => state.refreshUser);
+  const handleAuthError = useAuthStore(state => state.handleAuthError);
   
   const isAuthenticated = authState === 'AUTHENTICATED';
   const isLoading = authState === 'LOADING';
@@ -43,11 +45,14 @@ export function Protected({
     const checkAuth = async () => {
       // If we have a token but no user, try to refresh
       const hasToken = typeof window !== 'undefined' && !!localStorage.getItem('accessToken');
+
       if (hasToken && !user) {
         try {
           await refreshUser();
         } catch (error) {
           console.error("Failed to refresh user data:", error);
+          handleAuthError();
+          router.push('/login');
         }
       }
 
@@ -57,23 +62,40 @@ export function Protected({
         return;
       }
 
+      //redirect to homepage if already verified
+      if ((window.location.pathname === '/verify-email' 
+        || window.location.pathname === '/resend-verification') 
+        && user && user.emailVerified) {
+        router.push('/');
+        return;
+      }
+
       // Handle authentication requirement
-      if (!isLoading && !isAuthenticated && redirectTo) {
-        const redirectUrl = new URL(redirectTo, window.location.origin);
-        redirectUrl.searchParams.set('from', window.location.pathname);
-        router.push(redirectUrl);
+      if (!isLoading && !isAuthenticated) {
+        // Ensure redirectTo is a string and properly formatted
+        const redirectPath = String(redirectTo || '/login');
+        const currentPath = typeof window !== 'undefined' ? window.location.pathname : '';
+        
+        const url = new URL(redirectPath, window.location.origin);
+        if (currentPath) {
+          url.searchParams.set('from', currentPath);
+        }
+        
+        router.push(url.pathname + url.search);
       }
     };
 
-    checkAuth();
+    if (mounted) {
+      checkAuth();
+    }
 
     return () => {
       mounted = false;
     };
   }, [isAuthenticated, isLoading, redirectTo, router, user, refreshUser, requireEmailVerified]);
 
-  // While loading, don't show anything
-  if (isLoading) return null;
+  // While loading, show a loading fallback
+  if (isLoading) return <LoadingFallback />;
 
   // If not authenticated, don't render anything (redirect will happen in useEffect)
   if (!isAuthenticated) return fallback;
@@ -83,7 +105,10 @@ export function Protected({
 
   // If roles specified, check if user has required role
   if (roles.length > 0) {
-    const hasRequiredRole = roles.includes(user?.role);
+    const hasRequiredRole = roles.some(role => {
+      const userRoles = user?.roles || [user?.role];
+      return userRoles.includes(role);
+    });
     if (!hasRequiredRole) return fallback;
   }
 
@@ -110,3 +135,12 @@ export function withProtection(Component, options = {}) {
     );
   };
 }
+
+const LoadingFallback = () => {
+  return <div className="flex h-screen w-screen items-center justify-center">
+    <Icons.spinner className="h-8 w-8 animate-spin" />
+    <span className="ml-2">Loading...</span>
+  </div>
+};
+
+export default LoadingFallback;
