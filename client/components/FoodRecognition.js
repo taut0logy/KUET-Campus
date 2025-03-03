@@ -175,13 +175,15 @@ export default function FoodRecognition({ meals }) {
         <div className="inline-flex items-center space-x-2 mb-2">
           <Brain className="h-6 w-6 text-indigo-600" />
           <h2 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-red-600">
-            AI Food Recognition
+            AI Food Nutrition Estimation
           </h2>
           <Sparkles className="h-5 w-5 text-yellow-500" />
         </div>
-        <p className="text-gray-600 max-w-md mx-auto">
+        <p className="text-white-600 max-w mx-auto">
           Take a photo of your food to get instant nutrition estimates and find similar meals in our cafeteria.
         </p>
+
+        
       </motion.div>
 
       {/* Model status indicator */}

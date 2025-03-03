@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Toaster, toast } from "sonner";
 import useCafeteriaStore from "@/stores/cafeteria-store";
-import { Loader2,ArrowDown01,ArrowUp01,  Filter, Sparkles, Vegan, WheatOff, Square } from "lucide-react";
+import { Wheat, Loader2,ArrowDown01,ArrowUp01,  Filter, Sparkles, Vegan, WheatOff, Square, ShoppingCart, Search } from "lucide-react";
 import { motion } from "framer-motion";
 import { Slider } from "@/components/ui/slider";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -220,7 +220,7 @@ export default function Cafeteria() {
       <Toaster position="top-right" />
       <div className="max-w-7xl mx-auto">
         <header className="mb-10 text-center">
-          <h1 className="text-4xl font-extrabold text-white drop-shadow-lg">Cafeteria Menu</h1>
+          <h1 className="text-4xl font-extrabold text-white drop-shadow-lg">KUET Cafeteria</h1>
           <p className="text-lg text-white mt-2">
             Discover our delicious meals and order your favorite dish today!
           </p>
@@ -405,10 +405,13 @@ export default function Cafeteria() {
                     </div>
                   </CardContent>
                   <div className="p-4 border-t">
+                  
                     <Button
                       className="w-full bg-gradient-to-r from-blue-500 to-blue-600 text-white hover:from-blue-600 hover:to-blue-700"
                       onClick={() => handleOrder(suggestedMeal.id)}
+                      
                     >
+                      <ShoppingCart className="h-3 w-3 inline mr-1" />
                       Add to Cart
                     </Button>
                   </div>
@@ -425,12 +428,6 @@ export default function Cafeteria() {
 
 
           <Card className="mb-8">
-            <CardHeader>
-              <CardTitle className="text-2xl">Visual Meal Analysis</CardTitle>
-              <CardDescription>
-                Upload a food photo to get nutrition estimates and similar menu items
-              </CardDescription>
-            </CardHeader>
             <CardContent>
               <FoodRecognition meals={meals} />
             </CardContent>
@@ -442,7 +439,8 @@ export default function Cafeteria() {
             <div className="flex-1">
               <Input
                 type="text"
-                placeholder="Search for a meal..."
+                icon={<Search className="h-3 w-3 inline mr-1" />}
+                placeholder="Search for your favourite meal..."
                 className="w-full p-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -498,13 +496,19 @@ export default function Cafeteria() {
 
             <div className="w-full sm:w-64">
               <Popover>
-                <PopoverTrigger asChild>
+                <PopoverTrigger >
                   <Button variant="outline" className="w-full" >
                     <Filter className="h-3 w-3 inline mr-1" />
                     {selectedCategories.length > 0
                       ? `Categories (${selectedCategories.length})`
                       : "Filter by Category"}
                   </Button>
+                  <div className="mt-2">
+                  <p className="text-xs text-gray-600">
+                    Filter by price and calories to find your favourite meal
+                  </p>
+                  </div>
+                  
                 </PopoverTrigger>
                 <PopoverContent className="w-64">
                   <div className="space-y-2">
