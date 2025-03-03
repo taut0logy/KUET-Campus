@@ -213,7 +213,7 @@ export default function VerifyEmailPage() {
           <Icons.mail className="mx-auto h-10 w-10 text-primary" />
           <h1 className="text-2xl font-semibold tracking-tight">Check your email</h1>
           <p className="text-sm text-muted-foreground">
-            We've sent a verification link to your email address. Please check your inbox.
+            We've sent a verification link to <span className="font-bold">{user?.email}</span>. Please check your inbox.
           </p>
         </div>
 

@@ -240,7 +240,7 @@ const useAuthStore = create((set, get) => ({
       authState: AUTH_STATES.AUTHENTICATED
     });
     localStorage.setItem("accessToken", accessToken);
-    document.cookie = `accessToken=${accessToken}; path=/; max-age=86400; SameSite=Strict`;
+    document.cookie = `accessToken=${accessToken}; path=/; max-age=86400; SameSite=Lax`;
   },
   
   handleAuthError: () => {

@@ -1,7 +1,7 @@
 const nodemailer = require('nodemailer');
 const { logger } = require('../utils/logger.util');
 require('dotenv').config();
-
+const { logger } = require('../utils/logger.util');
 // Create a transporter using environment variables
 const transporter = nodemailer.createTransport({
   host: process.env.EMAIL_HOST,

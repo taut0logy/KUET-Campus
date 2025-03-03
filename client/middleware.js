@@ -42,9 +42,9 @@ export function middleware(request) {
 
   // Handle verification routes
   if (routeGroups.verification.test(pathname)) {
-    if (!token) {
-      return NextResponse.redirect(new URL('/', request.url));
-    }
+    // if (!token) {
+    //   return NextResponse.redirect(new URL('/', request.url));
+    // }
     return NextResponse.next();
   }
 

@@ -102,6 +102,7 @@ model Notification {
   message   String
   isRead    Boolean  @default(false)
   type      String   @default("INFO")
+  metadata  Json?    @default("{}")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -115,6 +116,11 @@ model Meal {
   name        String
   description String?    @db.Text
   nutrition   Json?
+  price       Decimal
+  category    String
+  isVegan        Boolean    @default(false)
+  isGlutenFree   Boolean    @default(false)
+  allergens      Json?
   menuMeals   MenuMeal[]
 
   @@map("meals")

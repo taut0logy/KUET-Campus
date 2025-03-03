@@ -32,7 +32,7 @@ export default function ResendVerificationPage() {
   const form = useForm({
     resolver: zodResolver(resendSchema),
     defaultValues: {
-      email: "",
+      email: user.email,
     },
   });
 

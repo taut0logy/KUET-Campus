@@ -3,17 +3,18 @@ import axios from '@/lib/axios';
 
 // Define store state interface
 const initialState = {
-  meals: [],
-  menus: [],
-  todayMenu: null,
-  preorders: [],
-  loading: false,
-  error: null,
+  meals: [],       // List of meals available in the cafeteria
+  menus: [],       // List of menus available (menus can have multiple meals)
+  todayMenu: null, // Today's specific menu
+  preorders: [],   // List of preorders placed by the user
+  loading: false,  // Indicates if a request is being processed
+  error: null,     // Stores any errors that occur during API requests
 };
+
 
 // Create cafeteria store with Zustand
 const useCafeteriaStore = create((set, get) => ({
-  // State
+  // Spread the initial state into the store
   ...initialState,
 
   // Actions
