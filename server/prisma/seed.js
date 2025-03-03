@@ -1,78 +1,89 @@
-// prisma/seed.js
-const { PrismaClient } = require('@prisma/client');
+import { PrismaClient } from "@prisma/client";
+
 const prisma = new PrismaClient();
 
 async function main() {
-  // OPTIONAL: Clear existing data in a specific order due to relations
-  await prisma.preorder.deleteMany();
-  await prisma.menuMeal.deleteMany();
-  await prisma.menu.deleteMany();
-  await prisma.meal.deleteMany();
-
-  // -------------------------
-  // Create demo meals
-  // -------------------------
-  const meal1 = await prisma.meal.create({
-    data: {
-      name: "Spaghetti Bolognese",
-      description: "Classic Italian pasta with a rich meat sauce.",
-      nutrition: { calories: 500, protein: 25 },
-    },
+  await prisma.meal.createMany({
+    data: [
+      {
+        name: "Grilled Chicken Salad",
+        description: "A healthy mix of grilled chicken, fresh greens, and vinaigrette dressing.",
+        nutrition: {
+          calories: 350,
+          protein: 40,
+          carbs: 15,
+          fat: 10,
+        },
+        price: 8.99,
+        category: "Salad",
+        isVegan: false,
+        isGlutenFree: true,
+        allergens: ["None"],
+      },
+      {
+        name: "Vegan Buddha Bowl",
+        description: "A balanced bowl with quinoa, chickpeas, avocado, and tahini dressing.",
+        nutrition: {
+          calories: 500,
+          protein: 20,
+          carbs: 55,
+          fat: 15,
+        },
+        price: 10.99,
+        category: "Vegan",
+        isVegan: true,
+        isGlutenFree: true,
+        allergens: ["Sesame"],
+      },
+      {
+        name: "Classic Cheeseburger",
+        description: "Juicy beef patty with cheddar cheese, lettuce, tomato, and pickles.",
+        nutrition: {
+          calories: 700,
+          protein: 45,
+          carbs: 50,
+          fat: 40,
+        },
+        price: 9.99,
+        category: "Fast Food",
+        isVegan: false,
+        isGlutenFree: false,
+        allergens: ["Gluten", "Dairy"],
+      },
+      {
+        name: "Gluten-Free Margherita Pizza",
+        description: "A delicious gluten-free pizza topped with fresh basil and mozzarella.",
+        nutrition: {
+          calories: 600,
+          protein: 25,
+          carbs: 65,
+          fat: 20,
+        },
+        price: 12.99,
+        category: "Pizza",
+        isVegan: false,
+        isGlutenFree: true,
+        allergens: ["Dairy"],
+      },
+      {
+        name: "Tofu Stir-Fry",
+        description: "Stir-fried tofu with vegetables and soy-ginger sauce.",
+        nutrition: {
+          calories: 400,
+          protein: 30,
+          carbs: 45,
+          fat: 12,
+        },
+        price: 9.49,
+        category: "Asian",
+        isVegan: true,
+        isGlutenFree: false,
+        allergens: ["Soy"],
+      },
+    ],
   });
 
-  const meal2 = await prisma.meal.create({
-    data: {
-      name: "Grilled Chicken Salad",
-      description: "Fresh salad topped with grilled chicken and a light dressing.",
-      nutrition: { calories: 350, protein: 30 },
-    },
-  });
-
-  // -------------------------
-  // Create a demo menu for today
-  // -------------------------
-  const today = new Date();
-  today.setHours(0, 0, 0, 0); // Normalize the time
-
-  const menu = await prisma.menu.create({
-    data: { date: today },
-  });
-
-  // -------------------------
-  // Create menu meals for the menu
-  // -------------------------
-  const menuMeal1 = await prisma.menuMeal.create({
-    data: {
-      menuId: menu.id,
-      mealId: meal1.id,
-      price: 9.99,
-      available: true,
-    },
-  });
-
-  const menuMeal2 = await prisma.menuMeal.create({
-    data: {
-      menuId: menu.id,
-      mealId: meal2.id,
-      price: 11.99,
-      available: true,
-    },
-  });
-
-  // -------------------------
-  // OPTIONAL: Create a demo preorder (if you want demo orders)
-  // -------------------------
-  // Replace 'demo-user-id' with an actual user id from your users table
-  // const preorder = await prisma.preorder.create({
-  //   data: {
-  //     userId: "demo-user-id",
-  //     menuMealId: menuMeal1.id,
-  //     status: "placed",
-  //   },
-  // });
-
-  console.log("Database has been seeded. Demo data:");
-  console.log({ meal1, meal2, menu, menuMeal1, menuMeal2 });
+  console.log("Meals seeded successfully!");
 }
 
 main()

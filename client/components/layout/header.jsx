@@ -4,6 +4,7 @@ import Link from "next/link";
 import { MainNav, MobileNav } from "@/components/layout/main-nav";
 import { UserNav } from "@/components/layout/user-nav";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { NotificationPopover } from "@/components/notifications/NotificationPopover";
 
 export function Header() {
   return (
@@ -16,6 +17,7 @@ export function Header() {
         <MainNav />
         <div className="flex flex-1 items-center justify-end space-x-4">
           <nav className="flex items-center space-x-2">
+            <NotificationPopover />
             <ThemeToggle />
             <UserNav />
           </nav>

@@ -4,6 +4,7 @@ import { Toaster } from "@/components/ui/sonner"
 import ThemeProvider from "@/components/providers/theme-provider";
 import QueryProvider from "@/components/providers/query-provider";
 import { AuthProvider } from "@/components/providers/auth-provider";
+import { SocketProvider } from "@/components/providers/socket-provider";
 import Footer from "@/components/layout/footer";
 
 const geistSans = Geist({
@@ -35,11 +36,13 @@ export default function RootLayout({ children }) {
         >
           <QueryProvider>
             <AuthProvider>
-              <div className="flex min-h-screen flex-col">
-                <main className="flex-1">{children}</main>
-                <Footer />
-              </div>
-              <Toaster />
+              <SocketProvider>
+                <div className="flex min-h-screen flex-col">
+                  <main className="flex-1">{children}</main>
+                  <Footer />
+                </div>
+                <Toaster />
+              </SocketProvider>
             </AuthProvider>
           </QueryProvider>
         </ThemeProvider>

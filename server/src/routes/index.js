@@ -4,6 +4,9 @@ const authRoutes = require('./auth.routes');
 const cafeteriaRoutes = require('./cafeteria.routes');
 const routineRoutes = require('./routine.routes');
 const { standardLimiter } = require('../middleware/rate-limit.middleware');
+//const userRoutes = require('./user.routes');
+const notificationRoutes = require('./notification.routes');
+const storageRoutes = require('./storage.routes');
 
 // Apply standard rate limit to all routes
 router.use(standardLimiter);
@@ -20,9 +23,12 @@ router.get('/health', (req, res) => {
 // Mount route modules
 router.use('/auth', authRoutes);
 router.use('/cafeteria', cafeteriaRoutes);
+//router.use('/users', userRoutes);
+router.use('/notifications', notificationRoutes);
+router.use('/storage', storageRoutes);
+
 router.use('/routine', routineRoutes);
 // Future route modules
-// router.use('/users', userRoutes);
 // router.use('/profiles', profileRoutes);
 // etc.
 

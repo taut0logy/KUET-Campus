@@ -5,23 +5,29 @@ const helmet = require('helmet');
 const morgan = require('morgan');
 const cookieParser = require('cookie-parser');
 const compression = require('compression');
+const { createServer } = require('http');
 const routes = require('./routes');
 const { connect } = require('./services/database.service');
 const { verifyConnection: verifyEmailConnection } = require('./services/email.service');
+const notificationService = require('./services/notification.service');
 const { errorHandler, notFoundHandler } = require('./middleware/error.middleware');
 const { logger, stream } = require('./utils/logger.util');
 
 // Initialize Express app
 const app = express();
+const httpServer = createServer(app);
 const PORT = process.env.PORT || 8000;
 
-// Connect to database
+// Initialize Socket.io with notification service
+notificationService.initialize(httpServer);
+
+// Connect to database service
 connect()
   .then(() => {
-    logger.info('Connected to database');
+    logger.info('Database service is ready');
   })
   .catch((error) => {
-    logger.error('Database connection error:', error);
+    logger.error('Database service is not ready:', error);
     process.exit(1);
   });
 
@@ -31,11 +37,11 @@ verifyEmailConnection()
     if (connected) {
       logger.info('Email service is ready');
     } else {
-      logger.warn('Email service is not connected. Emails will not be sent.');
+      logger.warn('Email service is not ready. Emails will not be sent.');
     }
   })
   .catch((error) => {
-    logger.error('Email service verification error:', error);
+    logger.error('Email service is not ready:', error);
   });
 
 // Middleware
@@ -65,9 +71,10 @@ app.use(notFoundHandler);
 // Centralized error handler
 app.use(errorHandler);
 
-// Start server
-app.listen(PORT, () => {
+// Start server with Socket.io
+httpServer.listen(PORT, () => {
   logger.info(`Server running on port ${PORT} in ${process.env.NODE_ENV} mode`);
+  logger.info('Socket.io server initialized');
 });
 
 // Handle unhandled promise rejections

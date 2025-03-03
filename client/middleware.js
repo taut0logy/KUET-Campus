@@ -1,5 +1,4 @@
 import { NextResponse } from 'next/server'
-// import { createClient } from '@supabase/supabase-js'
 
 /**
  * Middleware for handling authentication and routing
@@ -7,56 +6,49 @@ import { NextResponse } from 'next/server'
  */
 export function middleware(request) {
   const { pathname } = request.nextUrl;
-  
-  // Get the token from cookies or localStorage (via cookie alternative)
   const token = request.cookies.get('accessToken')?.value;
   
-  // Define route groups
-  const isAuthRoute = pathname.startsWith('/login') || 
-                      pathname.startsWith('/register') || 
-                      pathname.startsWith('/forgot-password') ||
-                      pathname.startsWith('/reset-password');
-                      
-  const isVerificationRoute = pathname.startsWith('/verify-email') || 
-                             pathname.startsWith('/resend-verification');
-                             
-  const isProtectedRoute = pathname.startsWith('/dashboard') || 
-                          pathname.startsWith('/profile') || 
-                          pathname.startsWith('/settings') ||
-                          pathname.startsWith('/admin') ||
-                          pathname.startsWith('/manager');
-  
-  // Public routes that don't need any redirects
-  const isPublicRoute = pathname === '/' || 
-                       pathname.startsWith('/about') || 
-                       pathname.startsWith('/contact') ||
-                       pathname.startsWith('/api') ||
-                       pathname.match(/\.(jpg|jpeg|png|gif|svg|ico|css|js)$/);
-  
-  // Handle API routes separately - don't redirect these
-  if (pathname.startsWith('/api')) {
+  // Define route groups with regex for better matching
+  const routeGroups = {
+    auth: /^\/(login|register|forgot-password|reset-password)/,
+    verification: /^\/(verify-email|resend-verification)/,
+    protected: /^\/(dashboard|profile|settings|admin|manager)/,
+    public: /^\/(about|contact)$/,
+    static: /\.(jpg|jpeg|png|gif|svg|ico|css|js)$/
+  };
+
+  // Skip middleware for API routes and static files
+  if (pathname.startsWith('/api') || routeGroups.static.test(pathname)) {
     return NextResponse.next();
   }
-  
-  // 1. If no token and trying to access protected routes, redirect to login
-  if (!token && isProtectedRoute) {
-    const redirectUrl = new URL('/login', request.url);
-    redirectUrl.searchParams.set('from', pathname);
-    return NextResponse.redirect(redirectUrl);
-  }
-  
-  // 2. If token exists and trying to access auth routes, redirect to dashboard
-  if (token && isAuthRoute) {
-    return NextResponse.redirect(new URL('/dashboard', request.url));
-  }
-  
-  // 3. Verification routes are special - we handle token directly in the page
-  if (isVerificationRoute && pathname.includes('token=')) {
-    // Allow direct access to verification with token
+
+  // Handle protected routes
+  if (routeGroups.protected.test(pathname)) {
+    if (!token) {
+      const redirectUrl = new URL('/login', request.url);
+      redirectUrl.searchParams.set('from', pathname);
+      return NextResponse.redirect(redirectUrl);
+    }
     return NextResponse.next();
   }
-  
-  // 4. For all other cases, proceed normally
+
+  // Handle auth routes
+  if (routeGroups.auth.test(pathname)) {
+    if (token) {
+      return NextResponse.redirect(new URL('/dashboard', request.url));
+    }
+    return NextResponse.next();
+  }
+
+  // Handle verification routes
+  if (routeGroups.verification.test(pathname)) {
+    // if (!token) {
+    //   return NextResponse.redirect(new URL('/', request.url));
+    // }
+    return NextResponse.next();
+  }
+
+  // For all other routes, proceed normally
   return NextResponse.next();
 }
 

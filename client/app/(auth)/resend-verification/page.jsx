@@ -18,6 +18,7 @@ import { Input } from "@/components/ui/input";
 import { Icons } from "@/components/ui/icons";
 import { toast } from "sonner";
 import axios from "@/lib/axios";
+import useAuthStore from "@/stores/auth-store";
 
 const resendSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
@@ -26,11 +27,12 @@ const resendSchema = z.object({
 export default function ResendVerificationPage() {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const user = useAuthStore(state => state.user);
 
   const form = useForm({
     resolver: zodResolver(resendSchema),
     defaultValues: {
-      email: "",
+      email: user.email,
     },
   });
 
@@ -75,12 +77,12 @@ export default function ResendVerificationPage() {
                   <FormLabel>Email</FormLabel>
                   <FormControl>
                     <Input
-                      placeholder="name@example.com"
+                      placeholder={user.email}
                       type="email"
                       autoCapitalize="none"
                       autoComplete="email"
                       autoCorrect="off"
-                      disabled={isSubmitting}
+                      disabled={true}
                       {...field}
                     />
                   </FormControl>
