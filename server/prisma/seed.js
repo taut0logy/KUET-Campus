@@ -28,6 +28,14 @@ async function main() {
     },
   });
 
+  const meal3 = await prisma.meal.create({
+    data: {
+      name: "Pizza Margherita",
+      description: "Classic Italian pizza with tomato sauce and mozzarella cheese.",
+      nutrition: { calories: 400, protein: 20 },
+    },
+  });
+
   // -------------------------
   // Create a demo menu for today
   // -------------------------
