@@ -115,6 +115,11 @@ model Meal {
   name        String
   description String?    @db.Text
   nutrition   Json?
+  price       Decimal
+  category    String
+  isVegan        Boolean    @default(false)
+  isGlutenFree   Boolean    @default(false)
+  allergens      Json?
   menuMeals   MenuMeal[]
 
   @@map("meals")
