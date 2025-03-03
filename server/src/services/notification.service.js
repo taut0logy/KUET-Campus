@@ -268,7 +268,7 @@ class NotificationService {
           title,
           message,
           type,
-          //metadata
+          metadata
         }
       });
 

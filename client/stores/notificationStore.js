@@ -59,6 +59,21 @@ export const useNotificationStore = create((set, get) => ({
     }));
   },
 
+  // Delete a notification
+  deleteNotification: (notificationId) => {
+    set((state) => {
+      const notification = state.notifications.find(n => n.id === notificationId);
+      if (!notification) {
+        return state;
+      }
+
+      return {
+        notifications: state.notifications.filter(n => n.id !== notificationId),
+        unreadCount: notification.isRead ? state.unreadCount : Math.max(0, state.unreadCount - 1)
+      };
+    });
+  },
+
   // Set all notifications
   setNotifications: (notifications) => set({ notifications }),
 })); 

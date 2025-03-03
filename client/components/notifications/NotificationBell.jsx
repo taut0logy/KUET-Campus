@@ -1,9 +1,9 @@
 import { Bell } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useNotificationStore } from '@/stores/notification';
+import { useNotificationStore } from '@/stores/notificationStore';
 import { Badge } from '@/components/ui/badge';
 
-export function NotificationBell({ onClick }) {
+export function NotificationBell() {
   const { unreadCount } = useNotificationStore();
 
   return (
@@ -11,7 +11,6 @@ export function NotificationBell({ onClick }) {
       variant="ghost"
       size="icon"
       className="relative"
-      onClick={onClick}
       aria-label={`Notifications ${unreadCount > 0 ? `(${unreadCount} unread)` : ''}`}
     >
       <Bell className="h-5 w-5" />

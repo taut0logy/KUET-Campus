@@ -1,32 +1,18 @@
 import { useEffect } from 'react';
-import { useNotificationStore } from '@/stores/notification';
+import { useNotificationStore } from '@/stores/notificationStore';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
-import { Check, Trash } from 'lucide-react';
+import { Check, Trash2 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
 export function NotificationList() {
   const {
     notifications,
-    loading,
-    error,
-    pagination,
-    fetchNotifications,
+    unreadCount,
     markAsRead,
     markAllAsRead,
+    deleteNotification,
   } = useNotificationStore();
-
-  useEffect(() => {
-    fetchNotifications();
-  }, [fetchNotifications]);
-
-  if (loading) {
-    return <div className="p-4 text-center">Loading notifications...</div>;
-  }
-
-  if (error) {
-    return <div className="p-4 text-center text-red-500">{error}</div>;
-  }
 
   if (!notifications.length) {
     return <div className="p-4 text-center text-muted-foreground">No notifications</div>;
@@ -36,14 +22,16 @@ export function NotificationList() {
     <div className="flex flex-col">
       <div className="flex items-center justify-between p-4 border-b">
         <h3 className="text-lg font-semibold">Notifications</h3>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => markAllAsRead()}
-          className="text-xs"
-        >
-          Mark all as read
-        </Button>
+        {unreadCount > 0 && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={markAllAsRead}
+            className="text-xs"
+          >
+            Mark all as read
+          </Button>
+        )}
       </div>
       <ScrollArea className="h-[400px]">
         <div className="flex flex-col gap-2 p-4">
@@ -52,37 +40,18 @@ export function NotificationList() {
               key={notification.id}
               notification={notification}
               onMarkAsRead={markAsRead}
+              onDelete={deleteNotification}
             />
           ))}
         </div>
       </ScrollArea>
-      {pagination.pages > 1 && (
-        <div className="flex justify-center gap-2 p-4 border-t">
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={pagination.page === 1}
-            onClick={() => fetchNotifications(pagination.page - 1)}
-          >
-            Previous
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={pagination.page === pagination.pages}
-            onClick={() => fetchNotifications(pagination.page + 1)}
-          >
-            Next
-          </Button>
-        </div>
-      )}
     </div>
   );
 }
 
-function NotificationItem({ notification, onMarkAsRead }) {
+function NotificationItem({ notification, onMarkAsRead, onDelete }) {
   const getTypeStyles = (type) => {
-    switch (type.toUpperCase()) {
+    switch (type?.toUpperCase()) {
       case 'ERROR':
         return 'bg-red-50 border-red-200';
       case 'WARNING':
@@ -107,16 +76,28 @@ function NotificationItem({ notification, onMarkAsRead }) {
           {formatDistanceToNow(new Date(notification.createdAt), { addSuffix: true })}
         </span>
       </div>
-      {!notification.isRead && (
+      <div className="flex items-center gap-1">
+        {!notification.isRead && (
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => onMarkAsRead(notification.id)}
+            className="h-8 w-8"
+            title="Mark as read"
+          >
+            <Check className="h-4 w-4" />
+          </Button>
+        )}
         <Button
           variant="ghost"
           size="icon"
-          onClick={() => onMarkAsRead(notification.id)}
-          className="h-8 w-8"
+          onClick={() => onDelete(notification.id)}
+          className="h-8 w-8 text-destructive hover:text-destructive"
+          title="Delete notification"
         >
-          <Check className="h-4 w-4" />
+          <Trash2 className="h-4 w-4" />
         </Button>
-      )}
+      </div>
     </div>
   );
 } 
