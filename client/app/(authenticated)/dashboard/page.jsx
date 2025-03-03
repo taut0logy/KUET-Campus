@@ -26,7 +26,7 @@ export default function RoutinePage() {
 
   const fetchCourses = async () => {
     try {
-      const response = await fetch("/api/v1/get-courses", {
+      const response = await fetch("/routine/get-courses", {
         headers: {
           Authorization: `Bearer ${user.accessToken}`,
         },
@@ -45,7 +45,7 @@ export default function RoutinePage() {
 
   const handleSetSchedule = async () => {
     try {
-      const response = await fetch("/api/v1/set-schedule", {
+      const response = await fetch("/routine/set-schedule", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -78,7 +78,7 @@ export default function RoutinePage() {
 
   const handleAddCourse = async () => {
     try {
-      const response = await fetch("/api/v1/add-course", {
+      const response = await fetch("/routine/add-course", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
