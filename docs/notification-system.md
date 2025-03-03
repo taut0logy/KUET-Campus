@@ -3,6 +3,11 @@
 ## Overview
 The notification system provides real-time notifications using Socket.IO for instant updates and a REST API for fetching historical notifications. It supports both user-specific and channel-based notifications.
 
+## Demo Page
+
+**test/notifications**
+
+
 ## Architecture
 
 ### Components
