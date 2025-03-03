@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useNotificationStore } from '@/stores/notificationStore';
+import { useNotificationStore } from '@/stores/notification-store';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { Check, Trash2 } from 'lucide-react';

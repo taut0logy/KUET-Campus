@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useSocket } from '@/hooks/useSocket';
-import { useNotificationStore } from '@/stores/notificationStore';
+import { useNotificationStore } from '@/stores/notification-store';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { toast } from 'sonner';

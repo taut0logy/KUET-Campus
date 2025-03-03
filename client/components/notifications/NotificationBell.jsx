@@ -1,6 +1,6 @@
 import { Bell } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useNotificationStore } from '@/stores/notificationStore';
+import { useNotificationStore } from '@/stores/notification-store';
 import { Badge } from '@/components/ui/badge';
 
 export function NotificationBell() {
