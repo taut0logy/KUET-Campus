@@ -70,4 +70,4 @@ const stream = {
 module.exports = {
   logger,
   stream
-}; 
+};

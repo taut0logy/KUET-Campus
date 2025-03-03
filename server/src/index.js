@@ -18,10 +18,10 @@ const PORT = process.env.PORT || 8000;
 // Connect to database
 connect()
   .then(() => {
-    logger.info('Connected to database');
+    logger.info('Database service is ready');
   })
   .catch((error) => {
-    logger.error('Database connection error:', error);
+    logger.error('Database service is not ready:', error);
     process.exit(1);
   });
 
@@ -31,11 +31,11 @@ verifyEmailConnection()
     if (connected) {
       logger.info('Email service is ready');
     } else {
-      logger.warn('Email service is not connected. Emails will not be sent.');
+      logger.warn('Email service is not ready. Emails will not be sent.');
     }
   })
   .catch((error) => {
-    logger.error('Email service verification error:', error);
+    logger.error('Email service is not ready:', error);
   });
 
 // Middleware
