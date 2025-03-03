@@ -2,75 +2,60 @@
 
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Routine } from "@/components/dashboard/Routine";
 import useAuthStore from "@/stores/auth-store";
+import useRoutineStore from "@/stores/routine-store";
 import { toast } from "sonner";
 
-export default function RoutinePage() {
+export default function DashboardPage() {
   const [showScheduleModal, setShowScheduleModal] = useState(false);
   const [showCourseModal, setShowCourseModal] = useState(false);
   const [weekday, setWeekday] = useState("");
   const [periods, setPeriods] = useState(Array(9).fill(""));
-  const [courses, setCourses] = useState([]);
   const [newCourse, setNewCourse] = useState({
     courseId: "",
     courseName: "",
     classTest: "class"
   });
+  
   const { user } = useAuthStore();
+  const { 
+    courses, 
+    weeklySchedule, 
+    loading, 
+    error,
+    fetchCourses, 
+    fetchWeeklySchedule,
+    addCourse,
+    setWeeklySchedule 
+  } = useRoutineStore();
 
   useEffect(() => {
     if (user) {
       fetchCourses();
+      fetchWeeklySchedule();
     }
-  }, [user]);
-
-  const fetchCourses = async () => {
-    try {
-      const response = await fetch("/routine/get-courses", {
-        headers: {
-          Authorization: `Bearer ${user.accessToken}`,
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to fetch courses");
-      }
-
-      const data = await response.json();
-      setCourses(data.data);
-    } catch (error) {
-      toast.error(error.message);
-    }
-  };
+  }, [user, fetchCourses, fetchWeeklySchedule]);
 
   const handleSetSchedule = async () => {
     try {
-      const response = await fetch("/routine/set-schedule", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${user.accessToken}`,
-        },
-        body: JSON.stringify({
-          weekday,
-          period1: periods[0],
-          period2: periods[1],
-          period3: periods[2],
-          period4: periods[3],
-          period5: periods[4],
-          period6: periods[5],
-          period7: periods[6],
-          period8: periods[7],
-          period9: periods[8],
-        }),
+      await setWeeklySchedule(weekday, {
+        period1: periods[0],
+        period2: periods[1],
+        period3: periods[2],
+        period4: periods[3],
+        period5: periods[4],
+        period6: periods[5],
+        period7: periods[6],
+        period8: periods[7],
+        period9: periods[8],
       });
-
-      if (!response.ok) {
-        throw new Error("Failed to set schedule");
-      }
 
       toast.success("Schedule set successfully");
       setShowScheduleModal(false);
+      setWeekday("");
+      setPeriods(Array(9).fill(""));
     } catch (error) {
       toast.error(error.message);
     }
@@ -78,22 +63,9 @@ export default function RoutinePage() {
 
   const handleAddCourse = async () => {
     try {
-      const response = await fetch("/routine/add-course", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${user.accessToken}`,
-        },
-        body: JSON.stringify(newCourse),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to add course");
-      }
-
+      await addCourse(newCourse);
       toast.success("Course added successfully");
       setShowCourseModal(false);
-      fetchCourses();
       setNewCourse({
         courseId: "",
         courseName: "",
@@ -105,15 +77,67 @@ export default function RoutinePage() {
   };
 
   return (
-    <div className="p-4">
-      <div className="flex gap-2 mb-4">
-        <Button onClick={() => setShowScheduleModal(true)}>Set Weekly Schedule</Button>
-        <Button onClick={() => setShowCourseModal(true)}>Add Course</Button>
+    <div className="flex-1 space-y-4 p-8 pt-6">
+      <div className="flex items-center justify-between space-y-2">
+        <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
+        <div className="flex gap-2">
+          <Button onClick={() => setShowScheduleModal(true)}>Set Weekly Schedule</Button>
+          <Button onClick={() => setShowCourseModal(true)}>Add Course</Button>
+        </div>
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Courses</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{courses.length}</div>
+            <p className="text-xs text-muted-foreground">Active courses in the system</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Scheduled Days</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {weeklySchedule ? Object.keys(weeklySchedule).length : 0}
+            </div>
+            <p className="text-xs text-muted-foreground">Days with scheduled classes</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Periods</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">9</div>
+            <p className="text-xs text-muted-foreground">Periods per day</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Status</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{loading ? "Loading..." : "Ready"}</div>
+            <p className="text-xs text-muted-foreground">
+              {error ? "Error loading data" : "System is operational"}
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
+        <Card className="col-span-7">
+          <Routine />
+        </Card>
       </div>
 
       {showScheduleModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-4 rounded-lg max-w-4xl w-full">
+          <div className="bg-background p-4 rounded-lg max-w-4xl w-full">
             <h2 className="text-lg font-bold mb-4">Set Weekly Schedule</h2>
             <table className="w-full">
               <thead>
@@ -175,7 +199,7 @@ export default function RoutinePage() {
 
       {showCourseModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-4 rounded-lg w-full max-w-md">
+          <div className="bg-background p-4 rounded-lg w-full max-w-md">
             <h2 className="text-lg font-bold mb-4">Add New Course</h2>
             <div className="space-y-4">
               <div>
@@ -212,10 +236,7 @@ export default function RoutinePage() {
             </div>
             <div className="mt-4 flex justify-end gap-2">
               <Button onClick={handleAddCourse}>Save</Button>
-              <Button 
-                variant="ghost" 
-                onClick={() => setShowCourseModal(false)}
-              >
+              <Button variant="ghost" onClick={() => setShowCourseModal(false)}>
                 Cancel
               </Button>
             </div>

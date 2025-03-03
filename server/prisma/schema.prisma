@@ -161,8 +161,6 @@ model Preorder {
   @@map("preorders")
 }
 
-// Add these models to your existing schema.prisma file
-
 model Routine {
   id        String   @id @default(uuid())
   userId    String   // Foreign key to User
