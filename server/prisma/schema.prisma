@@ -9,8 +9,8 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
 }
 
@@ -31,25 +31,28 @@ enum UserStatus {
 }
 
 model User {
-  id                String       @id @default(uuid())
-  email             String       @unique
+  id                String         @id @default(uuid())
+  email             String         @unique
   password          String?
   firstName         String?
   lastName          String?
-  roles             UserRole[]   @default([STUDENT])
-  status            UserStatus   @default(PENDING_VERIFICATION)
-  emailVerified     Boolean      @default(false)
+  roles             UserRole[]     @default([STUDENT])
+  status            UserStatus     @default(PENDING_VERIFICATION)
+  emailVerified     Boolean        @default(false)
   verificationToken String?
   resetToken        String?
   resetTokenExpiry  DateTime?
-  createdAt         DateTime     @default(now())
-  updatedAt         DateTime     @updatedAt
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
   profile           Profile?
   sessions          Session[]
-  messages          Message[]    @relation("MessageSender")
-  receivedMessages  Message[]    @relation("MessageReceiver")
+  messages          Message[]      @relation("MessageSender")
+  receivedMessages  Message[]      @relation("MessageReceiver")
   notifications     Notification[]
   preorders         Preorder[]
+  Routine           Routine[]
+  Course            Course[]
+
   @@map("users")
 }
 
@@ -82,15 +85,15 @@ model Session {
 }
 
 model Message {
-  id          String   @id @default(uuid())
-  content     String
-  senderId    String
-  receiverId  String?
-  isRead      Boolean  @default(false)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  sender      User     @relation("MessageSender", fields: [senderId], references: [id], onDelete: Cascade)
-  receiver    User?    @relation("MessageReceiver", fields: [receiverId], references: [id], onDelete: SetNull)
+  id         String   @id @default(uuid())
+  content    String
+  senderId   String
+  receiverId String?
+  isRead     Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  sender     User     @relation("MessageSender", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver   User?    @relation("MessageReceiver", fields: [receiverId], references: [id], onDelete: SetNull)
 
   @@map("messages")
 }
@@ -108,7 +111,6 @@ model Notification {
 
   @@map("notifications")
 }
-
 
 model Meal {
   id          Int        @id @default(autoincrement()) @map("meal_id")
@@ -129,13 +131,13 @@ model Menu {
 }
 
 model MenuMeal {
-  id        Int       @id @default(autoincrement()) @map("menu_meal_id")
-  menuId    Int       @map("menu_id")
-  mealId    Int       @map("meal_id")
-  price     Decimal   @db.Decimal(10, 2)
-  available Boolean   @default(true)
-  menu      Menu      @relation(fields: [menuId], references: [id])
-  meal      Meal      @relation(fields: [mealId], references: [id])
+  id        Int        @id @default(autoincrement()) @map("menu_meal_id")
+  menuId    Int        @map("menu_id")
+  mealId    Int        @map("meal_id")
+  price     Decimal    @db.Decimal(10, 2)
+  available Boolean    @default(true)
+  menu      Menu       @relation(fields: [menuId], references: [id])
+  meal      Meal       @relation(fields: [mealId], references: [id])
   preorders Preorder[]
 
   @@map("menu_meals")
@@ -151,4 +153,36 @@ model Preorder {
   menuMeal   MenuMeal @relation(fields: [menuMealId], references: [id])
 
   @@map("preorders")
+}
+
+// Add these models to your existing schema.prisma file
+
+model Routine {
+  id        String   @id @default(uuid())
+  userId    String   // Foreign key to User
+  weekday   String   // Weekday (e.g., "Sunday", "Monday", etc.)
+  period1   String?  // Course for period 1
+  period2   String?  // Course for period 2
+  period3   String?  // Course for period 3
+  period4   String?  // Course for period 4
+  period5   String?  // Course for period 5
+  period6   String?  // Course for period 6
+  period7   String?  // Course for period 7
+  period8   String?  // Course for period 8
+  period9   String?  // Course for period 9
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([weekday, userId]) // Unique constraint on weekday and userId
+  @@map("routines")
+}
+
+model Course {
+  id        String   @id @default(uuid())
+  courseId  String   @unique
+  courseName String
+  classTest  String  // "class" or "test"
+  userId    String   // Foreign key to User
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("courses")
 }
