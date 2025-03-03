@@ -20,6 +20,17 @@ router.get('/', authenticate, async (req, res) => {
   }
 });
 
+// Delete a notification
+router.delete('/:id', authenticate, async (req, res) => {
+  try {
+    await notificationService.deleteNotification(req.user.id, req.params.id);
+    res.json({ message: 'Notification deleted successfully' });
+  } catch (error) {
+    logger.error('Failed to delete notification:', error);
+    res.status(500).json({ message: 'Failed to delete notification' });
+  }
+});
+
 // Get unread notifications count
 router.get('/unread/count', authenticate, async (req, res) => {
   try {
