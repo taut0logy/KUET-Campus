@@ -2,14 +2,17 @@
 import { useState, useEffect, useRef } from 'react';
 import * as tf from '@tensorflow/tfjs';
 import * as mobilenet from '@tensorflow-models/mobilenet';
-import { Loader2, Upload, Camera } from 'lucide-react';
+import { Loader2, Upload, Camera, Sparkles, Brain, Cpu, Check, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
+import { motion } from 'framer-motion';
+import { Badge } from '@/components/ui/badge';
 
 export default function FoodRecognition({ meals }) {
   const [predictions, setPredictions] = useState([]);
   const [selectedImage, setSelectedImage] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [modelLoading, setModelLoading] = useState(true);
   const [nutritionEstimate, setNutritionEstimate] = useState(null);
   const [similarMeals, setSimilarMeals] = useState([]);
   const fileInputRef = useRef();
@@ -18,12 +21,12 @@ export default function FoodRecognition({ meals }) {
   // Load model on component mount
   useEffect(() => {
     async function loadModel() {
-      setLoading(true);
+      setModelLoading(true);
       modelRef.current = await mobilenet.load({
         version: 2,
         alpha: 1.0
       });
-      setLoading(false);
+      setModelLoading(false);
     }
     loadModel();
   }, []);
@@ -142,7 +145,7 @@ export default function FoodRecognition({ meals }) {
     };
 
 
-    return nutritionDB[foodItem] || {
+    return nutritionDB[foodItem.toLowerCase()] || {
       calories: 300,
       protein: 10,
       carbs: 35,
@@ -162,8 +165,50 @@ export default function FoodRecognition({ meals }) {
   };
 
   return (
-    <div className="space-y-4">
-      <div className="border-2 border-dashed rounded-lg p-6 text-center">
+    <div className="space-y-6 p-4 bg-gray from-blue-50 to-indigo-50 rounded-xl">
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="text-center"
+      >
+        <div className="inline-flex items-center space-x-2 mb-2">
+          <Brain className="h-6 w-6 text-indigo-600" />
+          <h2 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-red-600">
+            AI Food Recognition
+          </h2>
+          <Sparkles className="h-5 w-5 text-yellow-500" />
+        </div>
+        <p className="text-gray-600 max-w-md mx-auto">
+          Take a photo of your food to get instant nutrition estimates and find similar meals in our cafeteria.
+        </p>
+      </motion.div>
+
+      {/* Model status indicator */}
+      <div className="flex justify-center">
+        <Badge 
+          variant={modelLoading ? "outline" : "default"} 
+          className={`${modelLoading ? 'bg-amber-100 text-amber-800 border-amber-200' : 'bg-green-100 text-green-800 border-green-200'} flex items-center gap-1 px-3 py-1`}
+        >
+          {modelLoading ? (
+            <>
+              <Loader2 className="h-3 w-3 animate-spin" />
+              <span>AI Model Loading...</span>
+            </>
+          ) : (
+            <>
+              <Check className="h-3 w-3" />
+              <span>AI Ready</span>
+            </>
+          )}
+        </Badge>
+      </div>
+
+      <motion.div 
+        className="border-2 border-dashed border-indigo-200 rounded-lg bg-black/80 backdrop-blur-sm p-8 text-center shadow-sm hover:shadow-md transition-shadow"
+        whileHover={{ scale: 1.02 }}
+        transition={{ type: "spring", stiffness: 300 }}
+      >
         <input
           type="file"
           accept="image/*"
@@ -172,85 +217,181 @@ export default function FoodRecognition({ meals }) {
           className="hidden"
         />
 
-        <Button
-          onClick={() => fileInputRef.current.click()}
-          disabled={loading}
-        >
-          <Upload className="mr-2 h-4 w-4" />
-          {loading ? 'Upload Food Photo' : 'Analyzing...'}
-        </Button>
-
-        {selectedImage && (
-          <div className="mt-4 relative">
-            <img
+        {!selectedImage ? (
+          <div className="py-8">
+            <div className="mb-6 flex justify-center">
+              <div className="rounded-full bg-indigo-100 p-4">
+                <Camera className="h-12 w-12 text-indigo-600" />
+              </div>
+            </div>
+            <Button
+              onClick={() => fileInputRef.current.click()}
+              disabled={loading || modelLoading}
+              className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-medium px-6 py-2 rounded-lg shadow-md hover:shadow-lg transition-all"
+              size="lg"
+            >
+              <Upload className="mr-2 h-5 w-5" />
+              {modelLoading ? 'AI Model Loading...' : 'Upload Food Photo'}
+            </Button>
+          </div>
+        ) : (
+          <div className="relative">
+            <motion.img
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
               src={selectedImage}
               alt="Uploaded food"
-              className="max-h-48 mx-auto rounded-lg"
+              className="max-h-64 mx-auto rounded-lg shadow-md"
             />
             {loading && (
-              <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-                <Loader2 className="animate-spin text-white h-8 w-8" />
+              <div className="absolute inset-0 bg-indigo-900/50 backdrop-blur-sm flex items-center justify-center rounded-lg">
+                <div className="text-center">
+                  <Loader2 className="animate-spin text-white h-10 w-10 mx-auto mb-2" />
+                  <p className="text-white font-medium">AI Analyzing...</p>
+                </div>
+              </div>
+            )}
+            {!loading && (
+              <div className="mt-4">
+                <Button
+                  onClick={() => fileInputRef.current.click()}
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white"
+                  size="sm"
+                >
+                  Choose Another Photo
+                </Button>
               </div>
             )}
           </div>
         )}
-      </div>
+      </motion.div>
 
       {/* Results */}
       {predictions.length > 0 && (
-        <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Detection Results</CardTitle>
-                <CardDescription>
-                  {predictions[0].className} ({Math.round(predictions[0].probability * 100)}% confidence)
-                </CardDescription>
-              </CardHeader>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Nutrition Estimate</CardTitle>
-                <CardDescription>
-                  {nutritionEstimate?.calories} cal
-                </CardDescription>
+        <motion.div 
+          className="space-y-6"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+        >
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Card className="overflow-hidden border-indigo-100 shadow-md hover:shadow-lg transition-shadow">
+              <div className="h-2 bg-gradient-to-r from-blue-500 to-indigo-600"></div>
+              <CardHeader className="pb-2">
+                <div className="flex justify-between items-center">
+                  <CardTitle className="text-lg font-bold flex items-center">
+                    <Cpu className="h-4 w-4 mr-2 text-indigo-600" /> 
+                    AI Detection
+                  </CardTitle>
+                  <Badge className="bg-indigo-100 text-indigo-800 border-indigo-200">
+                    {Math.round(predictions[0].probability * 100)}% confidence
+                  </Badge>
+                </div>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-3 gap-2">
-                  <div>
-                    <p className="text-sm">Protein</p>
-                    <p className="font-bold">{nutritionEstimate?.protein}g</p>
+                <div className="bg-indigo-50 p-3 rounded-lg">
+                  <h3 className="font-medium text-lg text-indigo-800">{predictions[0].className.split(',')[0]}</h3>
+                  <p className="text-sm text-gray-600">
+                    {predictions[0].className.split(',').slice(1).join(', ')}
+                  </p>
+                </div>
+                {predictions.length > 1 && (
+                  <div className="mt-2 text-sm text-gray-500">
+                    <p>Other possibilities:</p>
+                    <ul className="list-disc list-inside">
+                      {predictions.slice(1, 3).map((pred, idx) => (
+                        <li key={idx}>
+                          {pred.className.split(',')[0]} ({Math.round(pred.probability * 100)}%)
+                        </li>
+                      ))}
+                    </ul>
                   </div>
-                  <div>
-                    <p className="text-sm">Carbs</p>
-                    <p className="font-bold">{nutritionEstimate?.carbs}g</p>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card className="overflow-hidden border-indigo-100 shadow-md hover:shadow-lg transition-shadow">
+              <div className="h-2 bg-gradient-to-r from-green-500 to-teal-600"></div>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg font-bold flex items-center">
+                  <Sparkles className="h-4 w-4 mr-2 text-teal-600" /> 
+                  Nutrition AI Estimate
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center justify-center p-3 bg-green-50 rounded-lg mb-3">
+                  <div className="text-center">
+                    <span className="text-3xl font-bold text-green-800">
+                      {nutritionEstimate?.calories}
+                    </span>
+                    <span className="block text-sm text-green-600">calories</span>
                   </div>
-                  <div>
-                    <p className="text-sm">Fat</p>
-                    <p className="font-bold">{nutritionEstimate?.fat}g</p>
+                </div>
+                
+                <div className="grid grid-cols-3 gap-3">
+                  <div className="bg-blue-50 p-3 rounded-lg text-center">
+                    <p className="text-2xl font-bold text-blue-800">{nutritionEstimate?.protein}g</p>
+                    <p className="text-sm text-blue-600">Protein</p>
+                  </div>
+                  <div className="bg-purple-50 p-3 rounded-lg text-center">
+                    <p className="text-2xl font-bold text-purple-800">{nutritionEstimate?.carbs}g</p>
+                    <p className="text-sm text-purple-600">Carbs</p>
+                  </div>
+                  <div className="bg-amber-50 p-3 rounded-lg text-center">
+                    <p className="text-2xl font-bold text-amber-800">{nutritionEstimate?.fat}g</p>
+                    <p className="text-sm text-amber-600">Fat</p>
                   </div>
                 </div>
               </CardContent>
             </Card>
           </div>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Similar Menu Items</CardTitle>
+          <Card className="overflow-hidden border-indigo-100 shadow-md hover:shadow-lg transition-shadow">
+            <div className="h-2 bg-gradient-to-r from-orange-500 to-red-600"></div>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-lg font-bold flex items-center">
+                <Brain className="h-4 w-4 mr-2 text-orange-600" /> 
+                AI-Recommended Menu Items
+              </CardTitle>
+              <CardDescription>
+                Based on your photo, our AI found these similar meals in our cafeteria
+              </CardDescription>
             </CardHeader>
-            <CardContent className="grid grid-cols-3 gap-4">
-              {similarMeals.map(meal => (
-                <div key={meal.id} className="border p-4 rounded-lg">
-                  <h3 className="font-bold">{meal.name}</h3>
-                  <p className="text-sm text-gray-600">
-                    {meal.nutrition.calories} cal
-                  </p>
-                </div>
-              ))}
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {similarMeals.map((meal, index) => (
+                  <motion.div 
+                    key={meal.id} 
+                    className="border border-orange-100 bg-gradient-to-br from-orange-50 to-white p-4 rounded-lg hover:shadow-md transition-all"
+                    whileHover={{ scale: 1.03 }}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3, delay: index * 0.1 }}
+                  >
+                    <h3 className="font-bold text-orange-800">{meal.name}</h3>
+                    <div className="flex items-center mt-2 text-sm">
+                      <span className="bg-orange-100 text-orange-800 px-2 py-1 rounded-full text-xs">
+                        {meal.nutrition.calories} cal
+                      </span>
+                      <span className="mx-2 text-gray-400">•</span>
+                      <span className="text-gray-600">${meal.price}</span>
+                    </div>
+                    
+                    <div className="mt-3 flex justify-between items-center">
+                      <span className="text-xs text-gray-500">Match score: {Math.min(100, Math.max(0, 100 - meal.score))}%</span>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
             </CardContent>
+            <CardFooter className="bg-orange-50 flex justify-center">
+              <p className="text-sm text-orange-700">
+                <Sparkles className="h-3 w-3 inline mr-1" />
+                AI recommendations are based on nutritional similarity
+              </p>
+            </CardFooter>
           </Card>
-        </div>
+        </motion.div>
       )}
     </div>
   );

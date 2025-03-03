@@ -5,21 +5,30 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Toaster, toast } from "sonner";
 import useCafeteriaStore from "@/stores/cafeteria-store";
-import { Loader2, ChevronDown } from "lucide-react";
+import { Loader2,ArrowDown01,ArrowUp01,  Filter, Sparkles, Vegan, WheatOff, Square } from "lucide-react";
 import { motion } from "framer-motion";
+import { Slider } from "@/components/ui/slider";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import FoodRecognition from '@/components/FoodRecognition';
+import MealChatbot from '@/components/MealChatbot';
 
 export default function Cafeteria() {
   const { meals, loading, error, fetchMeals, createPreorder } = useCafeteriaStore();
-  
+
   // State for search and category filters
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategories, setSelectedCategories] = useState([]);
-  
+
+  // State variables at the top of the component
+  const [sortType, setSortType] = useState("price");
+  const [sortOrder, setSortOrder] = useState("asc");
+  const [priceRange, setPriceRange] = useState([0, 100]);
+
+
   // State for user inputs and suggested meal
   const [userInputs, setUserInputs] = useState({
     weight: "",
@@ -159,11 +168,29 @@ export default function Cafeteria() {
   const uniqueCategories = Array.from(new Set(meals.map((meal) => meal.category))).sort();
 
   // Filter meals based on search and category
-  const filteredMeals = meals.filter((meal) => {
-    const matchesSearch = meal.name.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = selectedCategories.length === 0 || selectedCategories.includes(meal.category);
-    return matchesSearch && matchesCategory;
-  });
+  const filteredMeals = meals
+    .filter((meal) => {
+      const matchesSearch = meal.name.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesCategory = selectedCategories.length === 0 || selectedCategories.includes(meal.category);
+      const matchesPrice = meal.price >= priceRange[0] && meal.price <= priceRange[1];
+      return matchesSearch && matchesCategory && matchesPrice;
+    })
+    .sort((a, b) => {
+      let valueA, valueB;
+
+      if (sortType === "price") {
+        valueA = a.price;
+        valueB = b.price;
+      } else {
+        valueA = a.nutrition?.calories || 0;
+        valueB = b.nutrition?.calories || 0;
+      }
+
+      if (sortOrder === "asc") {
+        return valueA - valueB;
+      }
+      return valueB - valueA;
+    });
 
 
 
@@ -202,7 +229,7 @@ export default function Cafeteria() {
           <div className="mt-6 flex justify-center">
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
               <DialogTrigger asChild>
-                <Button variant="recommendation"> Get Personalized Suggestion</Button>
+                <Button variant="recommendation" className="mt-6 mb-6" > <Sparkles className="h-3 w-3 inline mr-1" /> Get Personalized Suggestion</Button>
               </DialogTrigger>
               <DialogContent>
                 <h2 className="text-xl font-bold mb-4">Enter Your Details</h2>
@@ -327,7 +354,7 @@ export default function Cafeteria() {
                         {suggestedMeal.category}
                       </span>
                       {suggestedMeal.isVegan && (
-                        <span className="px-2 py-1 bg-green-200 text-green-800 text-xs rounded-full">
+                        <span className="px-2 py-1 bg-green-200 text-green-800 text-xs rounded-full" >
                           Vegan
                         </span>
                       )}
@@ -382,7 +409,7 @@ export default function Cafeteria() {
                       className="w-full bg-gradient-to-r from-blue-500 to-blue-600 text-white hover:from-blue-600 hover:to-blue-700"
                       onClick={() => handleOrder(suggestedMeal.id)}
                     >
-                      Order Now
+                      Add to Cart
                     </Button>
                   </div>
                 </Card>
@@ -392,6 +419,23 @@ export default function Cafeteria() {
               </Button>
             </div>
           )}
+
+
+
+
+
+          <Card className="mb-8">
+            <CardHeader>
+              <CardTitle className="text-2xl">Visual Meal Analysis</CardTitle>
+              <CardDescription>
+                Upload a food photo to get nutrition estimates and similar menu items
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <FoodRecognition meals={meals} />
+            </CardContent>
+          </Card>
+
 
           {/* Search and category filter controls */}
           <div className="mt-6 flex flex-col sm:flex-row gap-4 max-w-2xl mx-auto">
@@ -403,11 +447,60 @@ export default function Cafeteria() {
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
+
+              {/* Price Range Slider with Inputs */}
+              <Card className="p-4 mt-4">
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center gap-4">
+                    <div className="flex-1">
+                      <label className="text-sm font-medium">Min Price ($)</label>
+                      <Input
+                        type="number"
+                        min="0"
+                        max={priceRange[1]}
+                        value={priceRange[0]}
+                        onChange={(e) => {
+                          const minVal = Math.min(Number(e.target.value), priceRange[1]);
+                          setPriceRange([minVal, priceRange[1]]);
+                        }}
+                      />
+                    </div>
+                    <div className="flex-1">
+                      <label className="text-sm font-medium">Max Price ($)</label>
+                      <Input
+                        type="number"
+                        min={priceRange[0]}
+                        max={Math.max(...meals.map(meal => meal.price), 100)}
+                        value={priceRange[1]}
+                        onChange={(e) => {
+                          const maxVal = Math.max(Number(e.target.value), priceRange[0]);
+                          setPriceRange([priceRange[0], maxVal]);
+                        }}
+                      />
+                    </div>
+                  </div>
+
+                  <Slider
+                    value={priceRange}
+                    min={0}
+                    max={Math.max(...meals.map(meal => meal.price), 100)}
+                    step={1}
+                    onValueChange={(value) => setPriceRange(value)}
+                  />
+
+                  <div className="flex justify-between text-sm">
+                    <span>${priceRange[0]}</span>
+                    <span>${priceRange[1]}</span>
+                  </div>
+                </div>
+              </Card>
             </div>
+
             <div className="w-full sm:w-64">
               <Popover>
                 <PopoverTrigger asChild>
-                  <Button variant="outline" className="w-full">
+                  <Button variant="outline" className="w-full" >
+                    <Filter className="h-3 w-3 inline mr-1" />
                     {selectedCategories.length > 0
                       ? `Categories (${selectedCategories.length})`
                       : "Filter by Category"}
@@ -438,22 +531,40 @@ export default function Cafeteria() {
                   </Button>
                 </PopoverContent>
               </Popover>
+
+              {/* Add this after the category filter popover */}
+              <div className="w-full space-y-4">
+
+
+                {/* Sorting Controls */}
+                <div className="flex gap-2">
+                  <Select value={sortType} onValueChange={setSortType}>
+                    <SelectTrigger className="w-[180px]">
+                      <SelectValue placeholder="Sort by" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="price">Price</SelectItem>
+                      <SelectItem value="calories">Calories</SelectItem>
+                    </SelectContent>
+                  </Select>
+
+                  <Select value={sortOrder} onValueChange={setSortOrder}>
+                    <SelectTrigger className="w-[160px]">
+                      <SelectValue placeholder="Order" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="asc"> <ArrowDown01 className="h-3 w-3 inline mr-1"/> Ascending</SelectItem>
+                      <SelectItem value="desc"> <ArrowUp01 className="h-3 w-3 inline mr-1"/> Descending</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
             </div>
           </div>
 
 
-<Card className="mb-8">
-  <CardHeader>
-    <CardTitle className="text-2xl">Visual Meal Analysis</CardTitle>
-    <CardDescription>
-      Upload a food photo to get nutrition estimates and similar menu items
-    </CardDescription>
-  </CardHeader>
-  <CardContent>
-    <FoodRecognition meals={meals} />
-  </CardContent>
-</Card>
-          
+          {/* <MealChatbot meals={meals} /> */}
+
 
         </header>
 
@@ -495,11 +606,13 @@ export default function Cafeteria() {
                       </span>
                       {meal.isVegan && (
                         <span className="px-2 py-1 bg-green-200 text-green-800 text-xs rounded-full">
+                          <Vegan className="h-3 w-3 inline mr-1" />
                           Vegan
                         </span>
                       )}
                       {meal.isGlutenFree && (
                         <span className="px-2 py-1 bg-yellow-200 text-yellow-800 text-xs rounded-full">
+                          <WheatOff className="h-3 w-3 inline mr-1" />
                           Gluten-Free
                         </span>
                       )}
@@ -549,7 +662,7 @@ export default function Cafeteria() {
                       className="w-full bg-gradient-to-r from-blue-500 to-blue-600 text-white hover:from-blue-600 hover:to-blue-700"
                       onClick={() => handleOrder(meal.id)}
                     >
-                      Order Now
+                      Add to Cart
                     </Button>
                   </div>
                 </Card>
