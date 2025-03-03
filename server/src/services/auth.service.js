@@ -91,46 +91,38 @@ const register = async (userData) => {
     const existingUser = await prisma.user.findUnique({
       where: { email }
     });
-    
+
     if (existingUser) {
       throw new Error('A user with this email already exists');
     }
-    
+
     // Hash password
-    const hashedPassword = await hashPassword(password);
-    
-    // Create user in database with roles
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Create user
     const user = await prisma.user.create({
       data: {
         email,
         password: hashedPassword,
         firstName,
         lastName,
-        roles: roles || ['STUDENT']
+        roles: roles,
+        status: 'ACTIVE',
+        emailVerified: false
       },
+      select: {
+        id: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        roles: true,
+        status: true,
+        emailVerified: true
+      }
     });
 
     // Generate verification token
     const { token: verificationToken, signedToken: signedVerificationToken } = generateVerificationToken(user.id);
-    
-    // const { data: supabaseUser, error: supabaseError } = await supabaseAdmin.auth.admin.createUser({
-    //   email,
-    //   password,
-    //   email_confirm: true,
-    //   user_metadata: {
-    //     firstName,
-    //     lastName,
-    //     role
-    //   },
-    //   email_confirm_send: false
-    // });
-    
-    // if (supabaseError) {
-    //   throw new Error(`Supabase auth error: ${supabaseError.message}`);
-    // }
-    
-    // Send verification email
-    await emailService.sendVerificationEmail(user, signedVerificationToken);
 
     // Update verification token in database
     await prisma.user.update({
@@ -139,18 +131,11 @@ const register = async (userData) => {
         verificationToken
       }
     });
-    
-    return { 
-      user: {
-        id: user.id,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        email: user.email,
-        status: user.status,
-        roles: user.roles,
-        profile: user.profile
-      }
-    };
+
+    // Send verification email
+    await emailService.sendVerificationEmail(user, signedVerificationToken);
+
+    return { user };
   } catch (error) {
     console.error('Error registering user:', error);
     throw error;
@@ -181,9 +166,20 @@ const verifyEmail = async (token) => {
         verificationToken: null
       }
     });
-  
-    
-    return { success: true, user: updatedUser };
+
+    // Generate tokens
+    const { accessToken, refreshToken } = generateTokens(user.id, user.roles);
+
+    // Create session
+    await prisma.session.create({
+      data: {
+        userId: user.id,
+        token: refreshToken,
+        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000) // 24 hours
+      }
+    });
+
+    return { success: true, user: updatedUser, accessToken, refreshToken };
   } catch (error) {
     console.error('Error during email verification:', error);
     throw error;
@@ -199,19 +195,26 @@ const login = async (email, password, captchaToken) => {
     // Find user by email
     const user = await prisma.user.findUnique({
       where: { email },
-      include: {
-        profile: true
+      select: {
+        id: true,
+        email: true,
+        password: true,
+        firstName: true,
+        lastName: true,
+        roles: true,
+        status: true,
+        emailVerified: true
       }
     });
-    
+
     if (!user) {
       throw new Error('No user found with this email');
     }
-    
+
     // Check password
-    const isPasswordValid = await comparePassword(password, user.password);
-    if (!isPasswordValid) {
-      throw new Error('Wrong password');
+    const isValidPassword = await bcrypt.compare(password, user.password);
+    if (!isValidPassword) {
+      throw new Error('Wrong password. Please try again.');
     }
     
     // Format user data for response, ensuring firstName and lastName are included
@@ -223,8 +226,11 @@ const login = async (email, password, captchaToken) => {
       status: user.status,
       roles: user.roles,
       emailVerified: user.emailVerified,
-      profile: user.profile
     };
+
+    if (user.status !== 'ACTIVE') {
+      throw new Error('Account is not active. Please contact support.');
+    }
 
     // Generate tokens
     const { accessToken, refreshToken } = generateTokens(user.id, user.roles);
@@ -234,25 +240,14 @@ const login = async (email, password, captchaToken) => {
       data: {
         userId: user.id,
         token: refreshToken,
-        expiresAt: new Date(Date.now() + 60 * 60 * 1000) // 1 hour
+        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000) // 24 hours
       }
     });
 
-    // // Try to login with Supabase as well to keep sessions in sync
-    // try {
-    //   await supabaseAdmin.auth.signInWithPassword({
-    //     email,
-    //     password
-    //   });
-    // } catch (supabaseError) {
-    //   // Just log the error but continue - we'll use our own auth system
-    //   console.error('Error logging in with Supabase (ignoring):', supabaseError);
-    // }
-    
-    return { 
+    return {
+      user: userData,
       accessToken,
-      refreshToken,
-      user: userData
+      refreshToken
     };
   } catch (error) {
     console.error('Error logging in:', error);
@@ -270,12 +265,6 @@ const logout = async (userId, refreshToken) => {
         token: refreshToken
       }
     });
-
-    // Logout from Supabase
-    // const { error: supabaseError } = await supabaseAdmin.auth.signOut();
-    // if (supabaseError) {
-    //   console.error('Error logging out from Supabase:', supabaseError);
-    // }
     
     return { success: true };
   } catch (error) {
