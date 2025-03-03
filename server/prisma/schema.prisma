@@ -36,7 +36,7 @@ model User {
   password          String?
   firstName         String?
   lastName          String?
-  role              UserRole     @default(STUDENT)
+  roles             UserRole[]   @default([STUDENT])
   status            UserStatus   @default(PENDING_VERIFICATION)
   emailVerified     Boolean      @default(false)
   verificationToken String?
@@ -49,7 +49,7 @@ model User {
   messages          Message[]    @relation("MessageSender")
   receivedMessages  Message[]    @relation("MessageReceiver")
   notifications     Notification[]
-
+  preorders         Preorder[]
   @@map("users")
 }
 
@@ -107,4 +107,48 @@ model Notification {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("notifications")
+}
+
+
+model Meal {
+  id          Int        @id @default(autoincrement()) @map("meal_id")
+  name        String
+  description String?    @db.Text
+  nutrition   Json?
+  menuMeals   MenuMeal[]
+
+  @@map("meals")
+}
+
+model Menu {
+  id        Int        @id @default(autoincrement()) @map("menu_id")
+  date      DateTime   @db.Date
+  menuMeals MenuMeal[]
+
+  @@map("menus")
+}
+
+model MenuMeal {
+  id        Int       @id @default(autoincrement()) @map("menu_meal_id")
+  menuId    Int       @map("menu_id")
+  mealId    Int       @map("meal_id")
+  price     Decimal   @db.Decimal(10, 2)
+  available Boolean   @default(true)
+  menu      Menu      @relation(fields: [menuId], references: [id])
+  meal      Meal      @relation(fields: [mealId], references: [id])
+  preorders Preorder[]
+
+  @@map("menu_meals")
+}
+
+model Preorder {
+  id         Int      @id @default(autoincrement()) @map("order_id")
+  userId     String   @map("user_id")
+  menuMealId Int      @map("menu_meal_id")
+  orderTime  DateTime @default(now()) @map("order_time")
+  status     String   @default("placed") // "placed", "ready", "picked_up"
+  user       User     @relation(fields: [userId], references: [id])
+  menuMeal   MenuMeal @relation(fields: [menuMealId], references: [id])
+
+  @@map("preorders")
 }

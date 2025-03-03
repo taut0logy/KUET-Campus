@@ -31,9 +31,16 @@ const register = async (req, res, next) => {
       captchaToken 
     });
     
+    // Generate tokens for immediate login
+    const { accessToken, user } = await authService.login(email, password, captchaToken);
+    
     return sendSuccess(
       res, 
-      { user: result.user },
+      { 
+        user,
+        accessToken,
+        success: true
+      },
       'Registration successful! Please check your email to verify your account.',
       201
     );

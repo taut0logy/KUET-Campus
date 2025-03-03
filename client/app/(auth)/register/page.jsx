@@ -82,11 +82,8 @@ function RegisterForm() {
       toast.success(
         "Registration successful! Please check your email to verify your account."
       );
-      
-      // Use setTimeout to give the toast time to show before redirecting
-      setTimeout(() => {
-        router.push("/login");
-      }, 2000);
+
+      router.push("/verify-email");
       
     } catch (error) {
       console.error("Registration error:", error);

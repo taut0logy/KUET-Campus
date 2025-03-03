@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const authRoutes = require('./auth.routes');
+const cafeteriaRoutes = require('./cafeteria.routes');
 const { standardLimiter } = require('../middleware/rate-limit.middleware');
 
 // Apply standard rate limit to all routes
@@ -17,6 +18,7 @@ router.get('/health', (req, res) => {
 
 // Mount route modules
 router.use('/auth', authRoutes);
+router.use('/cafeteria', cafeteriaRoutes);
 
 // Future route modules
 // router.use('/users', userRoutes);

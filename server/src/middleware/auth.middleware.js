@@ -24,7 +24,7 @@ const authenticate = async (req, res, next) => {
         email: true,
         firstName: true,
         lastName: true,
-        role: true,
+        roles: true,
         status: true,
         emailVerified: true,
         profile: true
@@ -111,10 +111,27 @@ const PERMISSIONS = {
   ],
 };
 
-// Middleware to check if user has required role
-const authorize = (roles = []) => {
-  if (typeof roles === 'string') {
-    roles = [roles];
+// Get all permissions for a user based on their roles
+const getUserPermissions = (roles) => {
+  if (!Array.isArray(roles) || roles.length === 0) {
+    return [];
+  }
+  
+  // Combine permissions from all roles
+  const permissions = new Set();
+  
+  roles.forEach(role => {
+    const rolePermissions = PERMISSIONS[role] || [];
+    rolePermissions.forEach(permission => permissions.add(permission));
+  });
+  
+  return Array.from(permissions);
+};
+
+// Middleware to check if user has at least one of the required roles
+const authorize = (requiredRoles = []) => {
+  if (typeof requiredRoles === 'string') {
+    requiredRoles = [requiredRoles];
   }
 
   return (req, res, next) => {
@@ -122,7 +139,13 @@ const authorize = (roles = []) => {
       return res.status(401).json({ message: 'Authentication required before authorization.' });
     }
     
-    if (roles.length && !roles.includes(req.user.role)) {
+    // Get user roles (use roles array)
+    const userRoles = req.user.roles;
+    
+    // Check if user has any of the required roles
+    const hasRole = requiredRoles.length === 0 || requiredRoles.some(role => userRoles.includes(role));
+    
+    if (!hasRole) {
       return res.status(403).json({
         message: 'Forbidden: You do not have the required permission to access this resource.'
       });
@@ -143,8 +166,11 @@ const hasPermission = (requiredPermissions = []) => {
       return res.status(401).json({ message: 'Authentication required before authorization.' });
     }
     
-    const userRole = req.user.role;
-    const userPermissions = PERMISSIONS[userRole] || [];
+    // Get user roles (use roles array if available, fallback to single role)
+    const userRoles = req.user.roles || [req.user.role];
+    
+    // Get all permissions for the user
+    const userPermissions = getUserPermissions(userRoles);
     
     const hasRequiredPermission = requiredPermissions.some(permission => 
       userPermissions.includes(permission)
@@ -179,6 +205,7 @@ module.exports = {
   authenticate,
   authorize,
   hasPermission,
+  getUserPermissions,
   requireEmailVerified,
   PERMISSIONS
 }; 

@@ -20,68 +20,58 @@ const useAuthStore = create((set, get) => ({
   hasRole: (requiredRole) => {
     const user = get().user;
     if (!user) return false;
-    
-    if (Array.isArray(requiredRole)) {
-      return requiredRole.includes(user.role);
-    }
-    
-    return user.role === requiredRole;
+    const userRoles = user.roles || [user.role];
+    return Array.isArray(requiredRole) 
+      ? requiredRole.some(role => userRoles.includes(role))
+      : userRoles.includes(requiredRole);
+  },
+  
+  getUserRoles: () => {
+    const user = get().user;
+    return user ? (user.roles || [user.role]) : [];
+  },
+
+  getPrimaryRole: () => {
+    const user = get().user;
+    return user ? (user.roles && user.roles.length > 0 ? user.roles[0] : user.role) : null;
   },
 
   // Actions
   initializeAuth: async () => {
-    console.log("🔐 [AUTH] Initializing auth...");
     try {
       const token = localStorage.getItem("accessToken");
-      
-      // If no token, we're definitely not authenticated
       if (!token) {
-        console.log("🔐 [AUTH] No token found, setting state to unauthenticated");
         set({ authState: AUTH_STATES.UNAUTHENTICATED });
         return;
       }
       
-      console.log("🔐 [AUTH] Token found, fetching current user...");
-      
-      // Try to get the current user with the existing token
       const userData = await get().fetchCurrentUser();
-      
       if (userData) {
-        console.log("🔐 [AUTH] User data received, setting state to authenticated", userData);
         set({ 
           user: userData,
           authState: AUTH_STATES.AUTHENTICATED 
         });
       } else {
-        console.log("🔐 [AUTH] Failed to fetch user data, clearing token");
-        // Token invalid or expired
-        localStorage.removeItem("accessToken");
-        set({ authState: AUTH_STATES.UNAUTHENTICATED });
+        get().handleAuthError();
       }
     } catch (error) {
       console.error("🔐 [AUTH] Initialization error:", error);
-      localStorage.removeItem("accessToken");
-      set({ authState: AUTH_STATES.UNAUTHENTICATED });
+      get().handleAuthError();
     }
   },
   
   fetchCurrentUser: async () => {
-    console.log("🔐 [AUTH] Fetching current user...");
     try {
       const response = await axios.get("/auth/me");
-      console.log("🔐 [AUTH] Current user response:", response.data);
       return response.data?.data?.user || null;
     } catch (error) {
       console.error("🔐 [AUTH] Error fetching current user:", error);
-      // Clear tokens on fetch failure
-      localStorage.removeItem("accessToken");
-
+      get().handleAuthError();
       return null;
     }
   },
   
   login: async (email, password, captchaToken = "test-token") => {
-    console.log("🔐 [AUTH] Logging in...");
     try {
       set({ authState: AUTH_STATES.LOADING });
       
@@ -92,30 +82,11 @@ const useAuthStore = create((set, get) => ({
       });
 
       const { accessToken, user } = response.data.data;
-      console.log("🔐 [AUTH] Login successful, user:", user);
-
-      // Update auth state
-      set({
-        user,
-        authState: AUTH_STATES.AUTHENTICATED
-      });
-      
-      // Store token in localStorage for client-side access
-      localStorage.setItem("accessToken", accessToken);
-      
-      // Also set a cookie for middleware access
-      document.cookie = `accessToken=${accessToken}; path=/; max-age=86400; SameSite=Strict`;
-
-      // Return the user
+      get().setAuthState(user, accessToken);
       return user;
     } catch (error) {
       console.error("🔐 [AUTH] Login error:", error);
-      // Clear tokens on login failure
-      localStorage.removeItem("accessToken");
-      localStorage.removeItem("refreshToken");
-      // Also clear cookie
-      document.cookie = "accessToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
-      set({ authState: AUTH_STATES.UNAUTHENTICATED });
+      get().handleAuthError();
       throw error;
     }
   },
@@ -124,17 +95,6 @@ const useAuthStore = create((set, get) => ({
     try {
       set({ authState: AUTH_STATES.LOADING });
       
-      console.log("🔐 [AUTH] Registering user:", 
-        // Log without sensitive data
-        {
-          email: userData.email,
-          firstName: userData.firstName,
-          lastName: userData.lastName,
-          // Don't log the password
-        }
-      );
-      
-      // Ensure all string values are properly trimmed and sanitized
       const sanitizedData = {
         firstName: String(userData.firstName || '').trim(),
         lastName: String(userData.lastName || '').trim(),
@@ -144,37 +104,28 @@ const useAuthStore = create((set, get) => ({
       };
       
       const response = await axios.post("/auth/register", sanitizedData);
-      console.log("🔐 [AUTH] Registration successful");
+      
+      if (response.data.success) {
+        const { user, accessToken } = response.data.data;
+        get().setAuthState(user, accessToken);
+        return user;
+      }
+      
       return response.data;
     } catch (error) {
       console.error("🔐 [AUTH] Registration error:", error);
-      // Clear tokens on registration failure (in case there were any)
-      localStorage.removeItem("accessToken");
-      localStorage.removeItem("refreshToken");
-      set({ authState: AUTH_STATES.UNAUTHENTICATED });
+      get().handleAuthError();
       throw error;
     }
   },
   
   logout: async () => {
-    console.log("🔐 [AUTH] Logging out...");
     try {
       await axios.post("/auth/logout");
     } catch (error) {
       console.error("🔐 [AUTH] Logout API error:", error);
     } finally {
-      // Always clear local state even if API call fails
-      console.log("🔐 [AUTH] Clearing auth state");
-      set({
-        user: null,
-        authState: AUTH_STATES.UNAUTHENTICATED
-      });
-      localStorage.removeItem("accessToken");
-      localStorage.removeItem("refreshToken");
-      // Also clear cookie
-      document.cookie = "accessToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
-      
-      // Redirect to login page
+      get().handleAuthError();
       if (typeof window !== 'undefined') {
         window.location.href = '/login';
       }
@@ -265,46 +216,40 @@ const useAuthStore = create((set, get) => ({
   },
   
   refreshUser: async () => {
-    console.log("🔐 [AUTH] Refreshing user data...");
     try {
       const userData = await get().fetchCurrentUser();
-      
       if (userData) {
-        console.log("🔐 [AUTH] User refresh successful", userData);
         set({
           user: userData,
           authState: AUTH_STATES.AUTHENTICATED
         });
         return true;
-      } else {
-        console.log("🔐 [AUTH] User refresh failed - no user data");
-        set({
-          user: null,
-          authState: AUTH_STATES.UNAUTHENTICATED
-        });
-        localStorage.removeItem("accessToken");
-        return false;
       }
+      get().handleAuthError();
+      return false;
     } catch (error) {
       console.error("🔐 [AUTH] Error refreshing user:", error);
-      set({
-        user: null,
-        authState: AUTH_STATES.UNAUTHENTICATED
-      });
-      localStorage.removeItem("accessToken");
+      get().handleAuthError();
       return false;
     }
   },
   
+  setAuthState: (user, accessToken) => {
+    set({
+      user,
+      authState: AUTH_STATES.AUTHENTICATED
+    });
+    localStorage.setItem("accessToken", accessToken);
+    document.cookie = `accessToken=${accessToken}; path=/; max-age=86400; SameSite=Strict`;
+  },
+  
   handleAuthError: () => {
-    console.log("🔐 [AUTH] Auth error handler called");
     set({
       user: null,
       authState: AUTH_STATES.UNAUTHENTICATED
     });
     localStorage.removeItem("accessToken");
     localStorage.removeItem("refreshToken");
-    // Also clear cookie
     if (typeof document !== 'undefined') {
       document.cookie = "accessToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
     }
@@ -313,83 +258,33 @@ const useAuthStore = create((set, get) => ({
 
 // Initialize auth and set up listeners when this module is imported
 if (typeof window !== 'undefined') {
-  console.log("🔐 [AUTH] Setting up auth listeners");
-  
   // Set up auth error listener
   window.addEventListener("authError", () => {
-    console.log("🔐 [AUTH] Auth error event received");
     useAuthStore.getState().handleAuthError();
   });
   
   // Handle storage changes for cross-tab synchronization
   window.addEventListener("storage", (event) => {
     if (event.key === "accessToken") {
-      console.log("🔐 [AUTH] Token changed in storage", {
-        oldValue: event.oldValue ? "[TOKEN]" : null,
-        newValue: event.newValue ? "[TOKEN]" : null
-      });
-      
-      // Token was removed or changed in another tab
       if (!event.newValue) {
-        console.log("🔐 [AUTH] Token removed in another tab");
-        useAuthStore.setState({
-          user: null,
-          authState: AUTH_STATES.UNAUTHENTICATED
-        });
-        // Also clear refresh token when access token is removed in another tab
-        localStorage.removeItem("refreshToken");
-        // Clear cookie as well
-        document.cookie = "accessToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+        useAuthStore.getState().handleAuthError();
       } else if (event.newValue !== event.oldValue) {
-        console.log("🔐 [AUTH] Token updated in another tab, refreshing user");
-        // Token was updated, refresh user data
         useAuthStore.getState().refreshUser();
-        // Update cookie as well
         document.cookie = `accessToken=${event.newValue}; path=/; max-age=86400; SameSite=Strict`;
       }
     }
   });
   
   // Initialize auth on first load
-  console.log("🔐 [AUTH] Triggering initial auth check");
   useAuthStore.getState().initializeAuth();
   
   // Safety timeout to ensure we don't get stuck in loading state
   setTimeout(() => {
     const currentState = useAuthStore.getState();
     if (currentState.authState === AUTH_STATES.LOADING) {
-      console.log("🔐 [AUTH] Auth initialization timed out, setting to unauthenticated");
-      useAuthStore.setState({
-        authState: AUTH_STATES.UNAUTHENTICATED
-      });
-      localStorage.removeItem("accessToken");
-      localStorage.removeItem("refreshToken");
-      // Clear cookie
-      document.cookie = "accessToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+      useAuthStore.getState().handleAuthError();
     }
-  }, 3000); // Reduced from 5 seconds to 3 seconds for faster error recovery
-  
-  // Additional safety check to reset loading state if we're still loading after 5 seconds
-  setTimeout(() => {
-    const currentState = useAuthStore.getState();
-    if (currentState.authState === AUTH_STATES.LOADING) {
-      console.log("🔐 [AUTH] CRITICAL: Auth still in loading state after timeout, forcing reset");
-      // Force a reset of the auth state
-      useAuthStore.setState({
-        user: null,
-        authState: AUTH_STATES.UNAUTHENTICATED
-      });
-      
-      // Try to clear any zombie token
-      localStorage.removeItem("accessToken");
-      localStorage.removeItem("refreshToken");
-      // Clear cookie
-      document.cookie = "accessToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
-      
-      // Notify user via console
-      console.warn("🔐 [AUTH] Authentication system reset due to timeout. Please refresh the page if you experience issues.");
-    }
-  }, 5000);
+  }, 3000);
 }
 
 export default useAuthStore; 

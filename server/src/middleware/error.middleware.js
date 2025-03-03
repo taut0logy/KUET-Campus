@@ -40,6 +40,14 @@ class ConflictError extends Error {
   }
 }
 
+class DatabaseError extends Error {
+  constructor(message = 'Database error occurred', details = null) {
+    super(message);
+    this.name = 'DatabaseError';
+    this.details = details;
+  }
+}
+
 /**
  * Centralized error handling middleware
  */
@@ -50,6 +58,17 @@ const errorHandler = (err, req, res, next) => {
   // For debugging in development
   if (process.env.NODE_ENV === 'development') {
     logger.debug(err.stack);
+  }
+
+  // Handle database connection errors
+  if (err.message && err.message.includes('Database connection not initialized')) {
+    logger.error('Database connection error detected', err);
+    return sendError(
+      res,
+      'Database connection error',
+      503, // Service Unavailable
+      { type: 'database_connection_error' }
+    );
   }
 
   // Get appropriate status code
@@ -77,6 +96,22 @@ const errorHandler = (err, req, res, next) => {
       
       case 'P2025': // Record not found
         return sendError(res, 'Resource not found', 404, { type: 'not_found' });
+      
+      case 'P2003': // Foreign key constraint failed
+        return sendError(
+          res,
+          'Operation failed due to a reference constraint',
+          400,
+          { type: 'foreign_key_constraint' }
+        );
+      
+      case 'P2000': // Input value too long
+        return sendError(
+          res,
+          'Input value is too long',
+          400,
+          { type: 'input_too_long' }
+        );
       
       // Add more Prisma error cases as needed
     }
@@ -117,5 +152,6 @@ module.exports = {
   UnauthorizedError,
   ForbiddenError,
   NotFoundError,
-  ConflictError
+  ConflictError,
+  DatabaseError
 }; 
