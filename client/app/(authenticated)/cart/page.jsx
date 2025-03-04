@@ -9,7 +9,7 @@ import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, Dialog
 import { useRouter } from 'next/navigation';
 import { Loader2, ShoppingCart, ChevronLeft, Trash2 } from 'lucide-react';
 import Link from 'next/link';
-import { Toaster } from 'sonner';
+import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function CartPage() {
@@ -101,19 +101,10 @@ export default function CartPage() {
         try {
           await createOrder(items);
           await resetCart();
-          toast({
-            title: "Order placed successfully!",
-            description: "Your meals will be ready for pickup in 30 minutes.",
-            duration: 5000,
-          });
+          toast.success("Order placed successfully!");
           router.push('/preorder');
         } catch (error) {
-          toast({
-            title: "Failed to place order",
-            description: error.message || "Please try again later",
-            variant: "destructive",
-            duration: 5000,
-          });
+          toast.error("Failed to place order");
         } finally {
           setIsPreordering(false);
         }

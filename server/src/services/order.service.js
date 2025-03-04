@@ -74,3 +74,23 @@ exports.getUserOrders = async (userId) => {
     }
   });
 };
+
+exports.updateOrderStatus = async (orderId, status) => {
+  const validStatuses = ['placed', 'ready', 'picked_up', 'cancelled'];
+  
+  if (!validStatuses.includes(status)) {
+    throw new Error(`Invalid status. Must be one of: ${validStatuses.join(', ')}`);
+  }
+  
+  return await prisma.preorder.update({
+    where: { id: parseInt(orderId) },
+    data: { status },
+    include: {
+      menuMeal: {
+        include: {
+          meal: true
+        }
+      }
+    }
+  });
+};

@@ -9,7 +9,7 @@ const useOrderStore = create((set, get) => ({
   createOrder: async (cartItems) => {
     try {
       set({ loading: true, error: null });
-      const response = await axios.post('/api/orders', { items: cartItems });
+      const response = await axios.post('/order', { items: cartItems });
       set(state => ({
         orders: [...response.data.orders, ...state.orders]
       }));
@@ -25,7 +25,7 @@ const useOrderStore = create((set, get) => ({
   fetchOrders: async () => {
     try {
       set({ loading: true, error: null });
-      const response = await axios.get('/api/orders');
+      const response = await axios.get('/order');
       set({ orders: response.data.orders });
     } catch (error) {
       set({ error: error.response?.data?.message || 'Failed to fetch orders' });
