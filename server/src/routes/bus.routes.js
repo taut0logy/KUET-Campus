@@ -34,17 +34,18 @@ router.get('/buses', async (_, res) => {
   }
 });
 
-// Get routes for a specific bus
-router.get('/routes/:busId?', async (req, res) => {
+// Get all routes
+router.get('/routes', async (req, res) => {
   try {
-    const { busId } = req.params;
-    const routes = await prisma.route.findMany({
-      where: busId ? { busId } : {},
+    console.log('Getting all routes');
+    const routes = await prisma.busRoute.findMany({
       include: {
-        stops: true
+        bus: true,
+        stops: true,
+        schedules: true
       },
       orderBy: {
-        name: 'asc'
+        routeName: 'asc'
       }
     });
     

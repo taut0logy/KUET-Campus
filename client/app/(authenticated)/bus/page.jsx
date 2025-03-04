@@ -2,12 +2,13 @@
 
 import { useEffect } from "react";
 import { BusList } from "@/components/bus/BusList";
+import { BusRoutes } from "@/components/bus/BusRoutes";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import useBusStore from "@/stores/bus-store";
 
 export default function BusPage() {
-  const { buses, routes, fetchBuses, fetchRoutes } = useBusStore();
+  const { buses, fetchBuses, fetchRoutes } = useBusStore();
 
   useEffect(() => {
     // Initial data fetch
@@ -75,13 +76,7 @@ export default function BusPage() {
             <BusList />
           </TabsContent>
           <TabsContent value="routes">
-            <Card>
-              <CardContent className="pt-6">
-                <p className="text-center text-muted-foreground">
-                  Route information coming soon
-                </p>
-              </CardContent>
-            </Card>
+            <BusRoutes />
           </TabsContent>
           <TabsContent value="schedules">
             <Card>
