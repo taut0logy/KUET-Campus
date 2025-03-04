@@ -36,6 +36,7 @@ model User {
   password          String?
   firstName         String?
   lastName          String?
+  cart              Cart?
   roles             UserRole[]   @default([STUDENT])
   status            UserStatus   @default(PENDING_VERIFICATION)
   emailVerified     Boolean      @default(false)
@@ -122,7 +123,7 @@ model Meal {
   isGlutenFree   Boolean    @default(false)
   allergens      Json?
   menuMeals   MenuMeal[]
-
+  cartItems   CartItem[]
   @@map("meals")
 }
 
@@ -158,3 +159,30 @@ model Preorder {
 
   @@map("preorders")
 }
+
+
+model Cart {
+  id        Int        @id @default(autoincrement()) @map("cart_id")
+  userId    String     @unique
+  user      User       @relation(fields: [userId], references: [id])
+  items     CartItem[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  @@map("carts")
+}
+
+model CartItem {
+  id         Int      @id @default(autoincrement()) @map("cart_item_id")
+  cartId     Int
+  cart       Cart     @relation(fields: [cartId], references: [id])
+  mealId     Int
+  meal       Meal     @relation(fields: [mealId], references: [id])
+  quantity   Int      @default(1)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([cartId, mealId])
+  @@map("cart_items")
+}
+

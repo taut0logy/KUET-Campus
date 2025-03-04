@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Toaster, toast } from "sonner";
 import useCafeteriaStore from "@/stores/cafeteria-store";
+import useCartStore from "@/stores/cart-store";
 import { Wheat, Loader2,ArrowDown01,ArrowUp01,  Filter, Sparkles, Vegan, WheatOff, Square, ShoppingCart, Search } from "lucide-react";
 import { motion } from "framer-motion";
 import { Slider } from "@/components/ui/slider";
@@ -18,6 +19,7 @@ import MealChatbot from '@/components/MealChatbot';
 
 export default function Cafeteria() {
   const { meals, loading, error, fetchMeals, createPreorder } = useCafeteriaStore();
+  const { addToCart } = useCartStore();
 
   // State for search and category filters
   const [searchTerm, setSearchTerm] = useState("");
@@ -55,6 +57,16 @@ export default function Cafeteria() {
       toast.success("Order placed successfully!");
     } catch (error) {
       toast.error(error.message || "Failed to place order");
+    }
+  };
+
+  // Handler to add a meal to the cart
+  const handleAddToCart = async (mealId) => {
+    try {
+      await addToCart(mealId);
+      toast.success("Meal added to cart!");
+    } catch (error) {
+      toast.error(error.message || "Failed to add meal to cart");
     }
   };
 
@@ -664,7 +676,7 @@ export default function Cafeteria() {
                   <div className="p-4 border-t">
                     <Button
                       className="w-full bg-gradient-to-r from-blue-500 to-blue-600 text-white hover:from-blue-600 hover:to-blue-700"
-                      onClick={() => handleOrder(meal.id)}
+                      onClick={() => handleAddToCart(meal.id)}
                     >
                       Add to Cart
                     </Button>

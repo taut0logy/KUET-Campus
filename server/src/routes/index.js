@@ -6,7 +6,7 @@ const { standardLimiter } = require('../middleware/rate-limit.middleware');
 //const userRoutes = require('./user.routes');
 const notificationRoutes = require('./notification.routes');
 const storageRoutes = require('./storage.routes');
-
+const cartRoutes = require('./cart.routes');
 // Apply standard rate limit to all routes
 router.use(standardLimiter);
 
@@ -25,6 +25,7 @@ router.use('/cafeteria', cafeteriaRoutes);
 //router.use('/users', userRoutes);
 router.use('/notifications', notificationRoutes);
 router.use('/storage', storageRoutes);
+router.use('/cart', cartRoutes);
 
 // Future route modules
 // router.use('/profiles', profileRoutes);
