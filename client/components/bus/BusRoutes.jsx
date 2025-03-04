@@ -1,15 +1,21 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import useBusStore from "@/stores/bus-store";
 
 export function BusRoutes() {
   const { routes } = useBusStore();
+  const router = useRouter();
+
+  const handleRouteClick = (routeId) => {
+    router.push(`/bus/routes/${routeId}`);
+  };
 
   return (
     <div className="grid gap-4">
       {routes.map((route) => (
-        <Card key={route.id}>
+        <Card key={route.id} onClick={() => handleRouteClick(route.id)}>
           <CardContent className="p-6">
             <div className="flex justify-between items-center">
               <div>
