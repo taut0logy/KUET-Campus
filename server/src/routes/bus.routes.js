@@ -34,6 +34,46 @@ router.get('/buses', async (_, res) => {
   }
 });
 
+// New endpoint to get a bus by its ID
+router.get('/buses/:busId', async (req, res) => {
+  const { busId } = req.params;
+  try {
+    console.log(`Getting bus details for ID: ${busId}`);
+    const bus = await prisma.bus.findUnique({
+      where: {
+        id: busId,
+      },
+    });
+
+    if (!bus) {
+      return res.status(404).json({
+        status: 404,
+        success: false,
+        message: `Bus with ID ${busId} not found`,
+      });
+    }
+
+    res.json({
+      status: 200,
+      success: true,
+      message: `Bus details for ID ${busId} retrieved successfully`,
+      data: bus,
+    });
+  } catch (error) {
+    console.error('Error fetching bus details:', error);
+    res.status(500).json({
+      status: 500,
+      success: false,
+      message: 'Failed to fetch bus details',
+      error: {
+        message: error.message,
+        code: 500,
+        details: error,
+      },
+    });
+  }
+});
+
 // Get all routes
 router.get('/routes', async (req, res) => {
   try {

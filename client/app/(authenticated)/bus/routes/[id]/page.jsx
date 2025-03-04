@@ -34,6 +34,10 @@ export default function RouteBusesPage({ params }) {
     loadBuses(); // Call the function to load buses
   }, [params.id]); // Dependency array to re-run effect when route ID changes
 
+  const handleBusClick = (busId) => {
+    router.push(`/bus/${busId}`); // Navigate to the bus details page
+  };
+
   if (loading) {
     return <div>Loading buses...</div>; // Loading state
   }
@@ -47,7 +51,7 @@ export default function RouteBusesPage({ params }) {
       <h2 className="text-2xl font-bold mb-4">Buses for Route ID: {params.id}</h2>
       <div className="grid gap-4">
         {buses.map((bus) => (
-          <Card key={bus.id}>
+          <Card key={bus.id} onClick={() => handleBusClick(bus.id)}>
             <CardContent>
               <h3 className="text-lg font-semibold">Bus {bus.busNumber}</h3>
               <p>Capacity: {bus.capacity} seats</p>
