@@ -56,15 +56,35 @@ const useRoutineStore = create((set, get) => ({
   },
 
   // Get weekly schedule
+  // ... existing code ...
+
+  // Get weekly schedule
   fetchWeeklySchedule: async () => {
     try {
       set({ loading: true, error: null });
       const response = await axios.get('/routine/get-schedule');
+      
+      // Transform the array of routine objects into an object with weekdays as keys
+      const formattedSchedule = {};
+      response.data.data.forEach(routine => {
+        formattedSchedule[routine.weekday] = {
+          period1: routine.period1 || null,
+          period2: routine.period2 || null,
+          period3: routine.period3 || null,
+          period4: routine.period4 || null,
+          period5: routine.period5 || null,
+          period6: routine.period6 || null,
+          period7: routine.period7 || null,
+          period8: routine.period8 || null,
+          period9: routine.period9 || null,
+        };
+      });
+      
       set({
-        weeklySchedule: response.data.data,
+        weeklySchedule: formattedSchedule,
         loading: false,
       });
-      return response.data.data;
+      return formattedSchedule;
     } catch (error) {
       set({
         error: error.response?.data?.message || 'Failed to fetch weekly schedule',
@@ -73,6 +93,8 @@ const useRoutineStore = create((set, get) => ({
       throw error;
     }
   },
+
+// ... existing code ...
 
   // Get all courses
   fetchCourses: async () => {
