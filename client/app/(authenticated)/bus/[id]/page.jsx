@@ -11,6 +11,10 @@ export default function BusDetailsPage({ params }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // Filter states
+  const [departureTimeFilter, setDepartureTimeFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
+
   useEffect(() => {
     const loadBusDetails = async () => {
       try {
@@ -45,20 +49,27 @@ export default function BusDetailsPage({ params }) {
   }, [params.id]); // Dependency array to re-run effect when bus ID changes
 
   if (loading) {
-    return <div>Loading bus details...</div>; // Loading state
+    return <div className="text-center">Loading bus details...</div>;
   }
 
   if (error) {
-    return <div>Error: {error}</div>; // Error state
+    return <div className="text-red-500">Error: {error}</div>;
   }
+
+  // Filter schedules based on criteria
+  const filteredSchedules = schedules.filter(schedule => {
+    const matchesDepartureTime = departureTimeFilter ? new Date(schedule.departureTime).toLocaleDateString() === new Date(departureTimeFilter).toLocaleDateString() : true;
+    const matchesStatus = statusFilter ? (statusFilter === "active" ? schedule.isActive : !schedule.isActive) : true;
+    return matchesDepartureTime && matchesStatus;
+  });
 
   return (
     <div className="container mx-auto p-6">
-      <h2 className="text-2xl font-bold mb-4">Bus Details for ID: {params.id}</h2>
+      <h2 className="text-4xl font-bold mb-4 text-center">Bus Details for ID: {params.id}</h2>
       {bus && (
-        <Card>
+        <Card className="mb-6">
           <CardContent>
-            <h3 className="text-lg font-semibold">Bus Number: {bus.busNumber}</h3>
+            <h3 className="text-xl font-semibold">Bus Number: {bus.busNumber}</h3>
             <p>Capacity: {bus.capacity} seats</p>
             <p>Status: {bus.isActive ? "Active" : "Inactive"}</p>
             <p>Description: {bus.description}</p>
@@ -68,9 +79,29 @@ export default function BusDetailsPage({ params }) {
         </Card>
       )}
 
-      <h3 className="text-xl font-bold mt-6">Schedules</h3>
-      {schedules.length > 0 ? (
-        schedules.map((schedule) => (
+      {/* Filter Section for Schedules */}
+      <h3 className="text-2xl font-bold mt-6">Schedules</h3>
+      <div className="mb-4">
+        <input
+          type="date"
+          placeholder="Filter by Departure Date"
+          value={departureTimeFilter}
+          onChange={(e) => setDepartureTimeFilter(e.target.value)}
+          className="border rounded p-2 mr-2"
+        />
+        <select
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value)}
+          className="border rounded p-2"
+        >
+          <option value="">All Statuses</option>
+          <option value="active">Active</option>
+          <option value="inactive">Inactive</option>
+        </select>
+      </div>
+
+      {filteredSchedules.length > 0 ? (
+        filteredSchedules.map((schedule) => (
           <Card key={schedule.id} className="mt-2">
             <CardContent>
               <h4 className="text-lg font-semibold">Schedule ID: {schedule.id}</h4>
