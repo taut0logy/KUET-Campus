@@ -190,3 +190,68 @@ model Course {
 
   @@map("courses")
 }
+
+// Bus related models
+model Bus {
+  id          String       @id @default(uuid())
+  busNumber   String       @unique
+  capacity    Int
+  isActive    Boolean      @default(true)
+  description String?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  routes      BusRoute[]
+  schedules   BusSchedule[]
+
+  @@map("buses")
+}
+
+model BusRoute {
+  id          String       @id @default(uuid())
+  routeName   String
+  startPoint  String
+  endPoint    String
+  distance    Float        // in kilometers
+  duration    Int          // in minutes
+  fare        Decimal      @db.Decimal(10, 2)
+  isActive    Boolean      @default(true)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  busId       String
+  bus         Bus          @relation(fields: [busId], references: [id])
+  schedules   BusSchedule[]
+  stops       BusStop[]
+
+  @@map("bus_routes")
+}
+
+model BusStop {
+  id          String     @id @default(uuid())
+  stopName    String
+  sequence    Int        // Order of stop in route
+  routeId     String
+  route       BusRoute   @relation(fields: [routeId], references: [id])
+  latitude    Float?
+  longitude   Float?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  @@unique([routeId, sequence])
+  @@map("bus_stops")
+}
+
+model BusSchedule {
+  id          String       @id @default(uuid())
+  busId       String
+  routeId     String
+  departureTime DateTime
+  arrivalTime   DateTime
+  isActive      Boolean    @default(true)
+  status        String     @default("SCHEDULED") // SCHEDULED, IN_PROGRESS, COMPLETED, CANCELLED
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+  bus           Bus        @relation(fields: [busId], references: [id])
+  route         BusRoute   @relation(fields: [routeId], references: [id])
+
+  @@map("bus_schedules")
+}

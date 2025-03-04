@@ -7,6 +7,7 @@ const cookieParser = require('cookie-parser');
 const compression = require('compression');
 const { createServer } = require('http');
 const routes = require('./routes');
+const busRoutes = require('./routes/bus.routes');
 const { connect } = require('./services/database.service');
 const { verifyConnection: verifyEmailConnection } = require('./services/email.service');
 const notificationService = require('./services/notification.service');
@@ -54,16 +55,18 @@ app.use(cookieParser()); // Parse cookies
 
 // CORS configuration
 const corsOptions = {
-  origin: [process.env.CLIENT_URL],
-  credentials: true, // Allow cookies
+  origin: ['http://localhost:3000'], // Your frontend URL
+  credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
+  exposedHeaders: ['set-cookie'],
   maxAge: 86400 // 24 hours
 };
 app.use(cors(corsOptions));
 
 // API routes
 app.use('/api/v1', routes);
+app.use('/api/bus', busRoutes);
 
 // 404 handler for routes that don't exist
 app.use(notFoundHandler);

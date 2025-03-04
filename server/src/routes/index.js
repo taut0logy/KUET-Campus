@@ -3,8 +3,8 @@ const router = express.Router();
 const authRoutes = require('./auth.routes');
 const cafeteriaRoutes = require('./cafeteria.routes');
 const routineRoutes = require('./routine.routes');
+const busRoutes = require('./bus.routes');
 const { standardLimiter } = require('../middleware/rate-limit.middleware');
-//const userRoutes = require('./user.routes');
 const notificationRoutes = require('./notification.routes');
 const storageRoutes = require('./storage.routes');
 
@@ -23,21 +23,9 @@ router.get('/health', (req, res) => {
 // Mount route modules
 router.use('/auth', authRoutes);
 router.use('/cafeteria', cafeteriaRoutes);
-//router.use('/users', userRoutes);
 router.use('/notifications', notificationRoutes);
 router.use('/storage', storageRoutes);
-
 router.use('/routine', routineRoutes);
-// Future route modules
-// router.use('/profiles', profileRoutes);
-// etc.
-
-// Catch-all 404 handler
-router.use('*', (req, res) => {
-  res.status(404).json({
-    status: 'error',
-    message: `Cannot ${req.method} ${req.originalUrl}`
-  });
-});
+router.use('/bus', busRoutes);  // This will make the routes available at /api/v1/bus/*
 
 module.exports = router; 
