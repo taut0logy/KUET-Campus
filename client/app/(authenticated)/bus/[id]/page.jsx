@@ -7,6 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 export default function BusDetailsPage({ params }) {
   const router = useRouter();
   const [bus, setBus] = useState(null);
+  const [schedules, setSchedules] = useState([]); // State for schedules
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -23,6 +24,15 @@ export default function BusDetailsPage({ params }) {
 
         const data = await response.json();
         setBus(data.data); // Set the bus data
+
+        // Fetch schedules for the bus
+        const schedulesResponse = await fetch(`http://localhost:8000/api/bus/buses/${params.id}/schedules`);
+        if (!schedulesResponse.ok) {
+          throw new Error(`HTTP error! status: ${schedulesResponse.status}`);
+        }
+
+        const schedulesData = await schedulesResponse.json();
+        setSchedules(schedulesData.data); // Set the schedules data
       } catch (err) {
         console.error("Error fetching bus details:", err); // Log the error
         setError(err.message); // Set the error message
@@ -56,6 +66,23 @@ export default function BusDetailsPage({ params }) {
             <p>Updated At: {new Date(bus.updatedAt).toLocaleString()}</p>
           </CardContent>
         </Card>
+      )}
+
+      <h3 className="text-xl font-bold mt-6">Schedules</h3>
+      {schedules.length > 0 ? (
+        schedules.map((schedule) => (
+          <Card key={schedule.id} className="mt-2">
+            <CardContent>
+              <h4 className="text-lg font-semibold">Schedule ID: {schedule.id}</h4>
+              <p>Departure Time: {new Date(schedule.departureTime).toLocaleString()}</p>
+              <p>Arrival Time: {new Date(schedule.arrivalTime).toLocaleString()}</p>
+              <p>Status: {schedule.status}</p>
+              <p>Route: {schedule.route.routeName}</p>
+            </CardContent>
+          </Card>
+        ))
+      ) : (
+        <p>No schedules available for this bus.</p>
       )}
     </div>
   );

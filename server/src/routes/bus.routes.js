@@ -74,6 +74,8 @@ router.get('/buses/:busId', async (req, res) => {
   }
 });
 
+
+
 // Get all routes
 router.get('/routes', async (req, res) => {
   try {
@@ -149,7 +151,50 @@ router.get('/buses/route/:routeId', async (req, res) => {
   }
 });
 
-module.exports = router;
+// New endpoint to get schedules for a specific bus by its ID
+router.get('/buses/:busId/schedules', async (req, res) => {
+  const { busId } = req.params;
+  try {
+    console.log(`Getting schedules for bus ID: ${busId}`);
+    const schedules = await prisma.busSchedule.findMany({
+      where: {
+        busId: busId, // Filter schedules by bus ID
+      },
+      include: {
+        route: true, // Include related route information if needed
+      },
+      orderBy: {
+        departureTime: 'asc', // Order by departure time
+      },
+    });
 
+    if (schedules.length === 0) {
+      return res.status(404).json({
+        status: 404,
+        success: false,
+        message: `No schedules found for bus ID ${busId}`,
+      });
+    }
+
+    res.json({
+      status: 200,
+      success: true,
+      message: `Schedules for bus ID ${busId} retrieved successfully`,
+      data: schedules,
+    });
+  } catch (error) {
+    console.error('Error fetching schedules:', error);
+    res.status(500).json({
+      status: 500,
+      success: false,
+      message: 'Failed to fetch schedules',
+      error: {
+        message: error.message,
+        code: 500,
+        details: error,
+      },
+    });
+  }
+});
 
 module.exports = router;
