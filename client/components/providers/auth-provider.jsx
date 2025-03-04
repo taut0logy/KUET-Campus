@@ -15,7 +15,9 @@ export function AuthProvider({ children }) {
     isAuthenticated: isAuthenticatedFn,
     isLoading: isLoadingFn,
     login,
-    register: registerStore,
+    registerStudent,
+    registerFaculty,
+    registerEmployee,
     logout,
     requestPasswordReset,
     resetPassword,
@@ -26,19 +28,6 @@ export function AuthProvider({ children }) {
     getPrimaryRole,
   } = useAuthStore();
 
-  // Adapter for the register function to match the expected signature in the registration form
-  const register = async (firstName, lastName, email, password, roles = ["STUDENT"], captchaToken = "test-token") => {
-    const userData = {
-      firstName,
-      lastName,
-      email,
-      password,
-      roles: Array.isArray(roles) ? roles : [roles],
-      captchaToken
-    };
-    return registerStore(userData);
-  };
-
   // Create the auth values object with the store's state and methods
   const authValues = {
     user,
@@ -46,7 +35,9 @@ export function AuthProvider({ children }) {
     isAuthenticated: isAuthenticatedFn(),
     isLoading: isLoadingFn(),
     login,
-    register,
+    registerStudent,
+    registerFaculty,
+    registerEmployee,
     logout,
     requestPasswordReset,
     resetPassword,

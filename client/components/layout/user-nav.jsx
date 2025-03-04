@@ -25,8 +25,8 @@ export function UserNav() {
   if (!user) return null;
 
   // Get first letter of first name and last name
-  const firstInitial = user.firstName ? user.firstName[0] : '';
-  const lastInitial = user.lastName ? user.lastName[0] : '';
+  const firstInitial = user.name ? user.name.split(' ')[0][0] : '';
+  const lastInitial = user.name ? user.name.split(' ')[1][0] : '';
   
   // Use initials from firstName and lastName if available
   // Fall back to email initial if names aren't available
@@ -34,12 +34,10 @@ export function UserNav() {
     ? `${firstInitial}${lastInitial}`.toUpperCase()
     : user.email 
       ? user.email[0].toUpperCase() 
-      : "U";
+      : "";
   
   // Format full name for display
-  const fullName = [user.firstName, user.lastName]
-    // .filter(Boolean)
-    .join(' ') || 'User';
+  const fullName = user.name || 'User';
     
   // Get user roles
   const userRoles = getUserRoles();
