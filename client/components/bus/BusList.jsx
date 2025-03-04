@@ -1,10 +1,16 @@
+import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import useBusStore from "@/stores/bus-store";
 
 export function BusList() {
+  const router = useRouter();
   const { buses, loading, error, fetchBuses, clearError, retryCount } = useBusStore();
+
+  const handleBusClick = (busId) => {
+    router.push(`/bus/${busId}`);
+  };
 
   if (loading) {
     return (
@@ -52,7 +58,11 @@ export function BusList() {
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
       {buses.map((bus) => (
-        <Card key={bus.id} className="hover:shadow-lg transition-shadow">
+        <Card 
+          key={bus.id} 
+          className="hover:shadow-lg transition-shadow cursor-pointer"
+          onClick={() => handleBusClick(bus.id)}
+        >
           <CardHeader>
             <CardTitle className="flex items-center justify-between">
               <span>Bus {bus.busNumber}</span>
@@ -67,7 +77,7 @@ export function BusList() {
                 <span className="font-medium">Capacity:</span> {bus.capacity} seats
               </p>
               {bus.description && (
-                <p className="text-sm text-muted-foreground">
+                <p className="text-sm text-muted-foreground line-clamp-2">
                   {bus.description}
                 </p>
               )}
