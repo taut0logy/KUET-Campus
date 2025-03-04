@@ -109,6 +109,12 @@ const getRoutes = (user) => {
       label: "Cafeteria",
       requireAuth: true,
     },
+
+    {
+      href: "/cart",
+      label: "Cart",
+      requireAuth: true,
+    },
   ];
 };
 

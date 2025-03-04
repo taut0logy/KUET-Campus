@@ -149,15 +149,20 @@ model MenuMeal {
 }
 
 model Preorder {
-  id         Int      @id @default(autoincrement()) @map("order_id")
-  userId     String   @map("user_id")
-  menuMealId Int      @map("menu_meal_id")
-  orderTime  DateTime @default(now()) @map("order_time")
-  status     String   @default("placed") // "placed", "ready", "picked_up"
-  user       User     @relation(fields: [userId], references: [id])
-  menuMeal   MenuMeal @relation(fields: [menuMealId], references: [id])
+  id               String   @id @default(uuid())
+  userId           String
+  menuMealId       Int
+  status           String   @default("placed")
+  orderTime        DateTime @default(now())
+  pickupTime       DateTime
+  quantity         Int      @default(1)
+  verificationCode String   @unique
+  notes           String?
+  user            User     @relation(fields: [userId], references: [id])
+  menuMeal        MenuMeal @relation(fields: [menuMealId], references: [id])
 
-  @@map("preorders")
+  @@index([userId])
+  @@index([menuMealId])
 }
 
 

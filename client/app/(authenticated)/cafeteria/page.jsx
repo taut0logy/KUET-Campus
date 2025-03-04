@@ -1,12 +1,13 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from 'next/link';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Toaster, toast } from "sonner";
 import useCafeteriaStore from "@/stores/cafeteria-store";
 import useCartStore from "@/stores/cart-store";
-import { Wheat, Loader2,ArrowDown01,ArrowUp01,  Filter, Sparkles, Vegan, WheatOff, Square, ShoppingCart, Search } from "lucide-react";
+import { Wheat, Loader2, ArrowDown01, ArrowUp01, Filter, Sparkles, Vegan, WheatOff, Square, ShoppingCart, Search } from "lucide-react";
 import { motion } from "framer-motion";
 import { Slider } from "@/components/ui/slider";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -64,7 +65,7 @@ export default function Cafeteria() {
   const handleAddToCart = async (mealId) => {
     try {
       await addToCart(mealId);
-      toast.success("Meal added to cart!");
+      toast.success("Meal added to cart! Visit cart to place order.");
     } catch (error) {
       toast.error(error.message || "Failed to add meal to cart");
     }
@@ -232,7 +233,10 @@ export default function Cafeteria() {
       <Toaster position="top-right" />
       <div className="max-w-7xl mx-auto">
         <header className="mb-10 text-center">
-          <h1 className="text-4xl font-extrabold text-white drop-shadow-lg">KUET Cafeteria</h1>
+          <div className="flex justify-between items-center mb-4">
+            <h1 className="text-4xl font-extrabold text-white drop-shadow-lg">KUET Cafeteria</h1>
+
+          </div>
           <p className="text-lg text-white mt-2">
             Discover our delicious meals and order your favorite dish today!
           </p>
@@ -417,11 +421,11 @@ export default function Cafeteria() {
                     </div>
                   </CardContent>
                   <div className="p-4 border-t">
-                  
+
                     <Button
                       className="w-full bg-gradient-to-r from-blue-500 to-blue-600 text-white hover:from-blue-600 hover:to-blue-700"
                       onClick={() => handleOrder(suggestedMeal.id)}
-                      
+
                     >
                       <ShoppingCart className="h-3 w-3 inline mr-1" />
                       Add to Cart
@@ -504,6 +508,7 @@ export default function Cafeteria() {
                   </div>
                 </div>
               </Card>
+              
             </div>
 
             <div className="w-full sm:w-64">
@@ -516,11 +521,11 @@ export default function Cafeteria() {
                       : "Filter by Category"}
                   </Button>
                   <div className="mt-2">
-                  <p className="text-xs text-gray-600">
-                    Filter by price and calories to find your favourite meal
-                  </p>
+                    <p className="text-xs text-gray-600">
+                      Filter by price and calories to find your favourite meal
+                    </p>
                   </div>
-                  
+
                 </PopoverTrigger>
                 <PopoverContent className="w-64">
                   <div className="space-y-2">
@@ -569,8 +574,8 @@ export default function Cafeteria() {
                       <SelectValue placeholder="Order" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="asc"> <ArrowDown01 className="h-3 w-3 inline mr-1"/> Ascending</SelectItem>
-                      <SelectItem value="desc"> <ArrowUp01 className="h-3 w-3 inline mr-1"/> Descending</SelectItem>
+                      <SelectItem value="asc"> <ArrowDown01 className="h-3 w-3 inline mr-1" /> Ascending</SelectItem>
+                      <SelectItem value="desc"> <ArrowUp01 className="h-3 w-3 inline mr-1" /> Descending</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
