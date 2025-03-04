@@ -70,4 +70,46 @@ router.get('/routes', async (req, res) => {
   }
 });
 
+// New endpoint to get buses for a specific bus route
+router.get('/buses/route/:routeId', async (req, res) => {
+  const { routeId } = req.params;
+  try {
+    console.log(`Getting buses for route ID: ${routeId}`);
+    const buses = await prisma.bus.findMany({
+      where: {
+        routes: {
+          some: {
+            id: routeId,
+          },
+        },
+      },
+      orderBy: {
+        busNumber: 'asc',
+      },
+    });
+
+    res.json({
+      status: 200,
+      success: true,
+      message: `Buses for route ID ${routeId} retrieved successfully`,
+      data: buses,
+    });
+  } catch (error) {
+    console.error('Error fetching buses for route:', error);
+    res.status(500).json({
+      status: 500,
+      success: false,
+      message: 'Failed to fetch buses for the route',
+      error: {
+        message: error.message,
+        code: 500,
+        details: error,
+      },
+    });
+  }
+});
+
+module.exports = router;
+
+
 module.exports = router;
