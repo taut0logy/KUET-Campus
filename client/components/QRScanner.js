@@ -1,160 +1,115 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useState, useEffect } from 'react';
+import { Html5QrcodeScanner } from 'html5-qrcode';
 import { toast } from 'sonner';
-import axios from 'axios';
+import axios from '@/lib/axios';
+import { Card } from './ui/card';
 
-export default function QRScanner() {
+export default function QRScanner({ onSuccess, onError }) {
   const [scanResult, setScanResult] = useState(null);
-  const [orderDetails, setOrderDetails] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [scanner, setScanner] = useState(null);
+  const [isScanning, setIsScanning] = useState(true);
 
   useEffect(() => {
-    // Dynamically import the library to avoid SSR issues
-    const loadQRScanner = async () => {
+    // Create and render the QR scanner
+    const scanner = new Html5QrcodeScanner(
+      'reader', 
+      { fps: 10, qrbox: { width: 250, height: 250 } },
+      false
+    );
+    
+    const success = async (decodedText) => {
+      // Stop scanning
+      scanner.clear();
+      setScanResult(decodedText);
+      setIsScanning(false);
+      
       try {
-        // Import the library only on client side
-        const Html5QrcodeScanner = (await import('html5-qrcode')).Html5QrcodeScanner;
+        console.log('QR code scanned:', decodedText);
         
-        // Initialize QR Scanner
-        const qrScanner = new Html5QrcodeScanner('reader', {
-          qrbox: {
-            width: 250,
-            height: 250,
-          },
-          fps: 5,
+        // Parse QR data
+        let verificationCode;
+        try {
+          const qrData = JSON.parse(decodedText);
+          verificationCode = qrData.verificationCode;
+          console.log('Extracted verification code:', verificationCode);
+        } catch (err) {
+          console.error('Failed to parse QR data:', err);
+          verificationCode = decodedText; // Use raw text as fallback
+        }
+        
+        // Submit verification code to server - Make sure this matches your API route
+        const response = await axios.post('/order/verify', {
+          verificationData: verificationCode
         });
-
-        setScanner(qrScanner);
-
-        qrScanner.render(
-          (result) => {
-            qrScanner.clear();
-            setScanResult(result);
-            
-            try {
-              // Parse the QR data
-              const orderData = JSON.parse(result);
-              verifyOrder(orderData);
-            } catch (error) {
-              toast.error('Invalid QR code format');
-              resetScanner(qrScanner);
-            }
-          }, 
-          (error) => {
-            console.warn(error);
-          }
-        );
+        
+        console.log('Verification API response:', response.data);
+        
+        // Call success callback
+        if (onSuccess) {
+          onSuccess(response.data);
+        } else {
+          toast.success('Order verified successfully!');
+        }
       } catch (error) {
-        console.error("Error loading QR scanner:", error);
-        toast.error("Failed to initialize QR scanner");
+        console.error('QR verification error:', error);
+        
+        // Call error callback
+        if (onError) {
+          onError(error);
+        } else {
+          toast.error(error.response?.data?.message || 'Failed to verify order');
+        }
       }
     };
+    
+    const error = (err) => {
+      console.warn(`QR Scanner error: ${err}`);
+    };
 
-    loadQRScanner();
+    // Start scanning
+    if (isScanning) {
+      scanner.render(success, error);
+    }
 
-    // Clean up on component unmount
+    // Cleanup on unmount
     return () => {
       if (scanner) {
-        scanner.clear();
+        try {
+          scanner.clear();
+        } catch (err) {
+          console.error('Error clearing scanner:', err);
+        }
       }
     };
-  }, []);
+  }, [onSuccess, onError]);
 
-  const verifyOrder = async (orderData) => {
-    setLoading(true);
-    try {
-      const response = await axios.post('/api/order/verify', {
-        verificationData: orderData
-      });
-      
-      setOrderDetails(response.data.order);
-      toast.success(`Order #${orderData.orderId} verified successfully!`);
-    } catch (error) {
-      toast.error(error.response?.data?.message || 'Verification failed');
-      resetScanner();
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const resetScanner = () => {
+  const handleReset = () => {
     setScanResult(null);
-    setOrderDetails(null);
-    
-    // Re-initialize the scanner
-    if (scanner) {
-      scanner.clear();
-      scanner.render(
-        (result) => {
-          scanner.clear();
-          setScanResult(result);
-          
-          try {
-            const orderData = JSON.parse(result);
-            verifyOrder(orderData);
-          } catch (error) {
-            toast.error('Invalid QR code format');
-            resetScanner();
-          }
-        }, 
-        (error) => {
-          console.warn(error);
-        }
-      );
-    }
+    setIsScanning(true);
+    window.location.reload(); // Simple way to restart the scanner
   };
 
   return (
-    <div className="container mx-auto p-4 max-w-md">
-      <Card>
-        <CardHeader>
-          <CardTitle>Scan Order QR Code</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {!scanResult ? (
-            <div className="flex flex-col items-center">
-              <div id="reader" className="w-full"></div>
-              <p className="text-sm text-muted-foreground mt-4 text-center">
-                Position the QR code in front of the camera to verify an order
-              </p>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {orderDetails ? (
-                <div className="bg-green-50 p-4 rounded-lg border border-green-200">
-                  <h3 className="font-medium text-green-800">Order Verified!</h3>
-                  <p className="text-sm text-green-700">Order #{orderDetails.id}</p>
-                  <p className="text-sm text-green-700">
-                    Meal: {orderDetails.meal.name}
-                  </p>
-                  <p className="text-sm text-green-700">
-                    Quantity: {orderDetails.quantity}
-                  </p>
-                  <p className="text-sm text-green-700">
-                    Status: {orderDetails.status}
-                  </p>
-                </div>
-              ) : (
-                <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
-                  <h3 className="font-medium text-yellow-800">Verifying...</h3>
-                  <p className="text-sm text-yellow-700">Please wait</p>
-                </div>
-              )}
-              <Button 
-                onClick={resetScanner} 
-                className="w-full"
-                disabled={loading}
-              >
-                Scan Another Order
-              </Button>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-    </div>
+    <Card className="p-4">
+      {isScanning ? (
+        <>
+          <div className="mb-4 text-center text-sm text-muted-foreground">
+            Position the QR code within the scanner area
+          </div>
+          <div id="reader" className="mx-auto"></div>
+        </>
+      ) : (
+        <div className="text-center">
+          <p className="mb-4">Verification in progress...</p>
+          <button 
+            onClick={handleReset}
+            className="px-4 py-2 bg-primary text-primary-foreground rounded-md"
+          >
+            Scan Another Code
+          </button>
+        </div>
+      )}
+    </Card>
   );
 }

@@ -49,44 +49,66 @@ exports.updateOrderStatus = async (req, res) => {
 
 
 
-// Update the verifyOrder function
 
-exports.verifyOrder = async (req, res) => {
-  try {
-    const { verificationData } = req.body;
+// Replace the verifyOrder function with this:
+
+// exports.verifyOrder = async (verificationCode) => {
+//   try {
+//     console.log('Attempting to verify code:', verificationCode);
     
-    // Handle both QR data object and direct verification code
-    let verificationCode = verificationData;
-    
-    // Try to parse as JSON if the data looks like JSON
-    if (typeof verificationData === 'string' && verificationData.startsWith('{')) {
-      try {
-        const parsedData = JSON.parse(verificationData);
-        verificationCode = parsedData.verificationCode;
-      } catch (err) {
-        console.log('Not JSON data, using as direct verification code');
-      }
-    }
-    
-    if (!verificationCode) {
-      return res.status(400).json({ message: 'Verification code is required' });
-    }
-    
-    const order = await orderService.verifyOrder(verificationCode);
-    
-    return res.status(200).json({
-      success: true,
-      data: { order },
-      message: 'Order verified successfully'
-    });
-  } catch (error) {
-    console.error('Order verification error:', error);
-    return res.status(error.statusCode || 400).json({
-      success: false,
-      message: error.message || 'Failed to verify order'
-    });
-  }
-};
+//     // Find order with matching verification code - CHANGE from "order" to "preorder"
+//     const order = await prisma.preorder.findFirst({
+//       where: {
+//         verificationCode: verificationCode,
+//         status: { in: ['placed', 'ready'] } // Only verify orders that are placed or ready
+//       },
+//       include: {
+//         meal: true,
+//         user: {
+//           select: {
+//             id: true,
+//             firstName: true,
+//             lastName: true,
+//             email: true,
+//           }
+//         }
+//       }
+//     });
+
+//     if (!order) {
+//       const error = new Error('Invalid verification code or order is not ready for pickup');
+//       error.statusCode = 404;
+//       throw error;
+//     }
+
+//     console.log('Order found:', order.id);
+
+//     // Update the order status to 'picked_up' - CHANGE from "order" to "preorder"
+//     const updatedOrder = await prisma.preorder.update({
+//       where: { id: order.id },
+//       data: { 
+//         status: 'picked_up',
+//         pickupTime: new Date() // Update pickup time to current time
+//       },
+//       include: {
+//         meal: true,
+//         user: {
+//           select: {
+//             id: true,
+//             firstName: true,
+//             lastName: true,
+//             email: true,
+//           }
+//         }
+//       }
+//     });
+
+//     return updatedOrder;
+//   } catch (error) {
+//     console.error('Order verification error:', error);
+//     throw error;
+//   }
+// };
 
 // Get all orders for cafe manager
 exports.getOrdersForManagement = async (req, res) => {
@@ -150,6 +172,7 @@ exports.verifyOrder = async (req, res) => {
       verificationCode = verificationData.verificationCode;
     }
     
+    console.log('Controller received verification code:', verificationCode);
     const order = await orderService.verifyOrder(verificationCode);
     return res.status(200).json({ order });
   } catch (error) {

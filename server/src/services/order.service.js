@@ -110,10 +110,14 @@ exports.updateOrderStatus = async (orderId, status) => {
 
 // Update the verifyOrder function
 
+// Fix the verifyOrder function to use preorder instead of order
+
 exports.verifyOrder = async (verificationCode) => {
   try {
-    // Find order with matching verification code
-    const order = await prisma.order.findFirst({
+    console.log('Service attempting to verify code:', verificationCode);
+    
+    // Find order with matching verification code - CHANGE from "order" to "preorder"
+    const order = await prisma.preorder.findFirst({
       where: {
         verificationCode: verificationCode,
         status: { in: ['placed', 'ready'] } // Only verify orders that are placed or ready
@@ -137,8 +141,10 @@ exports.verifyOrder = async (verificationCode) => {
       throw error;
     }
 
-    // Update the order status to 'picked_up'
-    const updatedOrder = await prisma.order.update({
+    console.log('Order found:', order.id);
+
+    // Update the order status to 'picked_up' - CHANGE from "order" to "preorder"
+    const updatedOrder = await prisma.preorder.update({
       where: { id: order.id },
       data: { 
         status: 'picked_up',

@@ -81,28 +81,30 @@ const useOrderStore = create((set, get) => ({
     }
   },
 
-  verifyOrderPickup: async (verificationCode) => {
-    try {
-      set({ loading: true, error: null });
-      const response = await axios.post('/orders/verify', {
-        verificationData: verificationCode
-      });
+// Update the verifyOrderPickup function:
 
-      // Update the local orders state
-      set(state => ({
-        orders: state.orders.map(order =>
-          order.verificationCode === verificationCode ? response.data.order : order
-        )
-      }));
+verifyOrderPickup: async (verificationCode) => {
+  try {
+    set({ loading: true, error: null });
+    const response = await axios.post('/order/verify', {  
+      verificationData: verificationCode
+    });
 
-      return response.data.order;
-    } catch (error) {
-      set({ error: error.response?.data?.message || 'Failed to verify order' });
-      throw error;
-    } finally {
-      set({ loading: false });
-    }
+    // Update the local orders state
+    set(state => ({
+      orders: state.orders.map(order =>
+        order.verificationCode === verificationCode ? response.data.order : order
+      )
+    }));
+
+    return response.data.order;
+  } catch (error) {
+    set({ error: error.response?.data?.message || 'Failed to verify order' });
+    throw error;
+  } finally {
+    set({ loading: false });
   }
+}
 
 
 }));
