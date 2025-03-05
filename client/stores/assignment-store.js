@@ -14,12 +14,21 @@ const useAssignmentStore = create((set, get) => ({
   createAssignment: async (assignmentData) => {
     try {
       set({ loading: true, error: null });
-      const response = await axios.post('/assignments/create', assignmentData);
+      // Add default status
+      const dataWithStatus = { ...assignmentData, status: "due" };
+      const response = await axios.post('/assignments/create', dataWithStatus);
+      
+      // Make sure the response includes the status field
+      const newAssignment = {
+        ...response.data.data,
+        status: response.data.data.status || "due" // Ensure status exists
+      };
+      
       set(state => ({
-        assignments: [...state.assignments, response.data.data],
+        assignments: [...state.assignments, newAssignment],
         loading: false,
       }));
-      return response.data.data;
+      return newAssignment;
     } catch (error) {
       set({
         error: error.response?.data?.message || 'Failed to create assignment',
@@ -29,13 +38,33 @@ const useAssignmentStore = create((set, get) => ({
     }
   },
 
-  // Fetch all assignments
+  // Fetch all assignments with auto-update of overdue status
   fetchAssignments: async () => {
     set({ loading: true, error: null });
     try {
       const response = await axios.get('/assignments/list');
-      set({ assignments: response.data.data, loading: false });
+      
+      // Check for overdue assignments and update their status
+      const now = new Date();
+      const assignments = response.data.data.map(assignment => {
+        // Ensure each assignment has a status field
+        const status = assignment.status || "due";
+        
+        // If deadline has passed and status is still "due", mark as "overdued"
+        if (new Date(assignment.deadline) < now && status === "due") {
+          // Update the status on the server
+          axios.put(`/assignments/${assignment.id}`, { status: "overdued" })
+            .catch(err => console.error("Failed to update overdue status:", err));
+            
+          return { ...assignment, status: "overdued" };
+        }
+        return { ...assignment, status };
+      });
+      
+      console.log("Fetched assignments:", assignments); // Debug log
+      set({ assignments, loading: false });
     } catch (error) {
+      console.error("Error fetching assignments:", error); // Debug log
       set({ 
         error: error.response?.data?.message || 'Failed to fetch assignments', 
         loading: false 

@@ -26,20 +26,26 @@ const createAssignment = async (userId, assignmentData) => {
       throw new Error('Course not found or you do not have permission to add assignments to it');
     }
     
-    return await prisma.assignment.create({
-      data: {
-        ...otherData,
-        user: {
-          connect: {
-            id: userId
-          }
-        },
-        course: {
-          connect: {
-            id: courseId
-          }
+    // Ensure status is set to "due" by default
+    const dataToCreate = {
+      ...otherData,
+      status: otherData.status || "due",
+      user: {
+        connect: {
+          id: userId
         }
       },
+      course: {
+        connect: {
+          id: courseId
+        }
+      }
+    };
+    
+    console.log("Creating assignment with data:", dataToCreate); // Debug log
+    
+    return await prisma.assignment.create({
+      data: dataToCreate,
       include: {
         course: true
       }
@@ -53,7 +59,7 @@ const getAssignments = async (userId) => {
     throw new Error('User ID is required');
   }
   
-  return await prisma.assignment.findMany({
+  const assignments = await prisma.assignment.findMany({
     where: { userId },
     include: {
       course: {
@@ -67,6 +73,43 @@ const getAssignments = async (userId) => {
       deadline: 'asc'
     }
   });
+  
+  // Check for overdue assignments and update their status
+  const now = new Date();
+  const updatedAssignments = [];
+  
+  for (const assignment of assignments) {
+    // Ensure status exists
+    if (!assignment.status) {
+      assignment.status = "due";
+      await prisma.assignment.update({
+        where: { id: assignment.id },
+        data: { status: "due" }
+      });
+    }
+    
+    // If deadline has passed and status is still "due", update to "overdued"
+    if (new Date(assignment.deadline) < now && assignment.status === "due") {
+      const updated = await prisma.assignment.update({
+        where: { id: assignment.id },
+        data: { status: "overdued" },
+        include: {
+          course: {
+            select: {
+              courseId: true,
+              courseName: true
+            }
+          }
+        }
+      });
+      updatedAssignments.push(updated);
+    } else {
+      updatedAssignments.push(assignment);
+    }
+  }
+  
+  console.log("Returning assignments:", updatedAssignments); // Debug log
+  return updatedAssignments;
 };
 
 const getAssignmentById = async (userId, assignmentId) => {

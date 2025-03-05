@@ -11,7 +11,7 @@ import { Calendar, Plus, Trash, X, ChevronRight } from "lucide-react";
 import { format } from "date-fns";
 import axios from '@/lib/axios';
 
-export function AssignmentsPage() {
+export default function AssignmentsPage() {
   const [showAssignmentModal, setShowAssignmentModal] = useState(false);
   const [showContentModal, setShowContentModal] = useState(false);
   const [selectedAssignment, setSelectedAssignment] = useState(null);
@@ -23,6 +23,7 @@ export function AssignmentsPage() {
     assignmentContent: "",
     deadline: ""
   });
+  const [selectedStatus, setSelectedStatus] = useState("due");
   
   const { user } = useAuthStore();
   const { 
@@ -79,15 +80,26 @@ export function AssignmentsPage() {
 
   const handleCreateAssignment = async () => {
     try {
-      await createAssignment(newAssignment);
+      // Add status field explicitly
+      const assignmentWithStatus = {
+        ...newAssignment,
+        status: "due"
+      };
+      
+      const createdAssignment = await createAssignment(assignmentWithStatus);
+      console.log("Created assignment:", createdAssignment); // Debug log
+      
       toast.success("Assignment created successfully");
       setShowAssignmentModal(false);
       setNewAssignment({
         courseId: "",
         assignmentName: "",
         assignmentContent: "",
-        deadline: ""
+        deadline: "",
       });
+      
+      // Refresh assignments to ensure we have the latest data
+      fetchAssignments();
     } catch (error) {
       toast.error(error.message || "Failed to create assignment");
     }
@@ -311,6 +323,41 @@ useEffect(() => {
   };
 }, [assignments, notifiedAssignments]);
 
+// Add function to handle status card selection
+const handleStatusSelect = (status) => {
+  setSelectedStatus(status);
+};
+
+// Add function to handle assignment status update
+const handleStatusUpdate = async (assignmentId, newStatus) => {
+  try {
+    await updateAssignment(assignmentId, { status: newStatus });
+    toast.success(`Assignment marked as ${newStatus}`);
+    setShowContentModal(false);
+  } catch (error) {
+    toast.error(error.message || "Failed to update assignment status");
+  }
+};
+
+// Filter assignments based on selected status
+const filteredAssignments = assignments.filter(assignment => {
+  console.log("Assignment:", assignment.assignmentName, "Status:", assignment.status); // Debug log
+  return assignment.status === selectedStatus;
+});
+
+// Count assignments by status with fallback to empty array
+const assignmentCounts = {
+  due: assignments.filter(a => (a.status || "due") === "due").length,
+  submitted: assignments.filter(a => a.status === "submitted").length,
+  overdued: assignments.filter(a => a.status === "overdued").length
+};
+
+// Add this debug log
+useEffect(() => {
+  console.log("All assignments:", assignments);
+  console.log("Filtered assignments:", filteredAssignments);
+  console.log("Counts:", assignmentCounts);
+}, [assignments, filteredAssignments, assignmentCounts]);
 
   return (
     <div className="flex-1 space-y-4 p-8 pt-6">
@@ -323,15 +370,42 @@ useEffect(() => {
         </div>
       </div>
 
+      {/* Add status cards */}
+      <div className="grid grid-cols-3 gap-4 mb-6">
+        {["due", "submitted", "overdued"].map((status) => (
+          <Card 
+            key={status}
+            className={`cursor-pointer transition-all duration-200 ${
+              selectedStatus === status 
+                ? "border-primary shadow-md transform scale-105" 
+                : "border-muted hover:border-muted-foreground"
+            }`}
+            onClick={() => handleStatusSelect(status)}
+          >
+            <CardHeader className="pb-2">
+              <CardTitle className="text-lg capitalize">{status}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-3xl font-bold">{assignmentCounts[status]}</p>
+              <p className="text-sm text-muted-foreground">
+                {status === "due" ? "Pending assignments" : 
+                 status === "submitted" ? "Completed assignments" : 
+                 "Missed deadlines"}
+              </p>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {loading ? (
           <p>Loading assignments...</p>
-        ) : assignments.length === 0 ? (
+        ) : filteredAssignments.length === 0 ? (
           <div className="col-span-full text-center py-10">
-            <p className="text-muted-foreground">No assignments yet. Click "Add Assignment" to create one.</p>
+            <p className="text-muted-foreground">No {selectedStatus} assignments found.</p>
           </div>
         ) : (
-          assignments.map((assignment) => (
+          filteredAssignments.map((assignment) => (
             <Card 
               key={assignment.id} 
               className={`
@@ -476,7 +550,7 @@ useEffect(() => {
                         ? "text-yellow-600" 
                         : ""
                   }`}>
-               {formatDeadline(selectedAssignment.deadline)}
+                    {formatDeadline(selectedAssignment.deadline)}
                   </span>
                 </div>
               </div>
@@ -488,6 +562,19 @@ useEffect(() => {
                   onChange={handleContentChange}
                   placeholder="No description provided for this assignment. Click to add details."
                 />
+              </div>
+              
+              {/* Add status section */}
+              <div className="border-t pt-4">
+                <h3 className="text-md font-medium mb-2">Status: <span className="capitalize">{selectedAssignment.status}</span></h3>
+                {selectedAssignment.status === "due" && (
+                  <Button 
+                    onClick={() => handleStatusUpdate(selectedAssignment.id, "submitted")}
+                    className="bg-green-600 hover:bg-green-700"
+                  >
+                    Mark as Submitted
+                  </Button>
+                )}
               </div>
             </div>
             <div className="mt-6 flex justify-between">
@@ -501,7 +588,7 @@ useEffect(() => {
                     Save Changes
                   </Button>
                 )}
-             <Button 
+                <Button 
                   variant="outline" 
                   size="sm"
                   onClick={() => setShowContentModal(false)}
@@ -516,5 +603,3 @@ useEffect(() => {
     </div>
   );
 }
-
-export default AssignmentsPage;

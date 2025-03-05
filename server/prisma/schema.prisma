@@ -248,6 +248,7 @@ model Assignment {
   assignmentName            String   @map("assignment_name")
   assignmentContent         String?  @map("assignment_content") @db.Text
   deadline                  DateTime
+  status                    String   @default("due") // Add status field with default value
   notifiedFor24HourDeadline Boolean  @default(false)
   createdAt                 DateTime @default(now())
   updatedAt                 DateTime @updatedAt
