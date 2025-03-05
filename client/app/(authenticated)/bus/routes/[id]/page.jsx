@@ -7,6 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 export default function RouteBusesPage({ params }) {
   const router = useRouter();
   const [buses, setBuses] = useState([]);
+  const [busStops, setBusStops] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   
@@ -27,6 +28,15 @@ export default function RouteBusesPage({ params }) {
 
         const data = await response.json();
         setBuses(data.data);
+
+        // Fetch bus stops for the route
+        const stopsResponse = await fetch(`http://localhost:8000/api/bus/routes/${params.id}/stops`);
+        if (!stopsResponse.ok) {
+          throw new Error(`HTTP error! status: ${stopsResponse.status}`);
+        }
+
+        const stopsData = await stopsResponse.json();
+        setBusStops(stopsData.data);
       } catch (err) {
         console.error("Error fetching buses:", err);
         setError(err.message);
@@ -105,6 +115,30 @@ export default function RouteBusesPage({ params }) {
             <Card>
               <CardContent>
                 <p className="text-center text-gray-500">No buses available for this route.</p>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+      </div>
+
+      {/* Bus Stops Section */}
+      <h3 className="text-3xl font-bold mt-8 mb-4 text-center">Bus Stops</h3>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {busStops.map((stop) => (
+          <Card key={stop.id} className="p-4 bg-white rounded-lg shadow-md">
+            <CardContent>
+              <h4 className="text-xl font-semibold">{stop.stopName}</h4>
+              <p className="text-sm text-gray-600">Sequence: {stop.sequence}</p>
+              <p className="text-sm text-gray-600">Campus Zone: {stop.campusZone}</p>
+              <p className="text-sm text-gray-600">Location: {stop.latitude}, {stop.longitude}</p>
+            </CardContent>
+          </Card>
+        ))}
+        {busStops.length === 0 && (
+          <div className="col-span-1 md:col-span-2 lg:col-span-3">
+            <Card>
+              <CardContent>
+                <p className="text-center text-gray-500">No bus stops available for this route.</p>
               </CardContent>
             </Card>
           </div>
