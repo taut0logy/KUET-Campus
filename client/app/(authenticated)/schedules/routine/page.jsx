@@ -10,6 +10,13 @@ import useRoutineStore from "@/stores/routine-store";
 import { toast } from "sonner";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { 
+  Popover, 
+  PopoverContent, 
+  PopoverTrigger 
+} from "@/components/ui/popover";
+import { Check, ChevronDown, X, Calendar, BookOpen, Clock, LayoutGrid } from "lucide-react";
+import Image from "next/image";
 
 export default function RoutinePage() {
   const [showScheduleModal, setShowScheduleModal] = useState(false);
@@ -18,6 +25,7 @@ export default function RoutinePage() {
   const [weekday, setWeekday] = useState("");
   const [periods, setPeriods] = useState(Array(9).fill(""));
   const [viewMode, setViewMode] = useState("routine");
+  const [selectedCourseFilter, setSelectedCourseFilter] = useState("");
   const [newCourse, setNewCourse] = useState({
     courseId: "",
     courseName: "",
@@ -136,44 +144,133 @@ export default function RoutinePage() {
     }
   };
 
+  // Filter exams based on selected course
+  const filteredExams = selectedCourseFilter 
+    ? exams.filter(exam => {
+        const course = courses.find(c => c.id === exam.courseId);
+        return course && course.courseId === selectedCourseFilter;
+      })
+    : exams;
+
+  // Filter weekly schedule based on selected course
+  const filteredWeeklySchedule = selectedCourseFilter
+    ? Object.entries(weeklySchedule || {}).reduce((filtered, [day, schedule]) => {
+        // Check if any period contains the selected course
+        const hasCourse = Object.values(schedule).some(periodCourse => periodCourse === selectedCourseFilter);
+        if (hasCourse) {
+          filtered[day] = schedule;
+        }
+        return filtered;
+      }, {})
+    : weeklySchedule;
+
   return (
     <div className="flex-1 space-y-4 p-8 pt-6">
-      <div className="flex items-center justify-between space-y-2">
+      <div className="flex flex-col md:flex-row md:items-center justify-between space-y-4 md:space-y-0">
         <h2 className="text-3xl font-bold tracking-tight">Academic Schedules</h2>
-        <div className="flex gap-4 items-center">
-          <div className="flex items-center space-x-2">
-            <Label htmlFor="view-mode" className={viewMode === "routine" ? "font-bold" : ""}>Routine</Label>
+        <div className="flex flex-wrap gap-3 items-center">
+          <div className="flex items-center space-x-2 bg-background/80 backdrop-blur-sm p-2 rounded-lg shadow-sm border">
+            <Label htmlFor="view-mode" className={`${viewMode === "routine" ? "font-bold text-primary" : ""} transition-colors duration-200`}>Routine</Label>
             <Switch 
               id="view-mode" 
               checked={viewMode === "exams"} 
               onCheckedChange={(checked) => setViewMode(checked ? "exams" : "routine")} 
+              className="data-[state=checked]:bg-primary"
             />
-            <Label htmlFor="view-mode" className={viewMode === "exams" ? "font-bold" : ""}>Exams</Label>
+            <Label htmlFor="view-mode" className={`${viewMode === "exams" ? "font-bold text-primary" : ""} transition-colors duration-200`}>Exams</Label>
           </div>
+
+          {/* Course Filter Dropdown */}
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button 
+                variant="outline" 
+                className="flex items-center gap-2 transition-all duration-300 hover:shadow-md hover:-translate-y-1"
+              >
+                Filter by course
+                <ChevronDown className="h-4 w-4" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-56 p-0" align="end">
+              <div className="p-2">
+                <div className="font-medium text-sm mb-2">Select Course</div>
+                <div className="space-y-1 max-h-60 overflow-auto">
+                  <div 
+                    className={`flex items-center justify-between px-2 py-1.5 rounded-md cursor-pointer hover:bg-accent transition-colors duration-200 ${!selectedCourseFilter ? 'bg-accent' : ''}`}
+                    onClick={() => setSelectedCourseFilter("")}
+                  >
+                    <span>All Courses</span>
+                    {!selectedCourseFilter && <Check className="h-4 w-4" />}
+                  </div>
+                  {courses.map((course) => (
+                    <div 
+                      key={course.id} 
+                      className={`flex items-center justify-between px-2 py-1.5 rounded-md cursor-pointer hover:bg-accent transition-colors duration-200 ${selectedCourseFilter === course.courseId ? 'bg-accent' : ''}`}
+                      onClick={() => setSelectedCourseFilter(course.courseId)}
+                    >
+                      <span>{course.courseId} - {course.courseName}</span>
+                      {selectedCourseFilter === course.courseId && <Check className="h-4 w-4" />}
+                    </div>
+                  ))}
+                </div>
+                {selectedCourseFilter && (
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="w-full mt-2 flex items-center justify-center gap-1 hover:bg-destructive/10 transition-colors duration-200"
+                    onClick={() => setSelectedCourseFilter("")}
+                  >
+                    <X className="h-3 w-3" /> Clear filter
+                  </Button>
+                )}
+              </div>
+            </PopoverContent>
+          </Popover>
+
           {viewMode === "routine" ? (
             <>
-              <Button onClick={() => setShowScheduleModal(true)}>Set Weekly Schedule</Button>
-              <Button onClick={() => setShowCourseModal(true)}>Add Course</Button>
+              <Button 
+                onClick={() => setShowScheduleModal(true)}
+                className="transition-all duration-300 hover:shadow-md hover:-translate-y-1"
+              >
+                <Calendar className="mr-2 h-4 w-4" />
+                Set Weekly Schedule
+              </Button>
+              <Button 
+                onClick={() => setShowCourseModal(true)}
+                className="transition-all duration-300 hover:shadow-md hover:-translate-y-1"
+              >
+                <BookOpen className="mr-2 h-4 w-4" />
+                Add Course
+              </Button>
             </>
           ) : (
-            <Button onClick={() => setShowExamModal(true)}>Add Exam</Button>
+            <Button 
+              onClick={() => setShowExamModal(true)}
+              className="transition-all duration-300 hover:shadow-md hover:-translate-y-1"
+            >
+              <Clock className="mr-2 h-4 w-4" />
+              Add Exam
+            </Button>
           )}
         </div>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
+        <Card className="shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Courses</CardTitle>
+            <BookOpen className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{courses.length}</div>
             <p className="text-xs text-muted-foreground">Active courses in the system</p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Scheduled Days</CardTitle>
+            <Calendar className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
@@ -182,18 +279,20 @@ export default function RoutinePage() {
             <p className="text-xs text-muted-foreground">Days with scheduled classes</p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Periods</CardTitle>
+            <LayoutGrid className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">9</div>
             <p className="text-xs text-muted-foreground">Periods per day</p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Status</CardTitle>
+            <div className={`h-2 w-2 rounded-full ${loading ? "bg-amber-500" : error ? "bg-destructive" : "bg-green-500"}`}></div>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{loading ? "Loading..." : "Ready"}</div>
@@ -205,12 +304,19 @@ export default function RoutinePage() {
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-        <Card className="col-span-7">
+        <Card className="col-span-7 shadow-md hover:shadow-lg transition-all duration-300">
+          {selectedCourseFilter && (
+            <div className="px-6 pt-6 pb-2 flex items-center">
+              <div className="bg-primary/10 text-primary px-3 py-1 rounded-full text-sm font-medium">
+                Filtered by: {selectedCourseFilter}
+              </div>
+            </div>
+          )}
           {viewMode === "routine" ? (
-            <Routine />
+            <Routine weeklySchedule={filteredWeeklySchedule} />
           ) : (
             <ExamList 
-              exams={exams} 
+              exams={filteredExams} 
               courses={courses} 
               onEdit={handleEditExam} 
               onDelete={handleDeleteExam} 
@@ -219,17 +325,28 @@ export default function RoutinePage() {
         </Card>
       </div>
 
+      {/* Set Weekly Schedule Modal */}
       {showScheduleModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 overflow-y-auto">
-          <div className="bg-background p-4 rounded-lg w-full max-h-[90vh] overflow-auto">
-            <h2 className="text-lg font-bold mb-4">Set Weekly Schedule</h2>
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto animate-in fade-in duration-300">
+          <div className="bg-background p-6 rounded-lg w-full max-h-[90vh] overflow-auto shadow-xl border border-border dark:border-primary/20 max-w-4xl">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold">Set Weekly Schedule</h2>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="rounded-full hover:bg-muted transition-all duration-300 hover:scale-110"
+                onClick={() => setShowScheduleModal(false)}
+              >
+                <X className="h-5 w-5" />
+              </Button>
+            </div>
             <div className="overflow-x-auto">
-              <table className="w-full min-w-[800px]">
+              <table className="w-full border-collapse">
                 <thead>
                   <tr>
-                    <th className="p-2">Weekday</th>
+                    <th className="p-2 bg-muted/50 rounded-l-md">Weekday</th>
                     {Array.from({ length: 9 }, (_, i) => (
-                      <th key={i} className="p-2">{i + 1}</th>
+                      <th key={i} className="p-2 bg-muted/50 text-center">Period {i + 1}</th>
                     ))}
                   </tr>
                 </thead>
@@ -237,7 +354,7 @@ export default function RoutinePage() {
                   <tr>
                     <td className="p-2">
                       <select
-                        className="w-full border p-1 rounded"
+                        className="w-full border p-2 rounded-md focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all duration-200 bg-background text-foreground"
                         value={weekday}
                         onChange={(e) => setWeekday(e.target.value)}
                       >
@@ -252,7 +369,7 @@ export default function RoutinePage() {
                     {periods.map((period, index) => (
                       <td key={index} className="p-2">
                         <select
-                          className="w-full border p-1 rounded"
+                          className="w-full border p-2 rounded-md focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all duration-200 bg-background text-foreground"
                           value={period}
                           onChange={(e) => {
                             const newPeriods = [...periods];
@@ -263,7 +380,9 @@ export default function RoutinePage() {
                           <option value="">Select Course</option>
                           {courses.map((course) => (
                             <option key={course.id} value={course.courseId}>
-                              {course.courseName}
+                              {course.courseId} - {course.courseName.length > 15 
+                                ? `${course.courseName.substring(0, 15)}...` 
+                                : course.courseName}
                             </option>
                           ))}
                         </select>
@@ -273,9 +392,18 @@ export default function RoutinePage() {
                 </tbody>
               </table>
             </div>
-            <div className="mt-4 flex justify-end gap-2">
-              <Button onClick={handleSetSchedule}>Save</Button>
-              <Button variant="ghost" onClick={() => setShowScheduleModal(false)}>
+            <div className="mt-6 flex justify-end gap-2">
+              <Button 
+                onClick={handleSetSchedule}
+                className="transition-all duration-300 hover:shadow-md hover:-translate-y-1"
+              >
+                Save Schedule
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={() => setShowScheduleModal(false)}
+                className="transition-all duration-300 hover:shadow-md hover:-translate-y-1"
+              >
                 Cancel
               </Button>
             </div>
@@ -283,35 +411,46 @@ export default function RoutinePage() {
         </div>
       )}
 
+      {/* Add Course Modal */}
       {showCourseModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-background p-4 rounded-lg w-full max-w-md">
-            <h2 className="text-lg font-bold mb-4">Add New Course</h2>
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 animate-in fade-in duration-300">
+          <div className="bg-background p-6 rounded-lg w-full max-w-md shadow-xl border border-border dark:border-primary/20">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold">Add New Course</h2>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="rounded-full hover:bg-muted transition-all duration-300 hover:scale-110"
+                onClick={() => setShowCourseModal(false)}
+              >
+                <X className="h-5 w-5" />
+              </Button>
+            </div>
             <div className="space-y-4">
               <div>
-                <label className="block mb-1">Course ID</label>
+                <label className="block mb-2 font-medium">Course ID</label>
                 <input
                   type="text"
-                  className="w-full border p-2 rounded"
+                  className="w-full border p-2 rounded-md focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all duration-200"
                   value={newCourse.courseId}
                   onChange={(e) => setNewCourse({...newCourse, courseId: e.target.value})}
                   placeholder="E.g., CSE101"
                 />
               </div>
               <div>
-                <label className="block mb-1">Course Name</label>
+                <label className="block mb-2 font-medium">Course Name</label>
                 <input
                   type="text"
-                  className="w-full border p-2 rounded"
+                  className="w-full border p-2 rounded-md focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all duration-200"
                   value={newCourse.courseName}
                   onChange={(e) => setNewCourse({...newCourse, courseName: e.target.value})}
                   placeholder="E.g., Introduction to Computer Science"
                 />
               </div>
               <div>
-                <label className="block mb-1">Type</label>
+                <label className="block mb-2 font-medium">Type</label>
                 <select
-                  className="w-full border p-2 rounded"
+                  className="w-full border p-2 rounded-md focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all duration-200"
                   value={newCourse.courseType}
                   onChange={(e) => setNewCourse({...newCourse, courseType: e.target.value})}
                 >
@@ -320,9 +459,18 @@ export default function RoutinePage() {
                 </select>
               </div>
             </div>
-            <div className="mt-4 flex justify-end gap-2">
-              <Button onClick={handleAddCourse}>Save</Button>
-              <Button variant="ghost" onClick={() => setShowCourseModal(false)}>
+            <div className="mt-6 flex justify-end gap-2">
+              <Button 
+                onClick={handleAddCourse}
+                className="transition-all duration-300 hover:shadow-md hover:-translate-y-1"
+              >
+                Save Course
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={() => setShowCourseModal(false)}
+                className="transition-all duration-300 hover:shadow-md hover:-translate-y-1"
+              >
                 Cancel
               </Button>
             </div>
@@ -330,17 +478,31 @@ export default function RoutinePage() {
         </div>
       )}
 
+      {/* Add/Edit Exam Modal */}
       {showExamModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-background p-4 rounded-lg w-full max-w-md">
-            <h2 className="text-lg font-bold mb-4">
-              {editingExam ? "Edit Exam" : "Add New Exam"}
-            </h2>
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 animate-in fade-in duration-300">
+          <div className="bg-background p-6 rounded-lg w-full max-w-md shadow-xl border border-border dark:border-primary/20">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold">
+                {editingExam ? "Edit Exam" : "Add New Exam"}
+              </h2>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="rounded-full hover:bg-muted transition-all duration-300 hover:scale-110"
+                onClick={() => {
+                  setShowExamModal(false);
+                  setEditingExam(null);
+                }}
+              >
+                <X className="h-5 w-5" />
+              </Button>
+            </div>
             <div className="space-y-4">
               <div>
-                <label className="block mb-1">Course</label>
+                <label className="block mb-2 font-medium">Course</label>
                 <select
-                  className="w-full border p-2 rounded"
+                  className="w-full border p-2 rounded-md focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all duration-200"
                   value={newExam.courseId}
                   onChange={(e) => setNewExam({...newExam, courseId: e.target.value})}
                 >
@@ -353,9 +515,9 @@ export default function RoutinePage() {
                 </select>
               </div>
               <div>
-                <label className="block mb-1">Exam Type</label>
+                <label className="block mb-2 font-medium">Exam Type</label>
                 <select
-                  className="w-full border p-2 rounded"
+                  className="w-full border p-2 rounded-md focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all duration-200"
                   value={newExam.examType}
                   onChange={(e) => setNewExam({...newExam, examType: e.target.value})}
                 >
@@ -365,18 +527,18 @@ export default function RoutinePage() {
                 </select>
               </div>
               <div>
-                <label className="block mb-1">Exam Date</label>
+                <label className="block mb-2 font-medium">Exam Date</label>
                 <input
                   type="datetime-local"
-                  className="w-full border p-2 rounded"
+                  className="w-full border p-2 rounded-md focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all duration-200"
                   value={newExam.examDate}
                   onChange={(e) => setNewExam({...newExam, examDate: e.target.value})}
                 />
               </div>
               <div>
-                <label className="block mb-1">Syllabus</label>
+                <label className="block mb-2 font-medium">Syllabus</label>
                 <textarea
-                  className="w-full border p-2 rounded"
+                  className="w-full border p-2 rounded-md focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all duration-200"
                   value={newExam.syllabus}
                   onChange={(e) => setNewExam({...newExam, syllabus: e.target.value})}
                   placeholder="Enter exam syllabus"
@@ -384,16 +546,20 @@ export default function RoutinePage() {
                 />
               </div>
             </div>
-            <div className="mt-4 flex justify-end gap-2">
-              <Button onClick={handleAddExam}>
-                {editingExam ? "Update" : "Save"}
+            <div className="mt-6 flex justify-end gap-2">
+              <Button 
+                onClick={handleAddExam}
+                className="transition-all duration-300 hover:shadow-md hover:-translate-y-1"
+              >
+                {editingExam ? "Update Exam" : "Save Exam"}
               </Button>
               <Button 
-                variant="ghost" 
+                variant="outline" 
                 onClick={() => {
                   setShowExamModal(false);
                   setEditingExam(null);
                 }}
+                className="transition-all duration-300 hover:shadow-md hover:-translate-y-1"
               >
                 Cancel
               </Button>

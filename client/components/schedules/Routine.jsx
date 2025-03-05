@@ -28,8 +28,11 @@ const PERIODS = [
   'period9',
 ];
 
-export function Routine() {
+export function Routine({ weeklySchedule: filteredSchedule }) {
   const { weeklySchedule, loading, error, fetchWeeklySchedule } = useRoutineStore();
+  
+  // Use the filtered schedule if provided, otherwise use the one from the store
+  const scheduleToDisplay = filteredSchedule || weeklySchedule;
 
   useEffect(() => {
     fetchWeeklySchedule();
@@ -75,6 +78,22 @@ export function Routine() {
   const today = new Date();
   const currentDay = WEEKDAYS[today.getDay()];
 
+  // If we have a filtered schedule with no days, show a message
+  if (scheduleToDisplay && Object.keys(scheduleToDisplay).length === 0) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Class Routine</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center py-8 text-muted-foreground">
+            No classes found for the selected course filter.
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card>
       <CardHeader>
@@ -83,8 +102,11 @@ export function Routine() {
       <CardContent>
         <div className="space-y-4">
           {WEEKDAYS.map((day) => {
-            const schedule = weeklySchedule?.[day];
+            const schedule = scheduleToDisplay?.[day];
             const isToday = day === currentDay;
+
+            // Skip days that don't have the filtered course
+            if (!schedule) return null;
 
             return (
               <div
