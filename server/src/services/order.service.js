@@ -118,6 +118,11 @@ exports.verifyOrder = async (verificationCode) => {
     throw new Error("Order not found");
   }
   
+  // Don't allow reverification of already picked up orders
+  if (order.status === 'picked_up') {
+    throw new Error("Order has already been picked up");
+  }
+  
   return await prisma.preorder.update({
     where: { id: order.id },
     data: { status: 'picked_up' },

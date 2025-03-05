@@ -47,13 +47,41 @@ exports.updateOrderStatus = async (req, res) => {
   }
 };
 
+
+
 exports.verifyOrder = async (req, res) => {
-  const { verificationCode } = req.body;
   try {
+    const { verificationData } = req.body;
+    
+    if (!verificationData) {
+      return res.status(400).json({ message: "Verification data is required" });
+    }
+    
+    // Extract verification code from QR data
+    let verificationCode;
+    
+    if (typeof verificationData === 'string') {
+      // Handle text-based verification (backward compatibility)
+      verificationCode = verificationData;
+    } else {
+      // Handle QR code JSON data
+      verificationCode = verificationData.verificationCode;
+      
+      // Additional security check - you can validate the timestamp if needed
+      const scanTimestamp = new Date(verificationData.timestamp);
+      const currentTime = new Date();
+      const timeDifferenceMinutes = (currentTime - scanTimestamp) / (1000 * 60);
+      
+      // If QR code is older than 10 minutes, reject it
+      if (timeDifferenceMinutes > 10) {
+        return res.status(400).json({ message: "QR code has expired. Please refresh and try again." });
+      }
+    }
+    
     const order = await orderService.verifyOrder(verificationCode);
-    return res.json({ order });
+    return res.status(200).json({ order });
   } catch (error) {
-    console.error("Error in verifyOrder controller:", error);
-    return res.status(500).json({ error: "Failed to verify order" });
+    console.error("Order verification error:", error);
+    return res.status(400).json({ message: error.message });
   }
 };

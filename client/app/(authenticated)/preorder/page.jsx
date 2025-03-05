@@ -2,15 +2,16 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import useOrderStore  from '@/stores/order-store';
+import useOrderStore from '@/stores/order-store';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Loader2, Clock, ArrowLeft } from 'lucide-react';
+import { Loader2, Clock, ArrowLeft, Copy } from 'lucide-react';
 import { format } from 'date-fns';
 import Link from 'next/link';
-
+import { QRCodeSVG } from 'qrcode.react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { toast } from 'sonner';
 
 export default function PreorderPage() {
   const { orders, loading, error, fetchOrders } = useOrderStore();
@@ -36,6 +37,20 @@ export default function PreorderPage() {
     const diff = pickup - now;
     const minutes = Math.floor(diff / 60000);
     return minutes > 0 ? `${minutes} minutes` : 'Time expired';
+  };
+  
+  const createQRData = (order) => {
+    // Include essential order data in QR code
+    return JSON.stringify({
+      orderId: order.id,
+      verificationCode: order.verificationCode,
+      timestamp: new Date().toISOString()
+    });
+  };
+  
+  const copyVerificationCode = (code) => {
+    navigator.clipboard.writeText(code);
+    toast.success('Verification code copied to clipboard');
   };
 
   if (loading) {
@@ -68,7 +83,7 @@ export default function PreorderPage() {
             className="mb-4"
           >
             <Card className="p-6">
-              <div className="flex justify-between items-start">
+              <div className="flex flex-col md:flex-row justify-between items-start gap-6">
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
                     <h3 className="font-semibold text-lg">
@@ -88,9 +103,39 @@ export default function PreorderPage() {
                     <Clock className="h-4 w-4" />
                     <span>Pickup in: {getTimeRemaining(order.pickupTime)}</span>
                   </div>
-                  <p className="text-sm font-medium">
-                    Verification Code: {order.verificationCode}
-                  </p>
+                  
+                  {/* Verification code display */}
+                  <div className="mt-4 pt-4 border-t">
+                    <div 
+                      className="bg-gray-50 p-3 rounded-md border flex items-center justify-between"
+                      title="Click to copy"
+                    >
+                      <div>
+                        <p className="text-xs text-gray-500 font-medium">VERIFICATION CODE</p>
+                        <p className="font-mono text-gray-500 font-medium tracking-wider">{order.verificationCode}</p>
+                      </div>
+                      <Button 
+                        size="sm" 
+                        variant="ghost" 
+                        onClick={() => copyVerificationCode(order.verificationCode)}
+                        className="h-8 w-8 p-0"
+                      >
+                        <Copy className="h-4 w-4" />
+                        <span className="sr-only">Copy code</span>
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Display QR code for verification */}
+                <div className="flex flex-col items-center">
+                  <QRCodeSVG 
+                    value={createQRData(order)}
+                    size={120}
+                    level="H"
+                    className="border p-2 rounded-lg"
+                  />
+                  <p className="text-xs text-center mt-2 text-muted-foreground">Scan for pickup</p>
                 </div>
               </div>
             </Card>

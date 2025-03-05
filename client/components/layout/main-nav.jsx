@@ -115,6 +115,11 @@ const getRoutes = (user) => {
       label: "Cart",
       requireAuth: true,
     },
+    {
+      href: "/preorder",
+      label: "Preorder",
+      requireAuth: true,
+    },
   ];
 };
 
