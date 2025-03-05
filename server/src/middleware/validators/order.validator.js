@@ -1,25 +1,17 @@
 const { body } = require('express-validator');
 
 const orderValidator = [
-  body('menuMealId')
-    .exists()
-    .withMessage('Menu meal ID is required')
+  body('items')
+    .isArray()
+    .withMessage('Items must be an array')
+    .notEmpty()
+    .withMessage('Items array cannot be empty'),
+  body('items.*.mealId')
     .isInt()
-    .withMessage('Menu meal ID must be an integer'),
-  
-  body('pickupTime')
-    .exists()
-    .withMessage('Pickup time is required')
-    .isISO8601()
-    .withMessage('Invalid pickup time format')
-    .custom((value) => {
-      const pickupTime = new Date(value);
-      const now = new Date();
-      if (pickupTime < now) {
-        throw new Error('Pickup time must be in the future');
-      }
-      return true;
-    })
+    .withMessage('Each item must have a valid meal ID'),
+  body('items.*.quantity')
+    .isInt({ min: 1 })
+    .withMessage('Each item must have a valid quantity')
 ];
 
 module.exports = { orderValidator };

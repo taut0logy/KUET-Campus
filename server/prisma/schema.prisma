@@ -122,47 +122,28 @@ model Meal {
   isVegan        Boolean    @default(false)
   isGlutenFree   Boolean    @default(false)
   allergens      Json?
-  menuMeals   MenuMeal[]
   cartItems   CartItem[]
+  preorders   Preorder[]
   @@map("meals")
 }
 
-model Menu {
-  id        Int        @id @default(autoincrement()) @map("menu_id")
-  date      DateTime   @db.Date
-  menuMeals MenuMeal[]
 
-  @@map("menus")
-}
-
-model MenuMeal {
-  id        Int       @id @default(autoincrement()) @map("menu_meal_id")
-  menuId    Int       @map("menu_id")
-  mealId    Int       @map("meal_id")
-  price     Decimal   @db.Decimal(10, 2)
-  available Boolean   @default(true)
-  menu      Menu      @relation(fields: [menuId], references: [id])
-  meal      Meal      @relation(fields: [mealId], references: [id])
-  preorders Preorder[]
-
-  @@map("menu_meals")
-}
 
 model Preorder {
-  id               String   @id @default(uuid())
+  id               Int      @id @default(autoincrement())
   userId           String
-  menuMealId       Int
-  status           String   @default("placed")
+  user             User     @relation(fields: [userId], references: [id])
+  mealId           Int
+  meal             Meal     @relation(fields: [mealId], references: [id])
+  quantity         Int      @default(1)
+  status           String   @default("placed") // placed, ready, picked_up, cancelled
   orderTime        DateTime @default(now())
   pickupTime       DateTime
-  quantity         Int      @default(1)
   verificationCode String   @unique
-  notes           String?
-  user            User     @relation(fields: [userId], references: [id])
-  menuMeal        MenuMeal @relation(fields: [menuMealId], references: [id])
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 
-  @@index([userId])
-  @@index([menuMealId])
+  @@map("preorders")
 }
 
 

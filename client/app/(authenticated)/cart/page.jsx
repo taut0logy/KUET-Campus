@@ -99,12 +99,18 @@ export default function CartPage() {
     const handlePreorder = async () => {
         setIsPreordering(true);
         try {
-          await createOrder(items);
+          const orderItems = items.map(item => ({
+            mealId: item.mealId,
+            quantity: item.quantity
+          }));
+          
+          await createOrder(orderItems);
           await resetCart();
           toast.success("Order placed successfully!");
           router.push('/preorder');
         } catch (error) {
-          toast.error("Failed to place order");
+          console.error(error);
+          toast.error(error.response?.data?.error || "Failed to place order");
         } finally {
           setIsPreordering(false);
         }

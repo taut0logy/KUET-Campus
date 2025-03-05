@@ -9,7 +9,12 @@ const useOrderStore = create((set, get) => ({
   createOrder: async (cartItems) => {
     try {
       set({ loading: true, error: null });
-      const response = await axios.post('/order', { items: cartItems });
+      const response = await axios.post('/order', {
+        items: cartItems.map(item => ({
+          mealId: item.mealId,
+          quantity: item.quantity
+        }))
+      });
       set(state => ({
         orders: [...response.data.orders, ...state.orders]
       }));

@@ -2,27 +2,32 @@ const orderService = require('../services/order.service');
 const { validationResult } = require('express-validator');
 
 exports.createOrder = async (req, res) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res.status(400).json({ errors: errors.array() });
+  const userId = req.user.id;
+  const { items } = req.body;
+
+  console.log("Order request received for user:", userId);
+  console.log("Items in request:", JSON.stringify(items));
+
+  if (!items || !Array.isArray(items)) {
+    return res.status(400).json({ error: "Invalid cart items" });
   }
 
-  const { menuMealId, pickupTime } = req.body;
-  const userId = req.user.id;
-
   try {
-    const order = await orderService.createOrder(userId, menuMealId, pickupTime);
-    return res.json({ order });
+    const orders = await orderService.createOrder(userId, items);
+    return res.json({ orders });
   } catch (error) {
     console.error("Error in createOrder controller:", error);
-    return res.status(500).json({ error: "Failed to create order" });
+    return res.status(500).json({
+      error: "Failed to create order",
+      details: error.message
+    });
   }
 };
 
 exports.getOrders = async (req, res) => {
   const userId = req.user.id;
   try {
-    const orders = await orderService.getOrders(userId);
+    const orders = await orderService.getUserOrders(userId);
     return res.json({ orders });
   } catch (error) {
     console.error("Error in getOrders controller:", error);

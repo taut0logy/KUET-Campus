@@ -2,53 +2,73 @@ const { PrismaClient } = require("@prisma/client");
 const crypto = require('crypto');
 const prisma = new PrismaClient();
 
-exports.createOrderFromCart = async (userId, cartItems) => {
-  const pickupTime = new Date();
-  pickupTime.setMinutes(pickupTime.getMinutes() + 30);
+exports.createOrder = async (userId, cartItems) => {
+  try {
+    console.log("Creating order for user:", userId, "with items:", JSON.stringify(cartItems));
+    
+    const pickupTime = new Date();
+    pickupTime.setMinutes(pickupTime.getMinutes() + 30);
 
-  // Create all orders in a transaction
-  return await prisma.$transaction(async (tx) => {
-    const orders = await Promise.all(
-      cartItems.map(async (item) => {
+    return await prisma.$transaction(async (tx) => {
+      // Process cart items directly from the parameter
+      if (!cartItems || !Array.isArray(cartItems) || cartItems.length === 0) {
+        throw new Error("No items in cart");
+      }
+
+      // Check if all meals exist
+      const mealIds = cartItems.map(item => item.mealId);
+      const meals = await tx.meal.findMany({
+        where: { id: { in: mealIds } }
+      });
+
+      if (meals.length !== mealIds.length) {
+        throw new Error("One or more meals not found");
+      }
+
+      // Create orders
+      const orders = [];
+      for (const item of cartItems) {
         const verificationCode = crypto.randomBytes(4).toString('hex').toUpperCase();
         
-        return await tx.preorder.create({
+        const order = await tx.preorder.create({
           data: {
             userId,
-            menuMealId: item.menuMealId,
+            mealId: item.mealId,
             quantity: item.quantity,
             pickupTime,
-            verificationCode,
-            status: 'placed'
+            verificationCode
           },
           include: {
-            menuMeal: {
-              include: {
-                meal: true
-              }
-            },
+            meal: true,
             user: {
               select: {
-                name: true,
+                firstName: true,
+                lastName: true,
                 email: true
               }
             }
           }
         });
-      })
-    );
-
-    // Clear the user's cart after successful order creation
-    await tx.cartItem.deleteMany({
-      where: {
-        cart: {
-          userId
-        }
+        
+        orders.push(order);
       }
-    });
 
-    return orders;
-  });
+      // Clear the cart after order is placed
+      try {
+        await tx.cart.update({
+          where: { userId },
+          data: { items: { deleteMany: {} } }
+        });
+      } catch (err) {
+        console.log("Failed to clear cart, but order was created:", err);
+      }
+
+      return orders;
+    });
+  } catch (error) {
+    console.error("Order creation failed with error:", error);
+    throw error;
+  }
 };
 
 exports.getUserOrders = async (userId) => {
@@ -57,14 +77,11 @@ exports.getUserOrders = async (userId) => {
       userId
     },
     include: {
-      menuMeal: {
-        include: {
-          meal: true
-        }
-      },
+      meal: true,
       user: {
         select: {
-          name: true,
+          firstName: true,
+          lastName: true,
           email: true
         }
       }
@@ -86,11 +103,24 @@ exports.updateOrderStatus = async (orderId, status) => {
     where: { id: parseInt(orderId) },
     data: { status },
     include: {
-      menuMeal: {
-        include: {
-          meal: true
-        }
-      }
+      meal: true
     }
+  });
+};
+
+exports.verifyOrder = async (verificationCode) => {
+  const order = await prisma.preorder.findUnique({
+    where: { verificationCode },
+    include: { meal: true }
+  });
+  
+  if (!order) {
+    throw new Error("Order not found");
+  }
+  
+  return await prisma.preorder.update({
+    where: { id: order.id },
+    data: { status: 'picked_up' },
+    include: { meal: true }
   });
 };
