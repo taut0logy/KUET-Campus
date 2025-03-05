@@ -140,7 +140,8 @@ export default function BusDetailsPage({ params }) {
 
   const filteredSchedules = schedules.filter(schedule => {
     const matchesDepartureTime = departureTimeFilter ? 
-      new Date(schedule.departureTime).toLocaleDateString() === new Date(departureTimeFilter).toLocaleDateString() : true;
+      new Date(`1970-01-01T${schedule.departureTime}`).getTime() >= 
+      new Date(`1970-01-01T${departureTimeFilter}:00`).getTime() : true;
     const matchesStatus = statusFilter && statusFilter !== "ALL" ? 
       schedule.status === statusFilter : true;
     return matchesDepartureTime && matchesStatus;
@@ -210,10 +211,10 @@ export default function BusDetailsPage({ params }) {
         {/* Filters Section */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           <div className="space-y-2">
-            <Label htmlFor="departureDate">Departure Date</Label>
+            <Label htmlFor="departureTime">Departure Time</Label>
             <Input
-              id="departureDate"
-              type="date"
+              id="departureTime"
+              type="time"
               value={departureTimeFilter}
               onChange={(e) => setDepartureTimeFilter(e.target.value)}
               className="w-full"
