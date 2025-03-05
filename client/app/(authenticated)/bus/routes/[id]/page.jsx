@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
+import Link from "next/link";
 
 export default function RouteBusesPage({ params }) {
   const router = useRouter();
@@ -160,13 +161,11 @@ export default function RouteBusesPage({ params }) {
                           <p className="text-sm text-muted-foreground mt-1">{bus.description}</p>
                         )}
                       </div>
-                      <div className={`px-3 py-1 rounded-full ${
-                        bus.isActive 
-                          ? 'bg-green-500/20 text-green-500 dark:bg-green-500/30 dark:text-green-400' 
-                          : 'bg-destructive/20 text-destructive dark:bg-destructive/30 dark:text-destructive-foreground'
-                      }`}>
-                        {bus.isActive ? "Active" : "Inactive"}
-                      </div>
+                      <Link href={`/bus/${bus.id}`}>
+                        <button className="mt-2 bg-blue-500 text-white rounded px-2 py-1">
+                          View Details
+                        </button>
+                      </Link>
                     </CardContent>
                   </Card>
                 ))

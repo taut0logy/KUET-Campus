@@ -1,26 +1,62 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { BusList } from "@/components/bus/BusList";
 import { BusRoutes } from "@/components/bus/BusRoutes";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import useBusStore from "@/stores/bus-store";
+import Link from "next/link";
 
 export default function BusPage() {
   const { buses, fetchBuses, fetchRoutes } = useBusStore();
+  const [schedules, setSchedules] = useState([]);
+  const [routeDetails, setRouteDetails] = useState({});
 
   useEffect(() => {
     // Initial data fetch
     const fetchData = async () => {
       try {
-        await Promise.all([fetchBuses(), fetchRoutes()]);
+        await Promise.all([fetchBuses(), fetchRoutes(), fetchSchedules()]);
       } catch (error) {
         console.error("Failed to fetch initial data:", error);
       }
     };
     fetchData();
-  }, []); // Remove dependencies to prevent multiple fetches
+  }, []);
+
+  const fetchSchedules = async () => {
+    try {
+      const response = await fetch("http://localhost:8000/api/bus/schedules");
+      const data = await response.json();
+      if (data.success) {
+        setSchedules(data.data);
+        await fetchRouteDetails(data.data);
+      } else {
+        console.error("Failed to fetch schedules:", data.message);
+      }
+    } catch (error) {
+      console.error("Error fetching schedules:", error);
+    }
+  };
+
+  const fetchRouteDetails = async (schedules) => {
+    const routePromises = schedules.map(async (schedule) => {
+      try {
+        const response = await fetch(`http://localhost:8000/api/bus/routes/${schedule.routeId}`);
+        const data = await response.json();
+        if (data.success) {
+          setRouteDetails((prev) => ({
+            ...prev,
+            [schedule.routeId]: data.data,
+          }));
+        }
+      } catch (error) {
+        console.error(`Error fetching route details for ${schedule.routeId}:`, error);
+      }
+    });
+    await Promise.all(routePromises);
+  };
 
   const activeBuses = buses.filter(bus => bus.isActive);
   const totalCapacity = buses.reduce((sum, bus) => sum + bus.capacity, 0);
@@ -81,9 +117,39 @@ export default function BusPage() {
           <TabsContent value="schedules">
             <Card>
               <CardContent className="pt-6">
-                <p className="text-center text-muted-foreground">
-                  Schedule information coming soon
-                </p>
+                <h2 className="text-lg font-bold">Bus Schedules</h2>
+                <ul className="space-y-2">
+                  {schedules
+                    .sort((a, b) => {
+                      return new Date(`1970-01-01T${a.departureTime}:00`) - new Date(`1970-01-01T${b.departureTime}:00`);
+                    })
+                    .map(schedule => (
+                      <li key={schedule.id} className="border p-4 rounded">
+                        <p><strong>Bus Number:</strong> {schedule.bus.busNumber}</p>
+                        <p><strong>Driver:</strong> {schedule.driver.firstName} {schedule.driver.lastName}</p>
+                        <p><strong>Departure Time:</strong> {schedule.departureTime}</p>
+                        <p><strong>Arrival Time:</strong> {schedule.arrivalTime}</p>
+                        <p><strong>Available Seats:</strong> {schedule.availableSeats}</p>
+                        {routeDetails[schedule.routeId] && (
+                          <>
+                            <p><strong>Route Name:</strong> {routeDetails[schedule.routeId].routeName}</p>
+                            <p><strong>Start Point:</strong> {routeDetails[schedule.routeId].startPoint}</p>
+                            <p><strong>End Point:</strong> {routeDetails[schedule.routeId].endPoint}</p>
+                          </>
+                        )}
+                        <Link href={`/bus/${schedule.bus.id}`}>
+                          <button className="mt-2 bg-blue-500 text-white rounded px-2 py-1">
+                            View Bus Details
+                          </button>
+                        </Link>
+                        <Link href={`/bus/routes/${schedule.routeId}`}>
+                          <button className="mt-2 bg-green-500 text-white rounded px-2 py-1">
+                            View Route Details
+                          </button>
+                        </Link>
+                      </li>
+                    ))}
+                </ul>
               </CardContent>
             </Card>
           </TabsContent>

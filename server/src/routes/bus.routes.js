@@ -74,8 +74,6 @@ router.get('/buses/:busId', async (req, res) => {
   }
 });
 
-
-
 // Get all routes
 router.get('/routes', async (req, res) => {
   try {
@@ -331,6 +329,80 @@ router.get('/routes/:routeId/stops', async (req, res) => {
   } catch (error) {
     console.error("Error fetching bus stops:", error);
     return res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// New endpoint to get all schedules
+router.get('/schedules', async (req, res) => {
+  try {
+    const schedules = await prisma.busSchedule.findMany({
+      include: {
+        bus: true, // Include bus details if needed
+        driver: true, // Include driver details if needed
+      },
+    });
+
+    if (!schedules || schedules.length === 0) {
+      return res.status(404).json({ message: 'No schedules found.' });
+    }
+
+    res.json({
+      status: 200,
+      success: true,
+      message: 'Schedules retrieved successfully',
+      data: schedules,
+    });
+  } catch (error) {
+    console.error('Error fetching schedules:', error);
+    res.status(500).json({
+      status: 500,
+      success: false,
+      message: 'Failed to fetch schedules',
+      error: {
+        message: error.message,
+        code: 500,
+        details: error,
+      },
+    });
+  }
+});
+
+// New endpoint to get a specific route by ID
+router.get('/routes/:id', async (req, res) => {
+  const { id } = req.params; // Get the route ID from the request parameters
+  try {
+    const route = await prisma.busRoute.findUnique({
+      where: { id: id }, // Query for the route with the specified ID
+      include: {
+        // Include any related data if necessary
+        bus: true,
+        stops: true,
+        schedules: true,
+      },
+    });
+
+    if (!route) {
+      return res.status(404).json({ message: 'Route not found.' });
+    }
+
+    res.json({
+      status: 200,
+      success: true,
+      message: 'Route retrieved successfully',
+      data: route,
+    });
+  } catch (error) {
+    console.error('Error fetching route:', error);
+    res.status(500).json({
+      status: 500,
+      success: false,
+      message: 'Failed to fetch route',
+      error: {
+        message: error.message,
+        code: 500,
+        details: error,
+      },
+    });
   }
 });
 
