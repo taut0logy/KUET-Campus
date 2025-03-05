@@ -25,7 +25,11 @@ const orderStatusValidator = [
   body('rejectionReason')
     .optional()
     .isString()
-    .withMessage('Rejection reason must be a string')
+    .withMessage('Rejection reason must be a string'),
+  body('pickupTime')
+    .optional()
+    .isISO8601()
+    .withMessage('Pickup time must be a valid date-time string')
 ];
 
 

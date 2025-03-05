@@ -32,11 +32,20 @@ export default function PreorderPage() {
   };
 
   const getTimeRemaining = (pickupTime) => {
+    if (!pickupTime) {
+      return "Not yet known";
+    }
+    
     const now = new Date();
     const pickup = new Date(pickupTime);
     const diff = pickup - now;
     const minutes = Math.floor(diff / 60000);
-    return minutes > 0 ? `${minutes} minutes` : 'Time expired';
+    
+    if (minutes < 0) {
+      return "Time expired";
+    }
+    
+    return `${minutes} minutes`;
   };
   
   const createQRData = (order) => {
@@ -52,6 +61,8 @@ export default function PreorderPage() {
     navigator.clipboard.writeText(code);
     toast.success('Verification code copied to clipboard');
   };
+
+  
 
   if (loading) {
     return (

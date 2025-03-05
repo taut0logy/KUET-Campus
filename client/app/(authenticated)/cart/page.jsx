@@ -246,7 +246,7 @@ export default function CartPage() {
                         <DialogHeader>
                             <DialogTitle>Confirm Preorder</DialogTitle>
                             <DialogDescription>
-                                Your order will be ready for pickup in 30 minutes. Do you want to proceed?
+                                Your order will be ready for pickup after the preorder is confirmed. Do you want to proceed?
                             </DialogDescription>
                         </DialogHeader>
                         <div className="flex justify-end space-x-2">

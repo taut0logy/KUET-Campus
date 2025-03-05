@@ -25,6 +25,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import QRScanner from '@/components/QRScanner';
+import DateTimePicker from 'react-datetime-picker';
 import axios from '@/lib/axios';
 
 export default function CafeManagerPage() {
@@ -39,7 +40,8 @@ export default function CafeManagerPage() {
   const [newStatus, setNewStatus] = useState('');
   const [rejectionReason, setRejectionReason] = useState('');
   const [verificationCode, setVerificationCode] = useState('');
-  
+  const [pickupDateTime, setPickupDateTime] = useState(new Date());
+
   // Fetch all orders
   const fetchOrders = async () => {
     setLoading(true);
@@ -117,6 +119,10 @@ export default function CafeManagerPage() {
   // Handle status update
   const handleUpdateStatus = async () => {
     try {
+        const payload = { status: newStatus };
+        if (newStatus === 'ready' && pickupDateTime) {
+            payload.pickupTime = pickupDateTime.toISOString();
+          }
       await axios.put(`/order/${selectedOrder.id}/status`, { status: newStatus });
       toast.success(`Order status updated to ${newStatus}`);
       setIsUpdateDialogOpen(false);
@@ -288,6 +294,24 @@ export default function CafeManagerPage() {
             </SelectContent>
           </Select>
           
+
+{/* Add datetime picker when setting status to "ready" */}
+{newStatus === 'ready' && (
+      <div className="mt-4">
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Set Pickup Time
+        </label>
+        <DateTimePicker
+          onChange={setPickupDateTime}
+          value={pickupDateTime}
+          className="w-full border rounded-md"
+          disableClock={true}
+          minDate={new Date()}
+          clearIcon={null}
+        />
+      </div>
+    )}
+
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsUpdateDialogOpen(false)}>
               Cancel

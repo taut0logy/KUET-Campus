@@ -138,7 +138,7 @@ model Preorder {
   quantity         Int      @default(1)
   status           String   @default("pending_approval") 
   orderTime        DateTime @default(now())
-  pickupTime       DateTime
+  pickupTime       DateTime?
   verificationCode String   @unique
   rejectionReason  String?  
   createdAt        DateTime @default(now())

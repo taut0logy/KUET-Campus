@@ -6,9 +6,6 @@ exports.createOrder = async (userId, cartItems) => {
   try {
     console.log("Creating order for user:", userId, "with items:", JSON.stringify(cartItems));
     
-    const pickupTime = new Date();
-    pickupTime.setMinutes(pickupTime.getMinutes() + 30);
-
     return await prisma.$transaction(async (tx) => {
       // Process cart items directly from the parameter
       if (!cartItems || !Array.isArray(cartItems) || cartItems.length === 0) {
@@ -30,13 +27,21 @@ exports.createOrder = async (userId, cartItems) => {
       for (const item of cartItems) {
         const verificationCode = crypto.randomBytes(4).toString('hex').toUpperCase();
         
+        // Set a default pickup time 1 hour from now (will be updated by manager later)
+        const defaultPickupTime = new Date();
+        defaultPickupTime.setHours(defaultPickupTime.getHours() + 1);
+        
         const order = await tx.preorder.create({
           data: {
-            userId,
-            mealId: item.mealId,
             quantity: item.quantity,
-            pickupTime,
-            verificationCode
+            pickupTime: defaultPickupTime, // Use default time instead of null
+            verificationCode,
+            user: {
+              connect: { id: userId }
+            },
+            meal: {
+              connect: { id: item.mealId }
+            }
           },
           include: {
             meal: true,
@@ -53,14 +58,23 @@ exports.createOrder = async (userId, cartItems) => {
         orders.push(order);
       }
 
-      // Clear the cart after order is placed
+      // Fix cart clearing - find cart items for this user and delete them
       try {
-        await tx.cart.update({
+        // Find cart first
+        const cart = await tx.cart.findFirst({
           where: { userId },
-          data: { items: { deleteMany: {} } }
+          select: { id: true }
         });
+        
+        if (cart) {
+          // Delete cart items
+          await tx.cartItem.deleteMany({
+            where: { cartId: cart.id }
+          });
+        }
       } catch (err) {
-        console.log("Failed to clear cart, but order was created:", err);
+        console.error("Failed to clear cart:", err);
+        // Continue since order has been created successfully
       }
 
       return orders;
@@ -70,6 +84,7 @@ exports.createOrder = async (userId, cartItems) => {
     throw error;
   }
 };
+
 
 exports.getUserOrders = async (userId) => {
   return await prisma.preorder.findMany({
@@ -92,16 +107,23 @@ exports.getUserOrders = async (userId) => {
   });
 };
 
-exports.updateOrderStatus = async (orderId, status) => {
+exports.updateOrderStatus = async (orderId, status, pickupTime = null) => {
   const validStatuses = ['placed', 'ready', 'picked_up', 'cancelled'];
   
   if (!validStatuses.includes(status)) {
     throw new Error(`Invalid status. Must be one of: ${validStatuses.join(', ')}`);
   }
   
+  const updateData = { status };
+  
+  // If pickup time is provided and status is 'ready', update pickup time
+  if (pickupTime && status === 'ready') {
+    updateData.pickupTime = new Date(pickupTime);
+  }
+  
   return await prisma.preorder.update({
     where: { id: parseInt(orderId) },
-    data: { status },
+    data: updateData,
     include: {
       meal: true
     }

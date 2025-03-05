@@ -47,20 +47,7 @@ const useCartStore = create((set, get) => ({
     },
 
     // Remove a cart item by its ID
-    removeFromCart: async (cartItemId) => {
-        try {
-            set({ loading: true, error: null });
-            await axios.delete(`/api/cart/item/${cartItemId}`);
-            set({
-                items: get().items.filter((item) => item.id !== cartItemId),
-            });
-        } catch (error) {
-            set({ error: error.response?.data?.error || "Failed to remove from cart" });
-            throw error;
-        } finally {
-            set({ loading: false });
-        }
-    },
+
 
     // Update the quantity of a cart item
     updateCartItemQuantity: async (cartItemId, quantity) => {

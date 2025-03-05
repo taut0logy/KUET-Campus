@@ -54,24 +54,29 @@ const useOrderStore = create((set, get) => ({
     }
   },
 
-  updateOrderStatus: async (orderId, status, rejectionReason = null) => {
+  updateOrderStatus: async (orderId, status, options = {}) => {
     try {
       set({ loading: true, error: null });
       const payload = { status };
-
-      if (rejectionReason) {
-        payload.rejectionReason = rejectionReason;
+  
+      // Add optional parameters
+      if (options.rejectionReason) {
+        payload.rejectionReason = options.rejectionReason;
       }
-
-      const response = await axios.put(`/orders/${orderId}/status`, payload);
-
+      
+      if (options.pickupTime) {
+        payload.pickupTime = options.pickupTime;
+      }
+  
+      const response = await axios.put(`/order/${orderId}/status`, payload);
+  
       // Update the local orders state
       set(state => ({
         orders: state.orders.map(order =>
           order.id === orderId ? response.data.order : order
         )
       }));
-
+  
       return response.data.order;
     } catch (error) {
       set({ error: error.response?.data?.message || 'Failed to update order status' });

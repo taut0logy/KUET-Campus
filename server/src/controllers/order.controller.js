@@ -49,67 +49,6 @@ exports.updateOrderStatus = async (req, res) => {
 
 
 
-
-// Replace the verifyOrder function with this:
-
-// exports.verifyOrder = async (verificationCode) => {
-//   try {
-//     console.log('Attempting to verify code:', verificationCode);
-    
-//     // Find order with matching verification code - CHANGE from "order" to "preorder"
-//     const order = await prisma.preorder.findFirst({
-//       where: {
-//         verificationCode: verificationCode,
-//         status: { in: ['placed', 'ready'] } // Only verify orders that are placed or ready
-//       },
-//       include: {
-//         meal: true,
-//         user: {
-//           select: {
-//             id: true,
-//             firstName: true,
-//             lastName: true,
-//             email: true,
-//           }
-//         }
-//       }
-//     });
-
-//     if (!order) {
-//       const error = new Error('Invalid verification code or order is not ready for pickup');
-//       error.statusCode = 404;
-//       throw error;
-//     }
-
-//     console.log('Order found:', order.id);
-
-//     // Update the order status to 'picked_up' - CHANGE from "order" to "preorder"
-//     const updatedOrder = await prisma.preorder.update({
-//       where: { id: order.id },
-//       data: { 
-//         status: 'picked_up',
-//         pickupTime: new Date() // Update pickup time to current time
-//       },
-//       include: {
-//         meal: true,
-//         user: {
-//           select: {
-//             id: true,
-//             firstName: true,
-//             lastName: true,
-//             email: true,
-//           }
-//         }
-//       }
-//     });
-
-//     return updatedOrder;
-//   } catch (error) {
-//     console.error('Order verification error:', error);
-//     throw error;
-//   }
-// };
-
 // Get all orders for cafe manager
 exports.getOrdersForManagement = async (req, res) => {
   try {
@@ -121,11 +60,11 @@ exports.getOrdersForManagement = async (req, res) => {
   }
 };
 
-// Update order status with additional manager features
+
 exports.updateOrderStatus = async (req, res) => {
   try {
     const { id } = req.params;
-    const { status, approved, rejectionReason } = req.body;
+    const { status, approved, rejectionReason, pickupTime } = req.body;
     
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -144,8 +83,8 @@ exports.updateOrderStatus = async (req, res) => {
       return res.json({ order });
     }
     
-    // Regular status update
-    const order = await orderService.updateOrderStatus(parseInt(id), status);
+    // Regular status update - now includes pickup time
+    const order = await orderService.updateOrderStatus(parseInt(id), status, pickupTime);
     return res.json({ order });
   } catch (error) {
     console.error("Error in updateOrderStatus controller:", error);
