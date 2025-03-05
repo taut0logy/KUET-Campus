@@ -8,7 +8,7 @@ import useAuthStore from "@/stores/auth-store";
 import useRoutineStore from "@/stores/routine-store";
 import { toast } from "sonner";
 
-export default function DashboardPage() {
+export function DashboardPage() {
   const [showScheduleModal, setShowScheduleModal] = useState(false);
   const [showCourseModal, setShowCourseModal] = useState(false);
   const [weekday, setWeekday] = useState("");
@@ -136,57 +136,59 @@ export default function DashboardPage() {
       </div>
 
       {showScheduleModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-background p-4 rounded-lg max-w-4xl w-full">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 overflow-y-auto">
+          <div className="bg-background p-4 rounded-lg w-full max-h-[90vh] overflow-auto">
             <h2 className="text-lg font-bold mb-4">Set Weekly Schedule</h2>
-            <table className="w-full">
-              <thead>
-                <tr>
-                  <th>Weekday</th>
-                  {Array.from({ length: 9 }, (_, i) => (
-                    <th key={i}>{i + 1}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td>
-                    <select
-                      className="border p-1 rounded"
-                      value={weekday}
-                      onChange={(e) => setWeekday(e.target.value)}
-                    >
-                      <option value="">Select Day</option>
-                      <option value="Sunday">Sunday</option>
-                      <option value="Monday">Monday</option>
-                      <option value="Tuesday">Tuesday</option>
-                      <option value="Wednesday">Wednesday</option>
-                      <option value="Thursday">Thursday</option>
-                    </select>
-                  </td>
-                  {periods.map((period, index) => (
-                    <td key={index}>
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[800px]">
+                <thead>
+                  <tr>
+                    <th className="p-2">Weekday</th>
+                    {Array.from({ length: 9 }, (_, i) => (
+                      <th key={i} className="p-2">{i + 1}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td className="p-2">
                       <select
-                        className="border p-1 rounded"
-                        value={period}
-                        onChange={(e) => {
-                          const newPeriods = [...periods];
-                          newPeriods[index] = e.target.value;
-                          setPeriods(newPeriods);
-                        }}
+                        className="w-full border p-1 rounded"
+                        value={weekday}
+                        onChange={(e) => setWeekday(e.target.value)}
                       >
-                        <option value="">Select Course</option>
-                        {courses.map((course) => (
-                          <option key={course.id} value={course.courseId}>
-                            {course.courseName}
-                          </option>
-                        ))}
+                        <option value="">Select Day</option>
+                        <option value="Sunday">Sunday</option>
+                        <option value="Monday">Monday</option>
+                        <option value="Tuesday">Tuesday</option>
+                        <option value="Wednesday">Wednesday</option>
+                        <option value="Thursday">Thursday</option>
                       </select>
                     </td>
-                  ))}
-                </tr>
-              </tbody>
-            </table>
+                    {periods.map((period, index) => (
+                      <td key={index} className="p-2">
+                        <select
+                          className="w-full border p-1 rounded"
+                          value={period}
+                          onChange={(e) => {
+                            const newPeriods = [...periods];
+                            newPeriods[index] = e.target.value;
+                            setPeriods(newPeriods);
+                          }}
+                        >
+                          <option value="">Select Course</option>
+                          {courses.map((course) => (
+                            <option key={course.id} value={course.courseId}>
+                              {course.courseName}
+                            </option>
+                          ))}
+                        </select>
+                      </td>
+                    ))}
+                  </tr>
+                </tbody>
+              </table>
+            </div>
             <div className="mt-4 flex justify-end gap-2">
               <Button onClick={handleSetSchedule}>Save</Button>
               <Button variant="ghost" onClick={() => setShowScheduleModal(false)}>
@@ -246,3 +248,5 @@ export default function DashboardPage() {
     </div>
   );
 }
+
+export default DashboardPage;

@@ -64,7 +64,9 @@ model User {
   Routine           Routine[]
   Course            Course[]
   clubs             UserClub[]     @relation("UserClubs")
-  moderatedClubs    Club[]         @relation("ClubModerator")
+  moderatedClubs    Club[]         @relation("ClubModerator")  
+  Assignment        Assignment[]
+
   @@map("users")
 }
 
@@ -238,39 +240,4 @@ model Course {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("courses")
-}
-
-model Club {
-  id                Int        @id @default(autoincrement())
-  name              String     @db.VarChar(255)
-  description       String?    @db.Text
-  foundingDate      DateTime
-  moderatorId       Int
-  moderator         User       @relation("ClubModerator", fields: [moderatorId], references: [id])
-  tags              Json       // Store tags as JSON
-  members           UserClub[] @relation
-  events            Event[]    @relation
-}
-
-model UserClub {
-  id                Int       @id @default(autoincrement())
-  userId            Int
-  clubId            Int
-  joinDate          DateTime  @default(now())
-  role              String     // e.g., 'moderator', 'manager'
-  status            String     // 'active' or 'inactive'
-  user              User       @relation("UserClubs", fields: [userId], references: [id])
-  club              Club       @relation(fields: [clubId], references: [id])
-}
-
-model Event {
-  id                Int       @id @default(autoincrement())
-  name              String    @db.VarChar(255)
-  description       String?   @db.Text
-  startTime         DateTime
-  endTime           DateTime
-  eventLinks        Json      // Store event links as JSON
-  tags              Json      // Store tags as JSON
-  clubId           Int
-  club             Club       @relation(fields: [clubId], references: [id])
 }

@@ -1,22 +1,46 @@
 const { prisma } = require('./database.service');
 
 const setWeeklySchedule = async (userId, weekday, periods) => {
+  if (!userId) {
+    throw new Error('User ID is required');
+  }
   return await prisma.routine.upsert({
-    where: { userId_weekday: { userId, weekday } },
+    where: { 
+      weekday_userId: { 
+        userId: userId, 
+        weekday: weekday 
+      } 
+    },
     update: { ...periods },
     create: { userId, weekday, ...periods },
   });
 };
 
 const addCourse = async (userId, courseId, courseName, classTest) => {
+  if (!userId) {
+    throw new Error('User ID is required');
+  }
+
   return await prisma.course.create({
-    data: { userId, courseId, courseName, classTest },
+    data: {
+      courseId,
+      courseName,
+      classTest,
+      user: {
+        connect: {
+          id: userId
+        }
+      }
+    },
   });
 };
 
 const getWeeklySchedule = async (userId) => {
+  if (!userId) {
+    throw new Error('User ID is required');
+  }
   return await prisma.routine.findMany({
-    where: { userId },
+    where: { userId } ,
   });
 };
 

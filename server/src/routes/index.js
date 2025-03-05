@@ -3,6 +3,7 @@ const router = express.Router();
 const authRoutes = require('./auth.routes');
 const cafeteriaRoutes = require('./cafeteria.routes');
 const routineRoutes = require('./routine.routes');
+const assignmentRoutes = require('./assignment.routes');
 const { standardLimiter } = require('../middleware/rate-limit.middleware');
 const userRoutes = require('./user.routes');
 const notificationRoutes = require('./notification.routes');
@@ -28,6 +29,7 @@ router.use('/notifications', notificationRoutes);
 router.use('/storage', storageRoutes);
 router.use('/departments', departmentRoutes);
 router.use('/routine', routineRoutes);
+router.use('/assignments', assignmentRoutes);
 // Future route modules
 // router.use('/profiles', profileRoutes);
 // etc.
