@@ -7,19 +7,28 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import useBusStore from "@/stores/bus-store";
 import Link from "next/link";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Calendar, MapPin, ArrowRight, Bus, Users, Clock, AlertCircle } from "lucide-react";
 
 export default function BusPage() {
   const { buses, fetchBuses, fetchRoutes } = useBusStore();
   const [schedules, setSchedules] = useState([]);
   const [routeDetails, setRouteDetails] = useState({});
+  const [statusFilter, setStatusFilter] = useState("ALL");
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Initial data fetch
     const fetchData = async () => {
       try {
+        setLoading(true);
         await Promise.all([fetchBuses(), fetchRoutes(), fetchSchedules()]);
       } catch (error) {
         console.error("Failed to fetch initial data:", error);
+      } finally {
+        setLoading(false);
       }
     };
     fetchData();
@@ -62,94 +71,207 @@ export default function BusPage() {
   const totalCapacity = buses.reduce((sum, bus) => sum + bus.capacity, 0);
 
   return (
-    <div className="container mx-auto p-6">
-      <div className="flex flex-col gap-6">
-        {/* Stats Section */}
+    <div className="h-full">
+      {/* Header Section */}
+      <div className="border-b">
+        <div className="flex h-16 items-center px-4">
+          <h1 className="text-2xl font-bold">Bus Management System</h1>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
+        {/* Stats Overview */}
         <div className="grid gap-4 md:grid-cols-3">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Buses</CardTitle>
+          <Card className="hover:shadow-lg transition-all">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium">Total Fleet</CardTitle>
+              <Bus className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{buses.length}</div>
-              <p className="text-xs text-muted-foreground">
-                Available in fleet
+              <p className="text-xs text-muted-foreground mt-1">
+                Buses in fleet
               </p>
             </CardContent>
           </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <Card className="hover:shadow-lg transition-all">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium">Active Buses</CardTitle>
+              <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{activeBuses.length}</div>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-xs text-muted-foreground mt-1">
                 Currently in service
               </p>
             </CardContent>
           </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <Card className="hover:shadow-lg transition-all">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium">Total Capacity</CardTitle>
+              <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{totalCapacity}</div>
-              <p className="text-xs text-muted-foreground">
-                Total passenger seats
+              <p className="text-xs text-muted-foreground mt-1">
+                Passenger seats
               </p>
             </CardContent>
           </Card>
         </div>
 
-        {/* Bus Information Tabs */}
-        <Tabs defaultValue="buses" className="space-y-4">
-          <TabsList>
-            <TabsTrigger value="buses">Buses</TabsTrigger>
-            <TabsTrigger value="routes">Routes</TabsTrigger>
+        {/* Main Tabs */}
+        <Tabs defaultValue="overview" className="space-y-4">
+          <TabsList className="grid w-full grid-cols-3 lg:w-[400px]">
+            <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="schedules">Schedules</TabsTrigger>
+            <TabsTrigger value="routes">Routes</TabsTrigger>
           </TabsList>
-          <TabsContent value="buses" className="space-y-4">
-            <BusList />
+
+          {/* Overview Tab */}
+          <TabsContent value="overview" className="space-y-4">
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
+              <Card className="col-span-4">
+                <CardHeader>
+                  <CardTitle>Active Fleet Status</CardTitle>
+                </CardHeader>
+                <CardContent className="pl-2">
+                  <BusList />
+                </CardContent>
+              </Card>
+              <Card className="col-span-3">
+                <CardHeader>
+                  <CardTitle>Quick Stats</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {/* Add quick stats content */}
+                </CardContent>
+              </Card>
+            </div>
           </TabsContent>
+
+          {/* Schedules Tab */}
+          <TabsContent value="schedules" className="space-y-4">
+            <div className="flex justify-between items-center mb-6">
+              <div className="space-y-1">
+                <h2 className="text-2xl font-semibold tracking-tight">
+                  Bus Schedules
+                </h2>
+                <p className="text-sm text-muted-foreground">
+                  Manage and monitor all bus schedules
+                </p>
+              </div>
+              <Select
+                value={statusFilter}
+                onValueChange={setStatusFilter}
+              >
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Filter by status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="ALL">All Status</SelectItem>
+                  <SelectItem value="SCHEDULED">Scheduled</SelectItem>
+                  <SelectItem value="IN_PROGRESS">In Progress</SelectItem>
+                  <SelectItem value="COMPLETED">Completed</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {schedules.map(schedule => (
+                <Card 
+                  key={schedule.id} 
+                  className="hover:shadow-lg transition-all duration-300"
+                >
+                  <CardContent className="p-6">
+                    <div className="flex flex-col space-y-4">
+                      <div className="flex justify-between items-start">
+                        <Badge 
+                          className={cn(
+                            schedule.status === "SCHEDULED" && "bg-blue-500/10 text-blue-500",
+                            schedule.status === "IN_PROGRESS" && "bg-amber-500/10 text-amber-500",
+                            schedule.status === "COMPLETED" && "bg-green-500/10 text-green-500"
+                          )}
+                        >
+                          {schedule.status}
+                        </Badge>
+                        <Link 
+                          href={`/bus/${schedule.bus.id}`}
+                          className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                        >
+                          Bus #{schedule.bus.busNumber}
+                        </Link>
+                      </div>
+
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between bg-muted/50 p-2 rounded">
+                          <div className="flex items-center">
+                            <Clock className="h-4 w-4 mr-2 text-muted-foreground" />
+                            <span className="text-sm">Departure</span>
+                          </div>
+                          <span className="font-medium">{schedule.departureTime}</span>
+                        </div>
+                        
+                        <div className="flex items-center justify-between bg-muted/50 p-2 rounded">
+                          <div className="flex items-center">
+                            <Clock className="h-4 w-4 mr-2 text-muted-foreground" />
+                            <span className="text-sm">Arrival</span>
+                          </div>
+                          <span className="font-medium">{schedule.arrivalTime}</span>
+                        </div>
+                      </div>
+
+                      {routeDetails[schedule.routeId] && (
+                        <Link 
+                          href={`/bus/routes/${schedule.routeId}`}
+                          className="block bg-muted/30 p-3 rounded-lg hover:bg-muted/50 transition-colors"
+                        >
+                          <div className="flex items-center text-sm text-muted-foreground">
+                            <MapPin className="h-4 w-4 mr-2" />
+                            <span>{routeDetails[schedule.routeId].startPoint}</span>
+                            <ArrowRight className="h-4 w-4 mx-2" />
+                            <span>{routeDetails[schedule.routeId].endPoint}</span>
+                          </div>
+                        </Link>
+                      )}
+
+                      <div className="flex gap-2 pt-2">
+                        <Button variant="outline" className="w-1/2" asChild>
+                          <Link href={`/bus/${schedule.bus.id}`}>View Bus</Link>
+                        </Button>
+                        <Button variant="outline" className="w-1/2" asChild>
+                          <Link href={`/bus/routes/${schedule.routeId}`}>View Route</Link>
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+
+              {schedules.length === 0 && (
+                <Card className="col-span-full p-8">
+                  <div className="flex flex-col items-center text-center space-y-4">
+                    <AlertCircle className="h-12 w-12 text-muted-foreground" />
+                    <CardTitle>No Schedules Found</CardTitle>
+                    <p className="text-sm text-muted-foreground max-w-sm">
+                      There are currently no schedules matching your filters.
+                      Try adjusting your search criteria or check back later.
+                    </p>
+                  </div>
+                </Card>
+              )}
+            </div>
+          </TabsContent>
+
+          {/* Routes Tab */}
           <TabsContent value="routes">
-            <BusRoutes />
-          </TabsContent>
-          <TabsContent value="schedules">
             <Card>
-              <CardContent className="pt-6">
-                <h2 className="text-lg font-bold">Bus Schedules</h2>
-                <ul className="space-y-2">
-                  {schedules
-                    .sort((a, b) => {
-                      return new Date(`1970-01-01T${a.departureTime}:00`) - new Date(`1970-01-01T${b.departureTime}:00`);
-                    })
-                    .map(schedule => (
-                      <li key={schedule.id} className="border p-4 rounded">
-                        <p><strong>Bus Number:</strong> {schedule.bus.busNumber}</p>
-                        <p><strong>Driver:</strong> {schedule.driver.firstName} {schedule.driver.lastName}</p>
-                        <p><strong>Departure Time:</strong> {schedule.departureTime}</p>
-                        <p><strong>Arrival Time:</strong> {schedule.arrivalTime}</p>
-                        <p><strong>Available Seats:</strong> {schedule.availableSeats}</p>
-                        {routeDetails[schedule.routeId] && (
-                          <>
-                            <p><strong>Route Name:</strong> {routeDetails[schedule.routeId].routeName}</p>
-                            <p><strong>Start Point:</strong> {routeDetails[schedule.routeId].startPoint}</p>
-                            <p><strong>End Point:</strong> {routeDetails[schedule.routeId].endPoint}</p>
-                          </>
-                        )}
-                        <Link href={`/bus/${schedule.bus.id}`}>
-                          <button className="mt-2 bg-blue-500 text-white rounded px-2 py-1">
-                            View Bus Details
-                          </button>
-                        </Link>
-                        <Link href={`/bus/routes/${schedule.routeId}`}>
-                          <button className="mt-2 bg-green-500 text-white rounded px-2 py-1">
-                            View Route Details
-                          </button>
-                        </Link>
-                      </li>
-                    ))}
-                </ul>
+              <CardHeader>
+                <CardTitle>Bus Routes</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <BusRoutes />
               </CardContent>
             </Card>
           </TabsContent>
