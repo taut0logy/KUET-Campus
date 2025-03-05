@@ -108,24 +108,148 @@ exports.updateOrderStatus = async (orderId, status) => {
   });
 };
 
+// Update the verifyOrder function
+
 exports.verifyOrder = async (verificationCode) => {
+  try {
+    // Find order with matching verification code
+    const order = await prisma.order.findFirst({
+      where: {
+        verificationCode: verificationCode,
+        status: { in: ['placed', 'ready'] } // Only verify orders that are placed or ready
+      },
+      include: {
+        meal: true,
+        user: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+          }
+        }
+      }
+    });
+
+    if (!order) {
+      const error = new Error('Invalid verification code or order is not ready for pickup');
+      error.statusCode = 404;
+      throw error;
+    }
+
+    // Update the order status to 'picked_up'
+    const updatedOrder = await prisma.order.update({
+      where: { id: order.id },
+      data: { 
+        status: 'picked_up',
+        pickupTime: new Date() // Update pickup time to current time
+      },
+      include: {
+        meal: true,
+        user: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+          }
+        }
+      }
+    });
+
+    return updatedOrder;
+  } catch (error) {
+    console.error('Order verification error:', error);
+    throw error;
+  }
+};
+
+
+// Get all orders for management
+exports.getAllOrders = async () => {
+  return await prisma.preorder.findMany({
+    include: {
+      meal: true,
+      user: {
+        select: {
+          id: true,
+          firstName: true,
+          lastName: true,
+          email: true
+        }
+      }
+    },
+    orderBy: [
+      {
+        status: 'asc' // Put pending and active orders first
+      },
+      {
+        orderTime: 'desc' // Then sort by order time (newest first)
+      }
+    ]
+  });
+};
+
+
+// Approve an order
+exports.approveOrder = async (orderId) => {
+  // Check if order exists
   const order = await prisma.preorder.findUnique({
-    where: { verificationCode },
-    include: { meal: true }
+    where: { id: orderId }
   });
   
   if (!order) {
     throw new Error("Order not found");
   }
   
-  // Don't allow reverification of already picked up orders
-  if (order.status === 'picked_up') {
-    throw new Error("Order has already been picked up");
+  // Update the order status to placed (approved)
+  return await prisma.preorder.update({
+    where: { id: orderId },
+    data: { 
+      status: 'placed',
+      rejectionReason: null // Clear any previous rejection reason
+    },
+    include: {
+      meal: true,
+      user: {
+        select: {
+          firstName: true,
+          lastName: true,
+          email: true
+        }
+      }
+    }
+  });
+};
+
+
+// Reject an order with reason
+exports.rejectOrder = async (orderId, rejectionReason) => {
+  // Check if order exists
+  const order = await prisma.preorder.findUnique({
+    where: { id: orderId }
+  });
+  
+  if (!order) {
+    throw new Error("Order not found");
   }
   
+  // Update the order status to cancelled with a reason
   return await prisma.preorder.update({
-    where: { id: order.id },
-    data: { status: 'picked_up' },
-    include: { meal: true }
+    where: { id: orderId },
+    data: { 
+      status: 'cancelled',
+      rejectionReason: rejectionReason
+    },
+    include: {
+      meal: true,
+      user: {
+        select: {
+          firstName: true,
+          lastName: true,
+          email: true
+        }
+      }
+    }
   });
 };

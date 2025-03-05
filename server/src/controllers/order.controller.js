@@ -49,6 +49,90 @@ exports.updateOrderStatus = async (req, res) => {
 
 
 
+// Update the verifyOrder function
+
+exports.verifyOrder = async (req, res) => {
+  try {
+    const { verificationData } = req.body;
+    
+    // Handle both QR data object and direct verification code
+    let verificationCode = verificationData;
+    
+    // Try to parse as JSON if the data looks like JSON
+    if (typeof verificationData === 'string' && verificationData.startsWith('{')) {
+      try {
+        const parsedData = JSON.parse(verificationData);
+        verificationCode = parsedData.verificationCode;
+      } catch (err) {
+        console.log('Not JSON data, using as direct verification code');
+      }
+    }
+    
+    if (!verificationCode) {
+      return res.status(400).json({ message: 'Verification code is required' });
+    }
+    
+    const order = await orderService.verifyOrder(verificationCode);
+    
+    return res.status(200).json({
+      success: true,
+      data: { order },
+      message: 'Order verified successfully'
+    });
+  } catch (error) {
+    console.error('Order verification error:', error);
+    return res.status(error.statusCode || 400).json({
+      success: false,
+      message: error.message || 'Failed to verify order'
+    });
+  }
+};
+
+// Get all orders for cafe manager
+exports.getOrdersForManagement = async (req, res) => {
+  try {
+    const orders = await orderService.getAllOrders();
+    return res.json({ orders });
+  } catch (error) {
+    console.error("Error in getOrdersForManagement controller:", error);
+    return res.status(500).json({ message: "Failed to fetch orders" });
+  }
+};
+
+// Update order status with additional manager features
+exports.updateOrderStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status, approved, rejectionReason } = req.body;
+    
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ message: "Validation failed", errors: errors.array() });
+    }
+
+    // Handle approvals
+    if (approved === true && status === 'placed') {
+      const order = await orderService.approveOrder(parseInt(id));
+      return res.json({ order });
+    }
+    
+    // Handle rejections with reason
+    if (status === 'cancelled' && rejectionReason) {
+      const order = await orderService.rejectOrder(parseInt(id), rejectionReason);
+      return res.json({ order });
+    }
+    
+    // Regular status update
+    const order = await orderService.updateOrderStatus(parseInt(id), status);
+    return res.json({ order });
+  } catch (error) {
+    console.error("Error in updateOrderStatus controller:", error);
+    return res.status(500).json({ message: error.message || "Failed to update order status" });
+  }
+};
+
+
+// Update verification for CAFE_MANAGER
 exports.verifyOrder = async (req, res) => {
   try {
     const { verificationData } = req.body;
@@ -57,25 +141,13 @@ exports.verifyOrder = async (req, res) => {
       return res.status(400).json({ message: "Verification data is required" });
     }
     
-    // Extract verification code from QR data
+    // Extract verification code
     let verificationCode;
     
     if (typeof verificationData === 'string') {
-      // Handle text-based verification (backward compatibility)
       verificationCode = verificationData;
     } else {
-      // Handle QR code JSON data
       verificationCode = verificationData.verificationCode;
-      
-      // Additional security check - you can validate the timestamp if needed
-      const scanTimestamp = new Date(verificationData.timestamp);
-      const currentTime = new Date();
-      const timeDifferenceMinutes = (currentTime - scanTimestamp) / (1000 * 60);
-      
-      // If QR code is older than 10 minutes, reject it
-      if (timeDifferenceMinutes > 10) {
-        return res.status(400).json({ message: "QR code has expired. Please refresh and try again." });
-      }
     }
     
     const order = await orderService.verifyOrder(verificationCode);

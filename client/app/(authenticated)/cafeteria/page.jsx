@@ -207,9 +207,9 @@ export default function Cafeteria() {
     // Calculate TDEE and meal targets
     const tdee = bmr * activityMultiplier * weatherAdjustment;
     const mealCalories = tdee * 0.35;
-    const targetCarbs = (mealCalories * 0.5) / 4; // 50% of calories, 4 kcal/g
-    const targetFats = (mealCalories * 0.3) / 9; // 30% of calories, 9 kcal/g
-    const targetProteins = (mealCalories * 0.2) / 4; // 20% of calories, 4 kcal/g
+    const targetCarbs = (mealCalories * 0.5) / 4; 
+    const targetFats = (mealCalories * 0.3) / 9; 
+    const targetProteins = (mealCalories * 0.2) / 4; 
 
     // Find the best matching meal
     let bestMeal = null;

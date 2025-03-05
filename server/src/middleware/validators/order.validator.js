@@ -1,4 +1,4 @@
-const { body } = require('express-validator');
+const { body, param } = require('express-validator');
 
 const orderValidator = [
   body('items')
@@ -14,4 +14,29 @@ const orderValidator = [
     .withMessage('Each item must have a valid quantity')
 ];
 
-module.exports = { orderValidator };
+
+const orderStatusValidator = [
+  param('id')
+    .isInt()
+    .withMessage('Order ID must be an integer'),
+  body('status')
+    .isIn(['pending_approval', 'placed', 'ready', 'picked_up', 'cancelled'])
+    .withMessage('Invalid status value'),
+  body('rejectionReason')
+    .optional()
+    .isString()
+    .withMessage('Rejection reason must be a string')
+];
+
+
+const orderVerificationValidator = [
+  body('verificationData')
+    .notEmpty()
+    .withMessage('Verification data is required')
+];
+
+module.exports = { 
+  orderValidator,
+  orderStatusValidator,
+  orderVerificationValidator
+};

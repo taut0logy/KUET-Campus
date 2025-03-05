@@ -125,6 +125,15 @@ export default function PreorderPage() {
                       </Button>
                     </div>
                   </div>
+                  {/* Add the rejection reason display here */}
+{order.status === 'cancelled' && order.rejectionReason && (
+  <div className="mt-4 pt-4 border-t">
+    <div className="bg-red-50 p-3 rounded-md border border-red-200">
+      <p className="text-xs text-red-500 font-medium">ORDER CANCELLED</p>
+      <p className="text-sm text-red-700">{order.rejectionReason}</p>
+    </div>
+  </div>
+)}
                 </div>
                 
                 {/* Display QR code for verification */}
