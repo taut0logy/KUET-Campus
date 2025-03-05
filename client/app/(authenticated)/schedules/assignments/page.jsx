@@ -7,9 +7,10 @@ import useAuthStore from "@/stores/auth-store";
 import useAssignmentStore from "@/stores/assignment-store";
 import useRoutineStore from "@/stores/routine-store";
 import { toast } from "sonner";
-import { Calendar, Plus, Trash, X, ChevronRight } from "lucide-react";
+import { Calendar, Plus, Trash, X, ChevronRight, Clock, CheckCircle, AlertTriangle } from "lucide-react";
 import { format } from "date-fns";
 import axios from '@/lib/axios';
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 export default function AssignmentsPage() {
   const [showAssignmentModal, setShowAssignmentModal] = useState(false);
@@ -37,6 +38,9 @@ export default function AssignmentsPage() {
   } = useAssignmentStore();
   
   const { courses, fetchCourses } = useRoutineStore();
+
+  // Add this state for tracking solution generation
+  const [isGeneratingSolution, setIsGeneratingSolution] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -359,34 +363,109 @@ useEffect(() => {
   console.log("Counts:", assignmentCounts);
 }, [assignments, filteredAssignments, assignmentCounts]);
 
+// Add this function to generate a solution using Gemini API
+const generateSolution = async () => {
+  if (!selectedAssignment) return;
+  
+  try {
+    setIsGeneratingSolution(true);
+    
+    // Initialize the Gemini API with your API key
+    const genAI = new GoogleGenerativeAI(process.env.NEXT_PUBLIC_GEMINI_API_KEY);
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
+    
+    // Create prompt from assignment details
+    const prompt = `
+      I need help solving this assignment:
+      
+      Assignment: ${selectedAssignment.assignmentName}
+      
+      Details: ${selectedAssignment.assignmentContent || "No details provided."}
+      
+      Please provide a detailed solution that I can use as a reference.
+    `;
+    
+    // Generate content
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    const solution = response.text();
+    
+    // Append solution to existing content
+    const updatedContent = `${editedContent.trim()}
+    
+## Solution:
+${solution}`;
+    
+    setEditedContent(updatedContent);
+    setIsContentEdited(true);
+    
+    toast.success("Solution generated successfully");
+  } catch (error) {
+    console.error("Error generating solution:", error);
+    toast.error("Failed to generate solution. Please try again.");
+  } finally {
+    setIsGeneratingSolution(false);
+  }
+};
+
   return (
     <div className="flex-1 space-y-4 p-8 pt-6">
       <div className="flex items-center justify-between space-y-2">
         <h2 className="text-3xl font-bold tracking-tight">Assignments</h2>
         <div className="flex gap-2">
-          <Button onClick={() => setShowAssignmentModal(true)}>
+          <Button 
+            onClick={() => setShowAssignmentModal(true)}
+            className="bg-primary hover:bg-primary/90 transition-all duration-300 hover:scale-105 shadow-md hover:shadow-lg"
+          >
             <Plus className="mr-2 h-4 w-4" /> Add Assignment
           </Button>
         </div>
       </div>
 
-      {/* Add status cards */}
+      {/* Status cards with improved styling */}
       <div className="grid grid-cols-3 gap-4 mb-6">
-        {["due", "submitted", "overdued"].map((status) => (
+        {[
+          { status: "due", icon: <Clock className="h-5 w-5 mr-2" />, color: "yellow" },
+          { status: "submitted", icon: <CheckCircle className="h-5 w-5 mr-2" />, color: "green" },
+          { status: "overdued", icon: <AlertTriangle className="h-5 w-5 mr-2" />, color: "red" }
+        ].map(({ status, icon, color }) => (
           <Card 
             key={status}
-            className={`cursor-pointer transition-all duration-200 ${
+            className={`cursor-pointer transition-all duration-300 border ${
               selectedStatus === status 
-                ? "border-primary shadow-md transform scale-105" 
-                : "border-muted hover:border-muted-foreground"
+                ? status === "due" 
+                  ? "border-yellow-500 shadow-md shadow-yellow-500/30 dark:shadow-yellow-400/20 bg-yellow-50/10 dark:bg-yellow-950/20 scale-105"
+                  : status === "submitted"
+                    ? "border-green-500 shadow-md shadow-green-500/30 dark:shadow-green-400/20 bg-green-50/10 dark:bg-green-950/20 scale-105"
+                    : "border-red-500 shadow-md shadow-red-500/30 dark:shadow-red-400/20 bg-red-50/10 dark:bg-red-950/20 scale-105"
+                : `border-muted hover:border-${color}-500/50 dark:hover:border-${color}-400/50 hover:shadow-${color}-500/20 dark:hover:shadow-${color}-400/10 hover:scale-105`
             }`}
             onClick={() => handleStatusSelect(status)}
           >
             <CardHeader className="pb-2">
-              <CardTitle className="text-lg capitalize">{status}</CardTitle>
+              <CardTitle className={`text-lg capitalize flex items-center ${
+                selectedStatus === status 
+                  ? status === "due" 
+                    ? "text-yellow-600 dark:text-yellow-400"
+                    : status === "submitted"
+                      ? "text-green-600 dark:text-green-400"
+                      : "text-red-600 dark:text-red-400"
+                  : ""
+              }`}>
+                {icon}
+                {status}
+              </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-3xl font-bold">{assignmentCounts[status]}</p>
+              <p className={`text-3xl font-bold ${
+                selectedStatus === status 
+                  ? status === "due" 
+                    ? "text-yellow-600 dark:text-yellow-400"
+                    : status === "submitted"
+                      ? "text-green-600 dark:text-green-400"
+                      : "text-red-600 dark:text-red-400"
+                  : ""
+              }`}>{assignmentCounts[status]}</p>
               <p className="text-sm text-muted-foreground">
                 {status === "due" ? "Pending assignments" : 
                  status === "submitted" ? "Completed assignments" : 
@@ -399,7 +478,12 @@ useEffect(() => {
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {loading ? (
-          <p>Loading assignments...</p>
+          <div className="col-span-full flex justify-center py-10">
+            <div className="animate-pulse flex flex-col items-center">
+              <div className="h-8 w-8 bg-primary/30 rounded-full mb-4"></div>
+              <p className="text-muted-foreground">Loading assignments...</p>
+            </div>
+          </div>
         ) : filteredAssignments.length === 0 ? (
           <div className="col-span-full text-center py-10">
             <p className="text-muted-foreground">No {selectedStatus} assignments found.</p>
@@ -409,15 +493,21 @@ useEffect(() => {
             <Card 
               key={assignment.id} 
               className={`
-                ${isDeadlinePassed(assignment.deadline) ? "border-red-300" : 
-                  isDeadlineApproaching(assignment.deadline) ? "border-yellow-300" : ""}
-                cursor-pointer hover:shadow-md transition-shadow
+                transition-all duration-300 hover:scale-105 hover:shadow-xl cursor-pointer
+                ${assignment.status === "submitted"
+                  ? "border-green-500/50 dark:border-green-400/50 bg-green-50/10 dark:bg-green-950/20"
+                  : assignment.status === "overdued" || isDeadlinePassed(assignment.deadline)
+                    ? "border-red-500/50 dark:border-red-400/50 bg-red-50/10 dark:bg-red-950/20"
+                    : isDeadlineApproaching(assignment.deadline)
+                      ? "border-yellow-500/50 dark:border-yellow-400/50 bg-yellow-50/10 dark:bg-yellow-950/20"
+                      : "border-muted hover:border-primary/50 dark:hover:border-primary/70"
+                }
               `}
               onClick={() => handleCardClick(assignment)}
             >
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-lg font-medium">{assignment.assignmentName}</CardTitle>
-                <div className="text-sm font-medium text-muted-foreground">
+                <div className="text-sm font-medium px-2 py-1 rounded-full bg-primary/10 dark:bg-primary/20">
                   {getCourseIdFromCourse(assignment.courseId)}
                 </div>
               </CardHeader>
@@ -425,25 +515,29 @@ useEffect(() => {
                 <div className="flex items-center text-sm">
                   <Calendar className="mr-2 h-4 w-4" />
                   <span className={
-                    isDeadlinePassed(assignment.deadline) 
-                      ? "text-red-500" 
-                      : isDeadlineApproaching(assignment.deadline) 
-                        ? "text-yellow-600" 
-                        : ""
+                    assignment.status === "overdued" || isDeadlinePassed(assignment.deadline)
+                      ? "text-red-500 dark:text-red-400"
+                      : assignment.status === "submitted"
+                        ? "text-green-500 dark:text-green-400"
+                        : isDeadlineApproaching(assignment.deadline)
+                          ? "text-yellow-600 dark:text-yellow-400"
+                          : ""
                   }>
                     {formatDeadline(assignment.deadline)}
-                    {isDeadlinePassed(assignment.deadline) && " (Overdue)"}
-                    {!isDeadlinePassed(assignment.deadline) && isDeadlineApproaching(assignment.deadline) && " (Soon)"}
+                    {assignment.status === "overdued" && " (Overdue)"}
+                    {assignment.status === "submitted" && " (Completed)"}
+                    {assignment.status === "due" && isDeadlineApproaching(assignment.deadline) && " (Soon)"}
                   </span>
                 </div>
               </CardContent>
               <CardFooter className="flex justify-between items-center">
-                <div className="text-sm text-muted-foreground">
-                  <ChevronRight className="h-4 w-4 inline" /> Click to view details
+                <div className="text-sm text-muted-foreground flex items-center">
+                  <ChevronRight className="h-4 w-4 mr-1" /> View details
                 </div>
                 <Button 
                   variant="ghost" 
                   size="sm"
+                  className="hover:bg-red-100 dark:hover:bg-red-900/30 hover:text-red-600 dark:hover:text-red-400 rounded-full transition-all duration-300 hover:scale-110"
                   onClick={(e) => {
                     e.stopPropagation();
                     handleDeleteAssignment(assignment.id);
@@ -457,25 +551,26 @@ useEffect(() => {
         )}
       </div>
 
-      {/* Add Assignment Modal */}
+      {/* Add Assignment Modal with improved styling */}
       {showAssignmentModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-background p-4 rounded-lg w-full max-w-md">
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 animate-in fade-in duration-300">
+          <div className="bg-background p-6 rounded-lg w-full max-w-md shadow-xl border border-border dark:border-primary/20">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-bold">Add New Assignment</h2>
+              <h2 className="text-xl font-bold">Add New Assignment</h2>
               <Button 
                 variant="ghost" 
                 size="sm" 
+                className="rounded-full hover:bg-muted transition-all duration-300 hover:scale-110"
                 onClick={() => setShowAssignmentModal(false)}
               >
-                <X className="h-4 w-4" />
+                <X className="h-5 w-5" />
               </Button>
             </div>
             <div className="space-y-4">
               <div>
-                <label className="block mb-1">Course</label>
+                <label className="block mb-2 text-sm font-medium">Course</label>
                 <select
-                  className="w-full border p-2 rounded"
+                  className="w-full border border-input bg-background p-2.5 rounded-md focus:ring-2 focus:ring-primary/50 focus:border-primary"
                   value={newAssignment.courseId}
                   onChange={(e) => setNewAssignment({...newAssignment, courseId: e.target.value})}
                 >
@@ -488,19 +583,19 @@ useEffect(() => {
                 </select>
               </div>
               <div>
-                <label className="block mb-1">Assignment Name</label>
+                <label className="block mb-2 text-sm font-medium">Assignment Name</label>
                 <input
                   type="text"
-                  className="w-full border p-2 rounded"
+                  className="w-full border border-input bg-background p-2.5 rounded-md focus:ring-2 focus:ring-primary/50 focus:border-primary"
                   value={newAssignment.assignmentName}
                   onChange={(e) => setNewAssignment({...newAssignment, assignmentName: e.target.value})}
                   placeholder="E.g., Midterm Project"
                 />
               </div>
               <div>
-                <label className="block mb-1">Description (Optional)</label>
+                <label className="block mb-2 text-sm font-medium">Description (Optional)</label>
                 <textarea
-                  className="w-full border p-2 rounded"
+                  className="w-full border border-input bg-background p-2.5 rounded-md focus:ring-2 focus:ring-primary/50 focus:border-primary"
                   value={newAssignment.assignmentContent}
                   onChange={(e) => setNewAssignment({...newAssignment, assignmentContent: e.target.value})}
                   placeholder="Add details about the assignment..."
@@ -508,18 +603,27 @@ useEffect(() => {
                 />
               </div>
               <div>
-                <label className="block mb-1">Deadline</label>
+                <label className="block mb-2 text-sm font-medium">Deadline</label>
                 <input
                   type="datetime-local"
-                  className="w-full border p-2 rounded"
+                  className="w-full border border-input bg-background p-2.5 rounded-md focus:ring-2 focus:ring-primary/50 focus:border-primary"
                   value={newAssignment.deadline}
                   onChange={(e) => setNewAssignment({...newAssignment, deadline: e.target.value})}
                 />
               </div>
             </div>
-            <div className="mt-4 flex justify-end gap-2">
-              <Button onClick={handleCreateAssignment}>Save</Button>
-              <Button variant="ghost" onClick={() => setShowAssignmentModal(false)}>
+            <div className="mt-6 flex justify-end gap-2">
+              <Button 
+                onClick={handleCreateAssignment}
+                className="bg-primary hover:bg-primary/90 transition-all duration-300 hover:scale-105"
+              >
+                Save
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={() => setShowAssignmentModal(false)}
+                className="transition-all duration-300 hover:scale-105"
+              >
                 Cancel
               </Button>
             </div>
@@ -527,16 +631,23 @@ useEffect(() => {
         </div>
       )}
 
-      {/* Assignment Content Modal */}
+      {/* Assignment Content Modal with improved styling */}
       {showContentModal && selectedAssignment && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-background p-4 rounded-lg w-full max-w-2xl">
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 animate-in fade-in duration-300">
+          <div className="bg-background p-6 rounded-lg w-full max-w-2xl shadow-xl border border-border dark:border-primary/20">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-bold">{selectedAssignment.assignmentName}</h2>
-              
+              <h2 className="text-xl font-bold">{selectedAssignment.assignmentName}</h2>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="rounded-full hover:bg-muted transition-all duration-300 hover:scale-110"
+                onClick={() => setShowContentModal(false)}
+              >
+                <X className="h-5 w-5" />
+              </Button>
             </div>
             <div className="space-y-4">
-              <div className="flex justify-between">
+              <div className="flex justify-between p-3 bg-muted/50 rounded-md">
                 <div>
                   <span className="text-sm font-medium">Course ID:</span>
                   <span className="ml-2 text-sm">{getCourseIdFromCourse(selectedAssignment.courseId)}</span>
@@ -545,9 +656,9 @@ useEffect(() => {
                   <span className="text-sm font-medium">Deadline:</span>
                   <span className={`ml-2 text-sm ${
                     isDeadlinePassed(selectedAssignment.deadline) 
-                      ? "text-red-500" 
+                      ? "text-red-500 dark:text-red-400" 
                       : isDeadlineApproaching(selectedAssignment.deadline) 
-                        ? "text-yellow-600" 
+                        ? "text-yellow-600 dark:text-yellow-400" 
                         : ""
                   }`}>
                     {formatDeadline(selectedAssignment.deadline)}
@@ -555,24 +666,45 @@ useEffect(() => {
                 </div>
               </div>
               <div className="border-t pt-4">
-                <h3 className="text-md font-medium mb-2">Assignment Details</h3>
+                <div className="flex justify-between items-center mb-3">
+                  <h3 className="text-md font-medium">Assignment Details</h3>
+                  <Button
+                    size="sm"
+                    onClick={generateSolution}
+                    disabled={isGeneratingSolution}
+                    className="bg-gradient-to-r from-indigo-500 to-blue-600 hover:from-indigo-600 hover:to-blue-700 dark:from-indigo-600 dark:to-blue-700 dark:hover:from-indigo-700 dark:hover:to-blue-800 text-white font-medium transition-all duration-300 hover:scale-105 shadow-md hover:shadow-blue-500/20 dark:hover:shadow-blue-400/20 border-0"
+                  >
+                    {isGeneratingSolution ? (
+                      <span className="flex items-center">
+                        <span className="h-3 w-3 mr-2 rounded-full border-2 border-white border-t-transparent animate-spin"></span>
+                        Generating...
+                      </span>
+                    ) : (
+                      <span className="flex items-center">
+                        <span className="mr-1.5">✨</span> Quick Solution
+                      </span>
+                    )}
+                  </Button>
+                </div>
                 <textarea
-                  className="w-full bg-muted p-4 rounded-md min-h-[150px] border border-transparent focus:border-primary"
+                  className="w-full bg-muted/30 dark:bg-muted/20 p-4 rounded-md min-h-[200px] border border-input focus:border-primary focus:ring-2 focus:ring-primary/50"
                   value={editedContent}
                   onChange={handleContentChange}
                   placeholder="No description provided for this assignment. Click to add details."
                 />
               </div>
               
-              {/* Add status section */}
+              {/* Status section with improved styling */}
               <div className="border-t pt-4">
-                <h3 className="text-md font-medium mb-2">Status: <span className="capitalize">{selectedAssignment.status}</span></h3>
+                <h3 className="text-md font-medium mb-3">
+                  Status: <span className="capitalize px-2 py-1 ml-2 text-sm rounded-full bg-primary/10 dark:bg-primary/20">{selectedAssignment.status}</span>
+                </h3>
                 {selectedAssignment.status === "due" && (
                   <Button 
                     onClick={() => handleStatusUpdate(selectedAssignment.id, "submitted")}
-                    className="bg-green-600 hover:bg-green-700"
+                    className="bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 dark:from-emerald-600 dark:to-green-700 dark:hover:from-emerald-700 dark:hover:to-green-800 text-white font-medium transition-all duration-300 hover:scale-105 shadow-md hover:shadow-green-500/20 dark:hover:shadow-green-400/20 border-0 flex items-center"
                   >
-                    Mark as Submitted
+                    <CheckCircle className="h-4 w-4 mr-2" /> Mark as Submitted
                   </Button>
                 )}
               </div>
@@ -583,6 +715,7 @@ useEffect(() => {
                   <Button 
                     variant="default" 
                     size="sm"
+                    className="bg-primary hover:bg-primary/90 transition-all duration-300 hover:scale-105 shadow-md hover:shadow-lg"
                     onClick={handleSaveContent}
                   >
                     Save Changes
@@ -591,6 +724,7 @@ useEffect(() => {
                 <Button 
                   variant="outline" 
                   size="sm"
+                  className="transition-all duration-300 hover:scale-105"
                   onClick={() => setShowContentModal(false)}
                 >
                   Close

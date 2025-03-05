@@ -64,6 +64,7 @@ model User {
   Routine           Routine[]
   Course            Course[]
   Assignment        Assignment[]
+  Exam              Exam[]
 
   @@map("users")
 }
@@ -233,10 +234,11 @@ model Course {
   id         String       @id @default(uuid())
   courseId   String       @unique
   courseName String
-  classTest  String // "class" or "test"
+  courseType String
   userId     Int // Foreign key to User
   user       User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   Assignment Assignment[]
+  Exam       Exam[] // Add relation to Exam model
 
   @@map("courses")
 }
@@ -256,4 +258,20 @@ model Assignment {
   course                    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
 
   @@map("assignments")
+}
+
+// New model for exams
+model Exam {
+  id        String   @id @default(uuid())
+  userId    Int // Foreign key to User
+  courseId  String // Foreign key to Course
+  examType  String // "term-final", "class-test", "lab-test"
+  syllabus  String?  @db.Text
+  examDate  DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@map("exams")
 }

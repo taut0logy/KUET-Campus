@@ -4,13 +4,13 @@ const authRoutes = require('./auth.routes');
 const cafeteriaRoutes = require('./cafeteria.routes');
 const routineRoutes = require('./routine.routes');
 const assignmentRoutes = require('./assignment.routes');
-const { standardLimiter } = require('../middleware/rate-limit.middleware');
+//const { standardLimiter } = require('../middleware/rate-limit.middleware');
 const userRoutes = require('./user.routes');
 const notificationRoutes = require('./notification.routes');
 const storageRoutes = require('./storage.routes');
 const departmentRoutes = require('./department.routes');
 // Apply standard rate limit to all routes
-router.use(standardLimiter);
+//router.use(standardLimiter);
 
 // Health check route
 router.get('/health', (req, res) => {

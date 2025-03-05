@@ -23,6 +23,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@google/generative-ai": "^0.23.0",
     "@prisma/client": "^5.10.2",
     "@socket.io/redis-adapter": "^8.3.0",
     "@supabase/supabase-js": "^2.49.1",

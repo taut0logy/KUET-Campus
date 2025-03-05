@@ -4,6 +4,7 @@ import axios from '@/lib/axios';
 const initialState = {
   weeklySchedule: null,
   courses: [],
+  exams: [],
   loading: false,
   error: null,
 };
@@ -129,6 +130,83 @@ const useRoutineStore = create((set, get) => ({
 
   // Reset store state
   reset: () => set(initialState),
+
+  // Add this new function
+  fetchExams: async () => {
+    try {
+      set({ loading: true, error: null });
+      const response = await axios.get('/routine/get-exams');
+      set(state => ({
+        exams: response.data.data,
+        loading: false,
+      }));
+      return response.data.data;
+    } catch (error) {
+      set({
+        error: error.response?.data?.message || 'Failed to fetch exams',
+        loading: false,
+      });
+      throw error;
+    }
+  },
+
+  // Add a new exam
+  addExam: async (examData) => {
+    try {
+      set({ loading: true, error: null });
+      const response = await axios.post('/routine/add-exam', examData);
+      set(state => ({
+        exams: [...state.exams, response.data.data],
+        loading: false,
+      }));
+      return response.data.data;
+    } catch (error) {
+      set({
+        error: error.response?.data?.message || 'Failed to add exam',
+        loading: false,
+      });
+      throw error;
+    }
+  },
+
+  // Update an exam
+  updateExam: async (examId, examData) => {
+    try {
+      set({ loading: true, error: null });
+      const response = await axios.put(`/routine/update-exam/${examId}`, examData);
+      set(state => ({
+        exams: state.exams.map(exam => 
+          exam.id === examId ? response.data.data : exam
+        ),
+        loading: false,
+      }));
+      return response.data.data;
+    } catch (error) {
+      set({
+        error: error.response?.data?.message || 'Failed to update exam',
+        loading: false,
+      });
+      throw error;
+    }
+  },
+
+  // Delete an exam
+  deleteExam: async (examId) => {
+    try {
+      set({ loading: true, error: null });
+      await axios.delete(`/routine/delete-exam/${examId}`);
+      set(state => ({
+        exams: state.exams.filter(exam => exam.id !== examId),
+        loading: false,
+      }));
+    } catch (error) {
+      set({
+        error: error.response?.data?.message || 'Failed to delete exam',
+        loading: false,
+      });
+      throw error;
+    }
+  },
 }));
 
 export default useRoutineStore; 
