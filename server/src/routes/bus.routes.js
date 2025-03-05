@@ -312,4 +312,26 @@ router.get('/schedules/:scheduleId/driver', async (req, res) => {
   }
 });
 
+// New route to get bus stops for a specific route
+router.get('/routes/:routeId/stops', async (req, res) => {
+  const { routeId } = req.params;
+
+  try {
+    const busStops = await prisma.busStop.findMany({
+      where: {
+        routeId: routeId, // Assuming you have a routeId field in your busStop model
+      },
+    });
+
+    if (!busStops || busStops.length === 0) {
+      return res.status(404).json({ message: 'No bus stops found for this route.' });
+    }
+
+    return res.status(200).json({ data: busStops });
+  } catch (error) {
+    console.error("Error fetching bus stops:", error);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
 module.exports = router;
