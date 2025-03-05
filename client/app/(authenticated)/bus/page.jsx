@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Calendar, MapPin, ArrowRight, Bus, Users, Clock, AlertCircle } from "lucide-react";
+import { Calendar, MapPin, ArrowRight, Bus, Users, Clock, AlertCircle, Route } from "lucide-react";
 
 export default function BusPage() {
   const { buses, fetchBuses, fetchRoutes } = useBusStore();
@@ -142,7 +142,7 @@ export default function BusPage() {
               </Card>
               <Card className="col-span-3">
                 <CardHeader>
-                  <CardTitle>Quick Stats</CardTitle>
+                  <CardTitle>Important Announcement </CardTitle>
                 </CardHeader>
                 <CardContent>
                   {/* Add quick stats content */}
@@ -186,25 +186,61 @@ export default function BusPage() {
                 >
                   <CardContent className="p-6">
                     <div className="flex flex-col space-y-4">
+                      {/* Status and Bus Number Header */}
                       <div className="flex justify-between items-start">
                         <Badge 
                           className={cn(
-                            schedule.status === "SCHEDULED" && "bg-blue-500/10 text-blue-500",
-                            schedule.status === "IN_PROGRESS" && "bg-amber-500/10 text-amber-500",
-                            schedule.status === "COMPLETED" && "bg-green-500/10 text-green-500"
+                            schedule.status === "SCHEDULED" && "bg-blue-500/10 text-black-500",
+                            schedule.status === "IN_PROGRESS" && "bg-amber-500/10 text-black-500",
+                            schedule.status === "COMPLETED" && "bg-green-500/10 text-black-500"
                           )}
                         >
                           {schedule.status}
                         </Badge>
-                        <Link 
-                          href={`/bus/${schedule.bus.id}`}
-                          className="text-sm text-muted-foreground hover:text-primary transition-colors"
-                        >
-                          Bus #{schedule.bus.busNumber}
-                        </Link>
+                        <div className="flex items-center gap-2">
+                          <Bus className="h-4 w-4 text-muted-foreground" />
+                          <Link 
+                            href={`/bus/${schedule.bus.id}`}
+                            className="text-sm font-medium hover:text-primary transition-colors"
+                          >
+                            #{schedule.bus.busNumber}
+                          </Link>
+                        </div>
                       </div>
 
+                      {/* Route Information */}
+                      {routeDetails[schedule.routeId] && (
+                        <div className="space-y-2">
+                          <div className="text-sm text-muted-foreground">Route Details</div>
+                          <Link 
+                            href={`/bus/routes/${schedule.routeId}`}
+                            className="block bg-muted/30 p-3 rounded-lg hover:bg-muted/50 transition-colors"
+                          >
+                            <div className="flex flex-col gap-2">
+                              <div className="flex items-center gap-2">
+                                <MapPin className="h-4 w-4 text-muted-foreground" />
+                                <span className="text-sm text-muted-foreground">From</span>
+                                <span className="text-sm font-medium">{routeDetails[schedule.routeId].startPoint}</span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <MapPin className="h-4 w-4 text-muted-foreground" />
+                                <span className="text-sm text-muted-foreground">To</span>
+                                <span className="text-sm font-medium">{routeDetails[schedule.routeId].endPoint}</span>
+                              </div>
+                              {routeDetails[schedule.routeId].distance && (
+                                <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
+                                  <Route className="h-4 w-4" />
+                                  <span>{routeDetails[schedule.routeId].distance} km</span>
+                                </div>
+                              )}
+                            </div>
+                          </Link>
+                        </div>
+                      )}
+
+                      {/* Schedule Times */}
                       <div className="space-y-3">
+                        <div className="text-sm text-muted-foreground">Schedule Times</div>
                         <div className="flex items-center justify-between bg-muted/50 p-2 rounded">
                           <div className="flex items-center">
                             <Clock className="h-4 w-4 mr-2 text-muted-foreground" />
@@ -222,26 +258,19 @@ export default function BusPage() {
                         </div>
                       </div>
 
-                      {routeDetails[schedule.routeId] && (
-                        <Link 
-                          href={`/bus/routes/${schedule.routeId}`}
-                          className="block bg-muted/30 p-3 rounded-lg hover:bg-muted/50 transition-colors"
-                        >
-                          <div className="flex items-center text-sm text-muted-foreground">
-                            <MapPin className="h-4 w-4 mr-2" />
-                            <span>{routeDetails[schedule.routeId].startPoint}</span>
-                            <ArrowRight className="h-4 w-4 mx-2" />
-                            <span>{routeDetails[schedule.routeId].endPoint}</span>
-                          </div>
-                        </Link>
-                      )}
-
+                      {/* Action Buttons */}
                       <div className="flex gap-2 pt-2">
                         <Button variant="outline" className="w-1/2" asChild>
-                          <Link href={`/bus/${schedule.bus.id}`}>View Bus</Link>
+                          <Link href={`/bus/${schedule.bus.id}`}>
+                            <Bus className="h-4 w-4 mr-2" />
+                            Bus Details
+                          </Link>
                         </Button>
                         <Button variant="outline" className="w-1/2" asChild>
-                          <Link href={`/bus/routes/${schedule.routeId}`}>View Route</Link>
+                          <Link href={`/bus/routes/${schedule.routeId}`}>
+                            <Route className="h-4 w-4 mr-2" />
+                            Route Details
+                          </Link>
                         </Button>
                       </div>
                     </div>

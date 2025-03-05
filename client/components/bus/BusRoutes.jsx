@@ -15,39 +15,65 @@ export function BusRoutes() {
   };
 
   return (
-    <div className="bg-black p-4 min-h-screen">
+    <div className="p-4">
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {routes.map(route => (
           <Card 
             key={route.id} 
-            className="overflow-hidden hover:shadow-lg transition-all duration-300 bg-gradient-to-r from-green-500 to-green-300 rounded-lg transform hover:scale-105"
+            className="overflow-hidden hover:shadow-lg transition-all duration-300 bg-gradient-to-br from-card to-card/50 border-primary/10"
             onClick={() => handleRouteClick(route.id)}
           >
             <CardHeader>
-              <CardTitle className="text-lg font-bold text-white">{route.routeName} ({route.routeCode})</CardTitle>
-              <Badge variant={route.isActive ? "default" : "secondary"} className="animate-pulse">
-                {route.isActive ? "Active" : "Inactive"}
-              </Badge>
+              <div className="flex justify-between items-center">
+                <CardTitle className="text-lg font-bold">
+                  {route.routeName} ({route.routeCode})
+                </CardTitle>
+                <Badge variant={route.isActive ? "default" : "secondary"}>
+                  {route.isActive ? "Active" : "Inactive"}
+                </Badge>
+              </div>
             </CardHeader>
-            <CardContent className="text-gray-200">
-              <p><strong>Start Point:</strong> {route.startPoint}</p>
-              <p><strong>End Point:</strong> {route.endPoint}</p>
-              <p><strong>Distance:</strong> {route.distance.toFixed(2)} km</p>
-              <p><strong>Duration:</strong> {route.duration} mins</p>
-              <p><strong>Bus Number:</strong> {route.bus.busNumber}</p>
-              <p><strong>License Plate:</strong> {route.bus.licensePlate}</p>
-              <p><strong>Capacity:</strong> {route.bus.capacity} seats</p>
-              <p><strong>Description:</strong> {route.bus.description}</p>
+            <CardContent className="space-y-2">
+              <div className="bg-black/5 p-3 rounded-lg space-y-2">
+                <p className="flex items-center justify-between">
+                  <span className="text-muted-foreground">Start Point:</span>
+                  <span className="font-medium">{route.startPoint}</span>
+                </p>
+                <p className="flex items-center justify-between">
+                  <span className="text-muted-foreground">End Point:</span>
+                  <span className="font-medium">{route.endPoint}</span>
+                </p>
+                <p className="flex items-center justify-between">
+                  <span className="text-muted-foreground">Distance:</span>
+                  <span className="font-medium">{route.distance.toFixed(2)} km</span>
+                </p>
+                <p className="flex items-center justify-between">
+                  <span className="text-muted-foreground">Duration:</span>
+                  <span className="font-medium">{route.duration} mins</span>
+                </p>
+              </div>
+              
+              <div className="bg-black/5 p-3 rounded-lg space-y-2">
+                <p className="flex items-center justify-between">
+                  <span className="text-muted-foreground">Bus Number:</span>
+                  <span className="font-medium">{route.bus.busNumber}</span>
+                </p>
+                <p className="flex items-center justify-between">
+                  <span className="text-muted-foreground">License Plate:</span>
+                  <span className="font-medium">{route.bus.licensePlate}</span>
+                </p>
+                <p className="flex items-center justify-between">
+                  <span className="text-muted-foreground">Capacity:</span>
+                  <span className="font-medium">{route.bus.capacity} seats</span>
+                </p>
+              </div>
+
+              <div className="bg-black/5 p-3 rounded-lg">
+                <p className="text-sm text-muted-foreground">{route.bus.description}</p>
+              </div>
             </CardContent>
           </Card>
         ))}
-        {routes.length === 0 && (
-          <Card className="flex items-center justify-center p-6">
-            <CardContent>
-              <p className="text-center text-gray-500">No routes available</p>
-            </CardContent>
-          </Card>
-        )}
       </div>
     </div>
   );
