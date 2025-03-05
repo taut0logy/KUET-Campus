@@ -1,120 +1,345 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { use, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Card, CardContent } from "@/components/ui/card";
+import { motion, AnimatePresence } from "framer-motion";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Skeleton } from "@/components/ui/skeleton";
+import { cn } from "@/lib/utils";
+import {
+  Loader,
+  AlertTriangle,
+  Bus,
+  Calendar,
+  Clock,
+  MapPin,
+  Users,
+  RefreshCw,
+  Info,
+  CheckCircle,
+  XCircle
+} from "lucide-react";
+
+// Skeleton loader component for bus details
+const BusDetailsSkeleton = () => (
+  <div className="space-y-6">
+    <div className="space-y-2">
+      <Skeleton className="h-8 w-2/3" />
+      <Skeleton className="h-4 w-1/2" />
+    </div>
+    <Card>
+      <CardContent className="space-y-4 p-6">
+        {[1, 2, 3, 4].map((i) => (
+          <Skeleton key={i} className="h-6 w-full" />
+        ))}
+      </CardContent>
+    </Card>
+  </div>
+);
 
 export default function BusDetailsPage({ params }) {
+  const resolvedParams = use(params);
   const router = useRouter();
   const [bus, setBus] = useState(null);
-  const [schedules, setSchedules] = useState([]); // State for schedules
+  const [schedules, setSchedules] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
-  // Filter states
   const [departureTimeFilter, setDepartureTimeFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
+  const [driverInfo, setDriverInfo] = useState({});
 
   useEffect(() => {
     const loadBusDetails = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`http://localhost:8000/api/bus/buses/${params.id}`); // Call the API endpoint for bus details
+        const response = await fetch(`http://localhost:8000/api/bus/buses/${resolvedParams.id}`);
         
-        // Check if the response is OK
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
 
         const data = await response.json();
-        setBus(data.data); // Set the bus data
+        setBus(data.data);
 
-        // Fetch schedules for the bus
-        const schedulesResponse = await fetch(`http://localhost:8000/api/bus/buses/${params.id}/schedules`);
+        const schedulesResponse = await fetch(`http://localhost:8000/api/bus/buses/${resolvedParams.id}/schedules`);
         if (!schedulesResponse.ok) {
           throw new Error(`HTTP error! status: ${schedulesResponse.status}`);
         }
 
         const schedulesData = await schedulesResponse.json();
-        setSchedules(schedulesData.data); // Set the schedules data
+        setSchedules(schedulesData.data);
+
+        // Fetch driver information for each schedule
+        const driverPromises = schedulesData.data.map(async (schedule) => {
+          const driverResponse = await fetch(`http://localhost:8000/api/bus/schedules/${schedule.id}/driver`);
+          if (driverResponse.ok) {
+            const driverData = await driverResponse.json();
+            return { ...schedule, driver: driverData.data };
+          }
+          return schedule;
+        });
+
+        const schedulesWithDrivers = await Promise.all(driverPromises);
+        setSchedules(schedulesWithDrivers);
       } catch (err) {
-        console.error("Error fetching bus details:", err); // Log the error
-        setError(err.message); // Set the error message
+        console.error("Error fetching bus details:", err);
+        setError(err.message);
       } finally {
-        setLoading(false); // Set loading to false
+        setLoading(false);
       }
     };
 
-    loadBusDetails(); // Call the function to load bus details
-  }, [params.id]); // Dependency array to re-run effect when bus ID changes
+    loadBusDetails();
+  }, [resolvedParams.id]);
 
   if (loading) {
-    return <div className="text-center">Loading bus details...</div>;
+    return (
+      <div className="relative min-h-[600px]">
+        <div className="absolute inset-0 bg-background/80 backdrop-blur-sm" />
+        <BusDetailsSkeleton />
+        <div className="absolute inset-0 flex flex-col items-center justify-center">
+          <Loader className="h-12 w-12 animate-spin text-primary" />
+          <p className="mt-4 text-lg font-medium text-muted-foreground">
+            Fetching bus details...
+          </p>
+        </div>
+      </div>
+    );
   }
 
   if (error) {
-    return <div className="text-red-500">Error: {error}</div>;
+    return (
+      <Alert variant="destructive" className="animate-in fade-in-50 duration-500">
+        <motion.div 
+          className="flex flex-col items-center gap-4 p-6"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
+          <AlertTriangle className="h-12 w-12 text-destructive animate-pulse" />
+          <AlertDescription className="text-lg font-semibold text-destructive">
+            {error}
+          </AlertDescription>
+          <Button
+            onClick={() => window.location.reload()}
+            variant="outline"
+            className="mt-2 bg-background/5 backdrop-blur-sm hover:bg-destructive hover:text-white transition-all duration-300"
+          >
+            <RefreshCw className="mr-2 h-4 w-4" />
+            Try Again
+          </Button>
+        </motion.div>
+      </Alert>
+    );
   }
 
-  // Filter schedules based on criteria
   const filteredSchedules = schedules.filter(schedule => {
-    const matchesDepartureTime = departureTimeFilter ? new Date(schedule.departureTime).toLocaleDateString() === new Date(departureTimeFilter).toLocaleDateString() : true;
-    const matchesStatus = statusFilter ? (statusFilter === "active" ? schedule.isActive : !schedule.isActive) : true;
+    const matchesDepartureTime = departureTimeFilter ? 
+      new Date(schedule.departureTime).toLocaleDateString() === new Date(departureTimeFilter).toLocaleDateString() : true;
+    const matchesStatus = statusFilter && statusFilter !== "ALL" ? 
+      schedule.status === statusFilter : true;
     return matchesDepartureTime && matchesStatus;
   });
 
+  const clearFilters = () => {
+    setDepartureTimeFilter("");
+    setStatusFilter("ALL");
+  };
+
   return (
-    <div className="container mx-auto p-6">
-      <h2 className="text-4xl font-bold mb-4 text-center">Bus Details for ID: {params.id}</h2>
-      {bus && (
-        <Card className="mb-6">
-          <CardContent>
-            <h3 className="text-xl font-semibold">Bus Number: {bus.busNumber}</h3>
-            <p>Capacity: {bus.capacity} seats</p>
-            <p>Status: {bus.isActive ? "Active" : "Inactive"}</p>
-            <p>Description: {bus.description}</p>
-            <p>Created At: {new Date(bus.createdAt).toLocaleString()}</p>
-            <p>Updated At: {new Date(bus.updatedAt).toLocaleString()}</p>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Filter Section for Schedules */}
-      <h3 className="text-2xl font-bold mt-6">Schedules</h3>
-      <div className="mb-4">
-        <input
-          type="date"
-          placeholder="Filter by Departure Date"
-          value={departureTimeFilter}
-          onChange={(e) => setDepartureTimeFilter(e.target.value)}
-          className="border rounded p-2 mr-2"
-        />
-        <select
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
-          className="border rounded p-2"
+    <AnimatePresence>
+      <motion.div 
+        className="container mx-auto p-6 space-y-8"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+      >
+        {/* Bus Details Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
         >
-          <option value="">All Statuses</option>
-          <option value="active">Active</option>
-          <option value="inactive">Inactive</option>
-        </select>
-      </div>
-
-      {filteredSchedules.length > 0 ? (
-        filteredSchedules.map((schedule) => (
-          <Card key={schedule.id} className="mt-2">
-            <CardContent>
-              <h4 className="text-lg font-semibold">Schedule ID: {schedule.id}</h4>
-              <p>Departure Time: {new Date(schedule.departureTime).toLocaleString()}</p>
-              <p>Arrival Time: {new Date(schedule.arrivalTime).toLocaleString()}</p>
-              <p>Status: {schedule.status}</p>
-              <p>Route: {schedule.route.routeName}</p>
+          <Card className="overflow-hidden bg-gradient-to-br from-card to-card/50 border-primary/10">
+            <CardHeader className="space-y-1">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-2xl font-bold">
+                  Bus {bus?.busNumber}
+                </CardTitle>
+                <Badge 
+                  variant={bus?.isActive ? "default" : "secondary"}
+                  className={cn(
+                    "transition-all duration-500",
+                    bus?.isActive && "animate-pulse"
+                  )}
+                >
+                  {bus?.isActive ? "Active" : "Inactive"}
+                </Badge>
+              </div>
+            </CardHeader>
+            <CardContent className="grid gap-4 p-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="flex items-center space-x-2">
+                  <Bus className="h-5 w-5 text-muted-foreground" />
+                  <span className="font-medium">License Plate:</span>
+                  <span>{bus?.licensePlate}</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <span className="font-medium">Capacity:</span>
+                  <span>{bus?.capacity} seats</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <span className="font-medium">Type:</span>
+                  <span>{bus?.type}</span>
+                </div>
+                {bus?.description && (
+                  <p className="text-sm text-muted-foreground">
+                    {bus.description}
+                  </p>
+                )}
+              </div>
             </CardContent>
           </Card>
-        ))
-      ) : (
-        <p>No schedules available for this bus.</p>
-      )}
-    </div>
+        </motion.div>
+
+        {/* Filters Section */}
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <div className="space-y-2">
+            <Label htmlFor="departureDate">Departure Date</Label>
+            <Input
+              id="departureDate"
+              type="date"
+              value={departureTimeFilter}
+              onChange={(e) => setDepartureTimeFilter(e.target.value)}
+              className="w-full"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="status">Status</Label>
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger>
+                <SelectValue placeholder="All Statuses" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="ALL">All Statuses</SelectItem>
+                <SelectItem value="SCHEDULED">Scheduled</SelectItem>
+                <SelectItem value="IN_PROGRESS">In Progress</SelectItem>
+                <SelectItem value="COMPLETED">Completed</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="flex items-end">
+            <Button
+              variant="outline"
+              onClick={clearFilters}
+              className="w-full"
+            >
+              Clear Filters
+            </Button>
+          </div>
+        </div>
+
+        {/* Schedules Section */}
+        <div className="space-y-4">
+          <h3 className="text-2xl font-bold">Schedules</h3>
+          {filteredSchedules.length > 0 ? (
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {filteredSchedules.map((schedule) => (
+                <motion.div
+                  key={schedule.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  whileHover={{ scale: 1.02 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <Card className="overflow-hidden hover:shadow-lg transition-all duration-300">
+                    <CardContent className="p-6 space-y-4">
+                      <div className="flex items-center justify-between">
+                        <Badge variant={schedule.status === "SCHEDULED" ? "default" : "secondary"}>
+                          {schedule.status}
+                        </Badge>
+                        <span className="text-sm text-muted-foreground">
+                          ID: {schedule.id.slice(0, 8)}
+                        </span>
+                      </div>
+                      <div className="space-y-2">
+                        <div className="flex items-center space-x-2">
+                          <Clock className="h-4 w-4 text-muted-foreground" />
+                          <span className="text-sm">
+                            Arrival: {schedule.arrivalTime.toLocaleString()}
+                          </span>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Clock className="h-4 w-4 text-muted-foreground" />
+                          <span className="text-sm">
+                            Departure: {schedule.departureTime.toLocaleString()}
+                          </span>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <MapPin className="h-4 w-4 text-muted-foreground" />
+                          <span className="text-sm">
+                            Route: {schedule.route.routeName}
+                          </span>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Users className="h-4 w-4 text-muted-foreground" />
+                          <span className="text-sm">
+                            Seats: {schedule.bookedSeats}/{schedule.totalCapacity}
+                          </span>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <span className="text-sm">
+                            Frequency: {schedule.frequency}
+                          </span>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <span className="text-sm">
+                            Driver ID: {schedule.driverId}
+                          </span>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <span className="text-sm">
+                            Driver Name: {schedule.driver.driverName}
+                          </span>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <span className="text-sm">
+                            Driver Contact: {schedule.driver.driverContact}
+                          </span>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              ))}
+            </div>
+          ) : (
+            <Card className="p-8">
+              <div className="flex flex-col items-center text-center space-y-4">
+                <Calendar className="h-12 w-12 text-muted-foreground" />
+                <CardTitle>No Schedules Available</CardTitle>
+                <p className="text-sm text-muted-foreground max-w-sm">
+                  There are currently no schedules matching your filters.
+                  Try adjusting your search criteria or check back later.
+                </p>
+                <Button
+                  variant="outline"
+                  onClick={clearFilters}
+                  className="mt-4"
+                >
+                  <RefreshCw className="mr-2 h-4 w-4" />
+                  Reset Filters
+                </Button>
+              </div>
+            </Card>
+          )}
+        </div>
+      </motion.div>
+    </AnimatePresence>
   );
 }
