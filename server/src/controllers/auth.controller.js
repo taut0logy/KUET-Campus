@@ -4,8 +4,8 @@ const { sendSuccess, sendError } = require('../utils/response.util');
 const { ValidationError } = require('../middleware/error.middleware');
 const { logger } = require('../utils/logger.util');
 
-// Register a new user
-const register = async (req, res, next) => {
+// Register a new employee
+const registerEmployee = async (req, res, next) => {
   try {
     // Validate request
     const errors = validationResult(req);
@@ -15,7 +15,7 @@ const register = async (req, res, next) => {
       throw new ValidationError(`Validation failed: ${errorMessages}`, errors.array());
     }
     
-    const { email, password, firstName, lastName, captchaToken } = req.body;
+    const { email, password, name, captchaToken, employeeId, designation } = req.body;
     
     // Verify captcha
     // if (!captchaToken) {
@@ -23,12 +23,13 @@ const register = async (req, res, next) => {
     // }
     
     // Register user
-    const result = await authService.register({ 
+    const result = await authService.registerEmployee({ 
       email, 
       password, 
-      firstName, 
-      lastName, 
-      captchaToken 
+      name, 
+      captchaToken,
+      employeeId,
+      designation,
     });
     
     // Generate tokens for immediate login
@@ -41,7 +42,7 @@ const register = async (req, res, next) => {
         accessToken,
         success: true
       },
-      'Registration successful! Please check your email to verify your account.',
+      'Employee registration successful! Please check your email to verify your account.',
       201
     );
   } catch (error) {
@@ -55,6 +56,77 @@ const register = async (req, res, next) => {
       return sendError(res, error.message, 400);
     }
     
+    sendError(res, error.message, 500);
+    next(error);
+  }
+};
+
+// Register a new student
+const registerStudent = async (req, res, next) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return sendError(res, errors.array(), 400);
+    }
+
+    const { email, password, name, captchaToken, studentId, section, batch, departmentId } = req.body;
+
+    const result = await authService.studentRegister({ email, password, name, captchaToken, studentId, section, batch, departmentId });
+
+    return sendSuccess(
+      res, 
+      {
+        user: result.user,
+        accessToken: result.accessToken,
+        success: true
+      },
+      'Student registration successful! Please check your email to verify your account.',
+      201
+    );
+  } catch (error) {
+    logger.error('Student registration error:', error);
+    if (error.message.includes('already exists')) {
+      return sendError(res, error.message, 409);
+    }
+    if (error.message.includes('CAPTCHA verification failed')) {
+      return sendError(res, error.message, 400);
+    }
+    sendError(res, error.message, 500);
+    next(error);
+  }
+};
+
+// Register a new faculty
+const registerFaculty = async (req, res, next) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return sendError(res, errors.array(), 400);
+    }
+
+    const { email, password, name, captchaToken, employeeId, status, designation, departmentId, bio } = req.body;
+
+    const result = await authService.facultyRegister({ email, password, name, captchaToken, employeeId, status, designation, departmentId, bio });
+
+    return sendSuccess(
+      res, 
+      {
+        user: result.user,
+        accessToken: result.accessToken,
+        success: true
+      },
+      'Faculty registration successful! Please check your email to verify your account.',
+      201
+    );
+  } catch (error) {
+    logger.error('Faculty registration error:', error);
+    if (error.message.includes('already exists')) {
+      return sendError(res, error.message, 409);
+    }
+    if (error.message.includes('CAPTCHA verification failed')) {
+      return sendError(res, error.message, 400);
+    }
+    sendError(res, error.message, 500);
     next(error);
   }
 };
@@ -321,7 +393,9 @@ const getCurrentUser = async (req, res, next) => {
 };
 
 module.exports = {
-  register,
+  registerEmployee,
+  registerStudent,
+  registerFaculty,
   verifyEmail,
   login,
   logout,

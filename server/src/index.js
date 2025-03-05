@@ -56,7 +56,7 @@ app.use(cookieParser()); // Parse cookies
 const corsOptions = {
   origin: [process.env.CLIENT_URL],
   credentials: true, // Allow cookies
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   maxAge: 86400 // 24 hours
 };

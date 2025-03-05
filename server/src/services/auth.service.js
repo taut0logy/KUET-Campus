@@ -80,9 +80,9 @@ const verifyCaptcha = async (token) => {
 };
 
 // Register a new user
-const register = async (userData) => {
+const registerEmployee = async (userData) => {
   try {
-    const { email, password, firstName, lastName, roles = ['STUDENT'], captchaToken } = userData;
+    const { email, password, name, roles = ['STUDENT'], captchaToken } = userData;
     
     // Verify captcha
     //await verifyCaptcha(captchaToken);
@@ -104,20 +104,24 @@ const register = async (userData) => {
       data: {
         email,
         password: hashedPassword,
-        firstName,
-        lastName,
+        name,
         roles: roles,
         status: 'ACTIVE',
-        emailVerified: false
+        emailVerified: false,
+        employeeInfo: {
+          create: {
+            employeeId,
+            designation
+          }
+        }
       },
       select: {
         id: true,
         email: true,
-        firstName: true,
-        lastName: true,
+        name: true,
         roles: true,
         status: true,
-        emailVerified: true
+        emailVerified: true,
       }
     });
 
@@ -137,7 +141,150 @@ const register = async (userData) => {
 
     return { user };
   } catch (error) {
-    console.error('Error registering user:', error);
+    console.error('Error registering employee:', error);
+    throw error;
+  }
+};
+
+// Register a new student
+const studentRegister = async (userData) => {
+  try {
+    const { email, password, name, roles = ['STUDENT'], captchaToken, studentId, section, batch, departmentId } = userData;
+    
+    // Verify captcha
+    //await verifyCaptcha(captchaToken);
+    
+    // Check if user already exists
+    const existingUser = await prisma.user.findUnique({
+      where: { email }
+    });
+
+    if (existingUser) {
+      throw new Error('A user with this email already exists');
+    }
+
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Create user
+    const user = await prisma.user.create({
+      data: {
+        email,
+        password: hashedPassword,
+        name,
+        roles: roles,
+        status: 'ACTIVE',
+        emailVerified: false,
+        studentInfo: {
+          create: {
+            studentId,
+            section,
+            batch,
+            department: {
+              connect: { id: departmentId }
+            }
+          }
+        }
+      },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        roles: true,
+        status: true,
+        emailVerified: true,
+      }
+    });
+
+    // Generate verification token
+    const { token: verificationToken, signedToken: signedVerificationToken } = generateVerificationToken(user.id);
+
+    // Update verification token in database
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        verificationToken
+      }
+    });
+
+    // Send verification email
+    await emailService.sendVerificationEmail(user, signedVerificationToken);
+
+    return { user };
+  } catch (error) {
+    console.error('Error registering student:', error);
+    throw error;
+  }
+};
+
+// Register a new faculty
+const facultyRegister = async (userData) => {
+  try {
+    const { email, password, name, roles = ['FACULTY'], captchaToken, employeeId, status, designation, departmentId, bio } = userData;
+    
+    // Verify captcha
+    //await verifyCaptcha(captchaToken);
+    
+    // Check if user already exists
+    const existingUser = await prisma.user.findUnique({
+      where: { email }
+    });
+
+    if (existingUser) {
+      throw new Error('A user with this email already exists');
+    }
+
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Create user
+    const user = await prisma.user.create({
+      data: {
+        email,
+        password: hashedPassword,
+        name,
+        roles: roles,
+        status: 'ACTIVE',
+        emailVerified: false,
+        facultyInfo: {
+          create: {
+            employeeId,
+            status,
+            designation,
+            bio,
+            department: {
+              connect: { id: departmentId }
+            }
+          }
+        }
+      },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        roles: true,
+        status: true,
+        emailVerified: true,
+      }
+    });
+
+    // Generate verification token
+    const { token: verificationToken, signedToken: signedVerificationToken } = generateVerificationToken(user.id);
+
+    // Update verification token in database
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        verificationToken
+      }
+    });
+
+    // Send verification email
+    await emailService.sendVerificationEmail(user, signedVerificationToken);
+
+    return { user };
+  } catch (error) {
+    console.error('Error registering faculty:', error);
     throw error;
   }
 };
@@ -199,8 +346,7 @@ const login = async (email, password, captchaToken) => {
         id: true,
         email: true,
         password: true,
-        firstName: true,
-        lastName: true,
+        name: true,
         roles: true,
         status: true,
         emailVerified: true
@@ -221,8 +367,7 @@ const login = async (email, password, captchaToken) => {
     const userData = {
       id: user.id,
       email: user.email,
-      firstName: user.firstName,
-      lastName: user.lastName,
+      name: user.name,
       status: user.status,
       roles: user.roles,
       emailVerified: user.emailVerified,
@@ -451,7 +596,9 @@ const resendVerificationEmail = async (email) => {
 };
 
 module.exports = {
-  register,
+  registerEmployee,
+  studentRegister,
+  facultyRegister,
   verifyEmail,
   login,
   logout,

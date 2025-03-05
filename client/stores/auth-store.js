@@ -91,19 +91,20 @@ const useAuthStore = create((set, get) => ({
     }
   },
   
-  register: async (userData) => {
+  registerEmployee: async (userData) => {
     try {
       set({ authState: AUTH_STATES.LOADING });
       
       const sanitizedData = {
-        firstName: String(userData.firstName || '').trim(),
-        lastName: String(userData.lastName || '').trim(),
+        name: String(userData.name || '').trim(),
         email: String(userData.email || '').trim(),
         password: userData.password,
-        captchaToken: userData.captchaToken || 'test-token'
+        captchaToken: userData.captchaToken || 'test-token',
+        employeeId: userData.employeeId,
+        designation: userData.designation,
       };
       
-      const response = await axios.post("/auth/register", sanitizedData);
+      const response = await axios.post("/auth/register/employee", sanitizedData);
       
       if (response.data.success) {
         const { user, accessToken } = response.data.data;
@@ -113,12 +114,75 @@ const useAuthStore = create((set, get) => ({
       
       return response.data;
     } catch (error) {
-      console.error("🔐 [AUTH] Registration error:", error);
+      console.error("🔐 [AUTH] Employee Registration error:", error);
+      get().handleAuthError();
+      throw error;
+    }
+  },
+
+  registerStudent: async (userData) => {
+    try {
+      set({ authState: AUTH_STATES.LOADING });
+      
+      const sanitizedData = {
+        name: String(userData.name || '').trim(),
+        email: String(userData.email || '').trim(),
+        password: userData.password,
+        captchaToken: userData.captchaToken || 'test-token',
+        studentId: userData.studentId,
+        departmentId: userData.departmentId,
+        batch: userData.batch,
+        section: userData.section,
+      };
+      
+      const response = await axios.post("/auth/register/student", sanitizedData);
+      
+      if (response.data.success) {
+        const { user, accessToken } = response.data.data;
+        get().setAuthState(user, accessToken);
+        return user;
+      }
+      
+      return response.data;
+    } catch (error) {
+      console.error("🔐 [AUTH] Student Registration error:", error);
       get().handleAuthError();
       throw error;
     }
   },
   
+  registerFaculty: async (userData) => {
+    try {
+      set({ authState: AUTH_STATES.LOADING });
+      
+      const sanitizedData = {
+        name: String(userData.name || '').trim(),
+        email: String(userData.email || '').trim(),
+        password: userData.password,
+        captchaToken: userData.captchaToken || 'test-token',
+        employeeId: userData.employeeId,
+        designation: userData.designation,
+        departmentId: userData.departmentId,
+        bio: userData.bio,
+        status: userData.status,
+      };
+      
+      const response = await axios.post("/auth/register/faculty", sanitizedData);
+      
+      if (response.data.success) {
+        const { user, accessToken } = response.data.data;
+        get().setAuthState(user, accessToken);
+        return user;
+      }
+      
+      return response.data;
+    } catch (error) {
+      console.error("🔐 [AUTH] Faculty Registration error:", error);
+      get().handleAuthError();
+      throw error;
+    }
+  },
+
   logout: async () => {
     try {
       await axios.post("/auth/logout");

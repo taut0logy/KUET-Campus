@@ -399,6 +399,29 @@ class NotificationService {
       throw error;
     }
   }
+
+  async deleteNotification(userId, notificationId) {
+    try {
+      const notification = await prisma.notification.delete({
+        where: {
+          id: notificationId,
+          userId // Ensure user owns the notification
+        }
+      });
+
+      // Emit delete event to user's room
+      this.notificationsNamespace.to(`user:${userId}`).emit('notification_deleted', notificationId);
+
+      // Update unread count
+      const unreadCount = await this.getUnreadCount(userId);
+      this.notificationsNamespace.to(`user:${userId}`).emit('unread_count', unreadCount);
+
+      return notification;
+    } catch (error) {
+      logger.error('Failed to delete notification:', error);
+      throw error;
+    }
+  }
 }
 
 const notificationService = new NotificationService();

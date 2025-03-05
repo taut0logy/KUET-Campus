@@ -1,16 +1,14 @@
 import { Bell } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useNotificationStore } from '@/stores/notificationStore';
+import { useNotificationStore } from '@/stores/notification-store';
 import { Badge } from '@/components/ui/badge';
 
 export function NotificationBell() {
   const { unreadCount } = useNotificationStore();
 
   return (
-    <Button
-      variant="ghost"
-      size="icon"
-      className="relative"
+    <div
+      className="relative cursor-pointer hover:bg-accent rounded-md p-2 transition-colors duration-200"
       aria-label={`Notifications ${unreadCount > 0 ? `(${unreadCount} unread)` : ''}`}
     >
       <Bell className="h-5 w-5" />
@@ -22,6 +20,6 @@ export function NotificationBell() {
           {unreadCount > 99 ? '99+' : unreadCount}
         </Badge>
       )}
-    </Button>
+    </div>
   );
 } 
