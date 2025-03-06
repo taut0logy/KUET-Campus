@@ -370,4 +370,500 @@ router.delete('/drivers/:id', busController.deleteDriver);
 // New endpoint to get all drivers
 router.get('/drivers', busController.getDrivers);
 
+// Route Management Endpoints
+
+// Create a new route
+router.post('/routes', async (req, res) => {
+  try {
+    const {
+      routeName,
+      routeCode,
+      startPoint,
+      endPoint,
+      distance,
+      duration,
+      direction,
+      isActive,
+      busId
+    } = req.body;
+
+    const route = await prisma.busRoute.create({
+      data: {
+        routeName,
+        routeCode,
+        startPoint,
+        endPoint,
+        distance: parseFloat(distance),
+        duration: parseInt(duration),
+        direction,
+        isActive,
+        busId
+      },
+      include: {
+        bus: true,
+        stops: true,
+        schedules: true
+      }
+    });
+
+    res.json({
+      status: 200,
+      success: true,
+      message: 'Route created successfully',
+      data: route
+    });
+  } catch (error) {
+    console.error('Error creating route:', error);
+    res.status(500).json({
+      status: 500,
+      success: false,
+      message: 'Failed to create route',
+      error: {
+        message: error.message,
+        code: 500,
+        details: error
+      }
+    });
+  }
+});
+
+// Update a route
+router.put('/routes/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const {
+      routeName,
+      routeCode,
+      startPoint,
+      endPoint,
+      distance,
+      duration,
+      direction,
+      isActive,
+      busId
+    } = req.body;
+
+    const route = await prisma.busRoute.update({
+      where: { id },
+      data: {
+        routeName,
+        routeCode,
+        startPoint,
+        endPoint,
+        distance: parseFloat(distance),
+        duration: parseInt(duration),
+        direction,
+        isActive,
+        busId
+      },
+      include: {
+        bus: true,
+        stops: true,
+        schedules: true
+      }
+    });
+
+    res.json({
+      status: 200,
+      success: true,
+      message: 'Route updated successfully',
+      data: route
+    });
+  } catch (error) {
+    console.error('Error updating route:', error);
+    res.status(500).json({
+      status: 500,
+      success: false,
+      message: 'Failed to update route',
+      error: {
+        message: error.message,
+        code: 500,
+        details: error
+      }
+    });
+  }
+});
+
+// Delete a route
+router.delete('/routes/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // First delete all associated stops and schedules
+    await prisma.busStop.deleteMany({
+      where: { routeId: id }
+    });
+
+    await prisma.busSchedule.deleteMany({
+      where: { routeId: id }
+    });
+
+    // Then delete the route
+    await prisma.busRoute.delete({
+      where: { id }
+    });
+
+    res.json({
+      status: 200,
+      success: true,
+      message: 'Route and associated data deleted successfully'
+    });
+  } catch (error) {
+    console.error('Error deleting route:', error);
+    res.status(500).json({
+      status: 500,
+      success: false,
+      message: 'Failed to delete route',
+      error: {
+        message: error.message,
+        code: 500,
+        details: error
+      }
+    });
+  }
+});
+
+// Get all routes with related data
+router.get('/routes', async (req, res) => {
+  try {
+    const routes = await prisma.busRoute.findMany({
+      include: {
+        bus: true,
+        stops: {
+          orderBy: {
+            sequence: 'asc'
+          }
+        },
+        schedules: {
+          include: {
+            driver: true
+          }
+        }
+      },
+      orderBy: {
+        routeName: 'asc'
+      }
+    });
+
+    res.json({
+      status: 200,
+      success: true,
+      message: 'Routes retrieved successfully',
+      data: routes
+    });
+  } catch (error) {
+    console.error('Error fetching routes:', error);
+    res.status(500).json({
+      status: 500,
+      success: false,
+      message: 'Failed to fetch routes',
+      error: {
+        message: error.message,
+        code: 500,
+        details: error
+      }
+    });
+  }
+});
+
+// Schedule Management Endpoints
+
+// Create a new schedule
+router.post('/schedules', async (req, res) => {
+  try {
+    const {
+      busId,
+      routeId,
+      driverId,
+      departureTime,
+      arrivalTime,
+      isRecurring,
+      frequency,
+      status,
+      totalCapacity,
+      availableSeats
+    } = req.body;
+
+    const schedule = await prisma.busSchedule.create({
+      data: {
+        busId,
+        routeId,
+        driverId,
+        departureTime,
+        arrivalTime,
+        isRecurring,
+        frequency,
+        status,
+        totalCapacity: parseInt(totalCapacity),
+        availableSeats: parseInt(availableSeats),
+        bookedSeats: 0
+      },
+      include: {
+        bus: true,
+        route: true,
+        driver: true
+      }
+    });
+
+    res.json({
+      status: 200,
+      success: true,
+      message: 'Schedule created successfully',
+      data: schedule
+    });
+  } catch (error) {
+    console.error('Error creating schedule:', error);
+    res.status(500).json({
+      status: 500,
+      success: false,
+      message: 'Failed to create schedule',
+      error: {
+        message: error.message,
+        code: 500,
+        details: error
+      }
+    });
+  }
+});
+
+// Update a schedule
+router.put('/schedules/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const {
+      busId,
+      routeId,
+      driverId,
+      departureTime,
+      arrivalTime,
+      isRecurring,
+      frequency,
+      status,
+      totalCapacity,
+      availableSeats
+    } = req.body;
+
+    const schedule = await prisma.busSchedule.update({
+      where: { id },
+      data: {
+        busId,
+        routeId,
+        driverId,
+        departureTime,
+        arrivalTime,
+        isRecurring,
+        frequency,
+        status,
+        totalCapacity: parseInt(totalCapacity),
+        availableSeats: parseInt(availableSeats)
+      },
+      include: {
+        bus: true,
+        route: true,
+        driver: true
+      }
+    });
+
+    res.json({
+      status: 200,
+      success: true,
+      message: 'Schedule updated successfully',
+      data: schedule
+    });
+  } catch (error) {
+    console.error('Error updating schedule:', error);
+    res.status(500).json({
+      status: 500,
+      success: false,
+      message: 'Failed to update schedule',
+      error: {
+        message: error.message,
+        code: 500,
+        details: error
+      }
+    });
+  }
+});
+
+// Delete a schedule
+router.delete('/schedules/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Delete any associated reminders first
+    await prisma.reminder.deleteMany({
+      where: { scheduleId: id }
+    });
+
+    // Then delete the schedule
+    await prisma.busSchedule.delete({
+      where: { id }
+    });
+
+    res.json({
+      status: 200,
+      success: true,
+      message: 'Schedule and associated data deleted successfully'
+    });
+  } catch (error) {
+    console.error('Error deleting schedule:', error);
+    res.status(500).json({
+      status: 500,
+      success: false,
+      message: 'Failed to delete schedule',
+      error: {
+        message: error.message,
+        code: 500,
+        details: error
+      }
+    });
+  }
+});
+
+// Get all schedules with related data
+router.get('/schedules', async (req, res) => {
+  try {
+    const schedules = await prisma.busSchedule.findMany({
+      include: {
+        bus: true,
+        route: true,
+        driver: true
+      },
+      orderBy: {
+        departureTime: 'asc'
+      }
+    });
+
+    res.json({
+      status: 200,
+      success: true,
+      message: 'Schedules retrieved successfully',
+      data: schedules
+    });
+  } catch (error) {
+    console.error('Error fetching schedules:', error);
+    res.status(500).json({
+      status: 500,
+      success: false,
+      message: 'Failed to fetch schedules',
+      error: {
+        message: error.message,
+        code: 500,
+        details: error
+      }
+    });
+  }
+});
+
+// Get schedules by route
+router.get('/routes/:routeId/schedules', async (req, res) => {
+  try {
+    const { routeId } = req.params;
+    const schedules = await prisma.busSchedule.findMany({
+      where: {
+        routeId
+      },
+      include: {
+        bus: true,
+        driver: true
+      },
+      orderBy: {
+        departureTime: 'asc'
+      }
+    });
+
+    res.json({
+      status: 200,
+      success: true,
+      message: `Schedules for route ${routeId} retrieved successfully`,
+      data: schedules
+    });
+  } catch (error) {
+    console.error('Error fetching schedules for route:', error);
+    res.status(500).json({
+      status: 500,
+      success: false,
+      message: 'Failed to fetch schedules for route',
+      error: {
+        message: error.message,
+        code: 500,
+        details: error
+      }
+    });
+  }
+});
+
+// Get active schedules for today
+router.get('/schedules/today', async (req, res) => {
+  try {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    const schedules = await prisma.busSchedule.findMany({
+      where: {
+        OR: [
+          {
+            // One-time schedules for today
+            isRecurring: false,
+            validFrom: {
+              gte: today,
+              lt: tomorrow
+            }
+          },
+          {
+            // Recurring schedules that are valid today
+            isRecurring: true,
+            validFrom: {
+              lte: today
+            },
+            OR: [
+              {
+                validUntil: null
+              },
+              {
+                validUntil: {
+                  gte: today
+                }
+              }
+            ]
+          }
+        ],
+        status: {
+          in: ['SCHEDULED', 'PENDING', 'DELAYED']
+        }
+      },
+      include: {
+        bus: true,
+        route: true,
+        driver: true
+      },
+      orderBy: {
+        departureTime: 'asc'
+      }
+    });
+
+    res.json({
+      status: 200,
+      success: true,
+      message: 'Today\'s schedules retrieved successfully',
+      data: schedules
+    });
+  } catch (error) {
+    console.error('Error fetching today\'s schedules:', error);
+    res.status(500).json({
+      status: 500,
+      success: false,
+      message: 'Failed to fetch today\'s schedules',
+      error: {
+        message: error.message,
+        code: 500,
+        details: error
+      }
+    });
+  }
+});
+
 module.exports = router;

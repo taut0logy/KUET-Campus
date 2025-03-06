@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Calendar, MapPin, ArrowRight, Bus, Users, Clock, AlertCircle, Route } from "lucide-react";
+import { Calendar, MapPin, ArrowRight, Bus, Users, Clock, AlertCircle, Route, Info } from "lucide-react";
 
 export default function BusPage() {
   const { buses, fetchBuses, fetchRoutes } = useBusStore();
@@ -84,38 +84,38 @@ export default function BusPage() {
       <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
         {/* Stats Overview */}
         <div className="grid gap-4 md:grid-cols-3">
-          <Card className="hover:shadow-lg transition-all">
+          <Card className="hover:shadow-lg transition-all duration-300 bg-gradient-to-br from-card/40 to-card hover:from-card/50 hover:to-card/80 border-border/50">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Total Fleet</CardTitle>
-              <Bus className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium text-primary/80">Total Fleet</CardTitle>
+              <Bus className="h-4 w-4 text-primary/60" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{buses.length}</div>
-              <p className="text-xs text-muted-foreground mt-1">
+              <div className="text-2xl font-bold text-foreground">{buses.length}</div>
+              <p className="text-xs text-muted-foreground/80 mt-1">
                 Buses in fleet
               </p>
             </CardContent>
           </Card>
-          <Card className="hover:shadow-lg transition-all">
+          <Card className="hover:shadow-lg transition-all duration-300 bg-gradient-to-br from-card/40 to-card hover:from-card/50 hover:to-card/80 border-border/50">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Active Buses</CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium text-primary/80">Active Buses</CardTitle>
+              <Users className="h-4 w-4 text-primary/60" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{activeBuses.length}</div>
-              <p className="text-xs text-muted-foreground mt-1">
+              <div className="text-2xl font-bold text-foreground">{activeBuses.length}</div>
+              <p className="text-xs text-muted-foreground/80 mt-1">
                 Currently in service
               </p>
             </CardContent>
           </Card>
-          <Card className="hover:shadow-lg transition-all">
+          <Card className="hover:shadow-lg transition-all duration-300 bg-gradient-to-br from-card/40 to-card hover:from-card/50 hover:to-card/80 border-border/50">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Total Capacity</CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium text-primary/80">Total Capacity</CardTitle>
+              <Users className="h-4 w-4 text-primary/60" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{totalCapacity}</div>
-              <p className="text-xs text-muted-foreground mt-1">
+              <div className="text-2xl font-bold text-foreground">{totalCapacity}</div>
+              <p className="text-xs text-muted-foreground/80 mt-1">
                 Passenger seats
               </p>
             </CardContent>
@@ -183,7 +183,7 @@ export default function BusPage() {
               {schedules.map(schedule => (
                 <Card 
                   key={schedule.id} 
-                  className="hover:shadow-lg transition-all duration-300"
+                  className="hover:shadow-xl hover:-translate-y-1 transition-all duration-300 bg-gradient-to-br from-background to-card/50 hover:from-card/60 hover:to-card/80 border-border/50 rounded-xl overflow-hidden"
                 >
                   <CardContent className="p-6">
                     <div className="flex flex-col space-y-4">
@@ -191,9 +191,10 @@ export default function BusPage() {
                       <div className="flex justify-between items-start">
                         <Badge 
                           className={cn(
-                            schedule.status === "SCHEDULED" && "bg-blue-500/10 text-black-500",
-                            schedule.status === "IN_PROGRESS" && "bg-amber-500/10 text-black-500",
-                            schedule.status === "COMPLETED" && "bg-green-500/10 text-black-500"
+                            "transition-colors duration-300 font-medium",
+                            schedule.status === "SCHEDULED" && "bg-blue-500/20 text-blue-400 dark:text-blue-300",
+                            schedule.status === "IN_PROGRESS" && "bg-amber-500/20 text-amber-500 dark:text-amber-300",
+                            schedule.status === "COMPLETED" && "bg-green-500/20 text-green-500 dark:text-green-300"
                           )}
                         >
                           {schedule.status}
@@ -215,7 +216,7 @@ export default function BusPage() {
                           <div className="text-sm text-muted-foreground">Route Details</div>
                           <Link 
                             href={`/bus/routes/${schedule.routeId}`}
-                            className="block bg-muted/30 p-3 rounded-lg hover:bg-muted/50 transition-colors"
+                            className="block bg-muted/30 p-3 rounded-lg hover:bg-muted/50 transition-all duration-300 hover:scale-[1.02] hover:shadow-md"
                           >
                             <div className="flex flex-col gap-2">
                               <div className="flex items-center gap-2">
@@ -261,7 +262,11 @@ export default function BusPage() {
 
                       {/* Action Buttons */}
                       <div className="flex gap-2 pt-2">
-                        <Button variant="outline" className="w-1/2" asChild>
+                        <Button 
+                          variant="outline" 
+                          className="w-1/2 hover:bg-primary/10 transition-colors duration-300"
+                          asChild
+                        >
                           <Link href={`/bus/${schedule.bus.id}`}>
                             <Bus className="h-4 w-4 mr-2" />
                             Bus Details

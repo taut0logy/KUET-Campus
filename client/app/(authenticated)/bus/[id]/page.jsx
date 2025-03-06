@@ -258,60 +258,55 @@ export default function BusDetailsPage({ params }) {
                   whileHover={{ scale: 1.02 }}
                   transition={{ duration: 0.2 }}
                 >
-                  <Card className="overflow-hidden hover:shadow-lg transition-all duration-300">
+                  <Card className="overflow-hidden hover:shadow-xl transition-all duration-300 bg-gradient-to-br from-background to-card/50 hover:from-card/60 hover:to-card/80 border-border/50">
                     <CardContent className="p-6 space-y-4">
                       <div className="flex items-center justify-between">
-                        <Badge variant={schedule.status === "SCHEDULED" ? "default" : "secondary"}>
+                        <Badge 
+                          className={cn(
+                            "transition-colors duration-300",
+                            schedule.status === "SCHEDULED" && "bg-blue-500/20 text-blue-400 dark:text-blue-300",
+                            schedule.status === "IN_PROGRESS" && "bg-amber-500/20 text-amber-500 dark:text-amber-300",
+                            schedule.status === "COMPLETED" && "bg-green-500/20 text-green-500 dark:text-green-300"
+                          )}
+                        >
                           {schedule.status}
                         </Badge>
-                        <span className="text-sm text-muted-foreground">
-                          ID: {schedule.id.slice(0, 8)}
+                        <span className="text-sm text-muted-foreground/80 font-mono">
+                          #{schedule.id.slice(0, 8)}
                         </span>
                       </div>
-                      <div className="space-y-2">
-                        <div className="flex items-center space-x-2">
-                          <Clock className="h-4 w-4 text-muted-foreground" />
-                          <span className="text-sm">
-                            Arrival: {schedule.arrivalTime.toLocaleString()}
-                          </span>
+                      
+                      {/* Schedule details with improved styling */}
+                      <div className="space-y-3 divide-y divide-border/30">
+                        <div className="grid gap-2 py-2">
+                          <div className="flex items-center space-x-2 text-primary/80">
+                            <Clock className="h-4 w-4" />
+                            <span className="text-sm font-medium">Schedule Times</span>
+                          </div>
+                          <div className="grid grid-cols-2 gap-2">
+                            <div className="bg-muted/30 p-2 rounded-lg hover:bg-muted/40 transition-colors">
+                              <span className="text-xs text-muted-foreground">Departure</span>
+                              <p className="font-medium">{schedule.departureTime}</p>
+                            </div>
+                            <div className="bg-muted/30 p-2 rounded-lg hover:bg-muted/40 transition-colors">
+                              <span className="text-xs text-muted-foreground">Arrival</span>
+                              <p className="font-medium">{schedule.arrivalTime}</p>
+                            </div>
+                          </div>
                         </div>
-                        <div className="flex items-center space-x-2">
-                          <Clock className="h-4 w-4 text-muted-foreground" />
-                          <span className="text-sm">
-                            Departure: {schedule.departureTime.toLocaleString()}
-                          </span>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <MapPin className="h-4 w-4 text-muted-foreground" />
-                          <span className="text-sm">
-                            Route: {schedule.route.routeName}
-                          </span>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <Users className="h-4 w-4 text-muted-foreground" />
-                          <span className="text-sm">
-                            Seats: {schedule.bookedSeats}/{schedule.totalCapacity}
-                          </span>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <span className="text-sm">
-                            Frequency: {schedule.frequency}
-                          </span>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <span className="text-sm">
-                            Driver ID: {schedule.driverId}
-                          </span>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <span className="text-sm">
-                            Driver Name: {schedule.driver.driverName}
-                          </span>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <span className="text-sm">
-                            Driver Contact: {schedule.driver.driverContact}
-                          </span>
+
+                        {/* Driver info with improved styling */}
+                        <div className="py-2">
+                          <div className="bg-muted/20 rounded-lg p-3 hover:bg-muted/30 transition-all">
+                            <div className="flex items-center space-x-2 mb-2">
+                              <Users className="h-4 w-4 text-primary/60" />
+                              <span className="text-sm font-medium text-primary/80">Driver Information</span>
+                            </div>
+                            <div className="space-y-1 text-sm">
+                              <p className="text-muted-foreground">Name: {schedule.driver?.driverName}</p>
+                              <p className="text-muted-foreground">Contact: {schedule.driver?.driverContact}</p>
+                            </div>
+                          </div>
                         </div>
                       </div>
                     </CardContent>

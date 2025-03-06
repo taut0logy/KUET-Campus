@@ -1,6 +1,4 @@
-import { PrismaClient } from "@prisma/client";
-
-const prisma = new PrismaClient();
+const { prisma } = require('../src/services/database.service');
 
 async function cleanDatabase() {
   await prisma.reminder.deleteMany({});

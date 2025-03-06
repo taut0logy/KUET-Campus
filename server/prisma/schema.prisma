@@ -114,16 +114,16 @@ model Notification {
 }
 
 model Meal {
-  id          Int        @id @default(autoincrement()) @map("meal_id")
-  name        String
-  description String?    @db.Text
-  nutrition   Json?
-  price       Decimal
-  category    String
-  isVegan        Boolean    @default(false)
-  isGlutenFree   Boolean    @default(false)
-  allergens      Json?
-  menuMeals   MenuMeal[]
+  id           Int        @id @default(autoincrement()) @map("meal_id")
+  name         String
+  description  String?    @db.Text
+  nutrition    Json?
+  price        Decimal
+  category     String
+  isVegan      Boolean    @default(false)
+  isGlutenFree Boolean    @default(false)
+  allergens    Json?
+  menuMeals    MenuMeal[]
 
   @@map("meals")
 }
@@ -162,31 +162,31 @@ model Preorder {
 }
 
 model Routine {
-  id        String   @id @default(uuid())
-  userId    String   // Foreign key to User
-  weekday   String   // Weekday (e.g., "Sunday", "Monday", etc.)
-  period1   String?  // Course for period 1
-  period2   String?  // Course for period 2
-  period3   String?  // Course for period 3
-  period4   String?  // Course for period 4
-  period5   String?  // Course for period 5
-  period6   String?  // Course for period 6
-  period7   String?  // Course for period 7
-  period8   String?  // Course for period 8
-  period9   String?  // Course for period 9
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id      String  @id @default(uuid())
+  userId  String // Foreign key to User
+  weekday String // Weekday (e.g., "Sunday", "Monday", etc.)
+  period1 String? // Course for period 1
+  period2 String? // Course for period 2
+  period3 String? // Course for period 3
+  period4 String? // Course for period 4
+  period5 String? // Course for period 5
+  period6 String? // Course for period 6
+  period7 String? // Course for period 7
+  period8 String? // Course for period 8
+  period9 String? // Course for period 9
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([weekday, userId]) // Unique constraint on weekday and userId
   @@map("routines")
 }
 
 model Course {
-  id        String   @id @default(uuid())
-  courseId  String   @unique
+  id         String @id @default(uuid())
+  courseId   String @unique
   courseName String
-  classTest  String  // "class" or "test"
-  userId    String   // Foreign key to User
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  classTest  String // "class" or "test"
+  userId     String // Foreign key to User
+  user       User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("courses")
 }
@@ -225,94 +225,94 @@ enum Direction {
 }
 
 model Bus {
-  id            String          @id @default(uuid())
-  busNumber     String          @unique
-  licensePlate  String?         // Made nullable first
-  capacity      Int
-  type          BusType?       // Using enum instead of String
-  isActive      Boolean        @default(true)
-  description   String?
-  routes        BusRoute[]     // Add reverse relation
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
-  schedules     BusSchedule[]
-  drivers       Driver[]
-  maintenance   MaintenanceLog[]
+  id           String           @id @default(uuid())
+  busNumber    String           @unique
+  licensePlate String? // Made nullable first
+  capacity     Int
+  type         BusType? // Using enum instead of String
+  isActive     Boolean          @default(true)
+  description  String?
+  routes       BusRoute[] // Add reverse relation
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+  schedules    BusSchedule[]
+  drivers      Driver[]
+  maintenance  MaintenanceLog[]
 
   @@map("buses")
 }
 
 model Driver {
-  id            String          @id @default(uuid())
+  id            String        @id @default(uuid())
   firstName     String
   lastName      String
-  licenseNumber String         @unique
+  licenseNumber String        @unique
   phone         String?
-  isAvailable   Boolean        @default(true)
-  availability  String?        // Consider creating an enum for this
+  isAvailable   Boolean       @default(true)
+  availability  String? // Consider creating an enum for this
   schedules     BusSchedule[]
   buses         Bus[]
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
 
+  @@index([isAvailable]) // Add index for frequent queries
   @@map("drivers")
-  @@index([isAvailable])      // Add index for frequent queries
 }
 
 model BusRoute {
-  id              String          @id @default(uuid())
-  routeName       String
-  routeCode       String?         // Made nullable first
-  startPoint      String
-  endPoint        String
-  distance        Float          // in kilometers
-  duration        Int            // in minutes
-  direction       Direction?     // Using enum instead of String
-  isActive        Boolean        @default(true)
-  busId           String
-  bus             Bus            @relation(fields: [busId], references: [id], onDelete: Cascade)
-  schedules       BusSchedule[]
-  stops           BusStop[]
-  createdAt       DateTime       @default(now())
-  updatedAt       DateTime       @updatedAt
+  id         String        @id @default(uuid())
+  routeName  String
+  routeCode  String? // Made nullable first
+  startPoint String
+  endPoint   String
+  distance   Float // in kilometers
+  duration   Int // in minutes
+  direction  Direction? // Using enum instead of String
+  isActive   Boolean       @default(true)
+  busId      String
+  bus        Bus           @relation(fields: [busId], references: [id], onDelete: Cascade)
+  schedules  BusSchedule[]
+  stops      BusStop[]
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
 
+  @@index([isActive]) // Add index for frequent queries
   @@map("bus_routes")
-  @@index([isActive])          // Add index for frequent queries
 }
 
 model BusStop {
-  id              String          @id @default(uuid())
-  stopName        String
-  sequence        Int
-  timeFromStart   Int?           // First make it nullable
-  routeId         String
-  route           BusRoute       @relation(fields: [routeId], references: [id], onDelete: Cascade)
-  campusZone      String?
-  latitude        Float?
-  longitude       Float?
-  createdAt       DateTime       @default(now())
-  updatedAt       DateTime       @updatedAt
+  id            String   @id @default(uuid())
+  stopName      String
+  sequence      Int
+  timeFromStart Int? // First make it nullable
+  routeId       String
+  route         BusRoute @relation(fields: [routeId], references: [id], onDelete: Cascade)
+  campusZone    String?
+  latitude      Float?
+  longitude     Float?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
   @@unique([routeId, sequence])
   @@unique([stopName, routeId])
-  @@map("bus_stops")
   @@index([routeId])
+  @@map("bus_stops")
 }
 
 model BusSchedule {
-  id                String          @id @default(uuid())
+  id                String         @id @default(uuid())
   busId             String
   routeId           String
   driverId          String?
-  departureTime     String         // Consider using DateTime with @db.Time
-  arrivalTime       String         // Consider using DateTime with @db.Time
+  departureTime     String // Consider using DateTime with @db.Time
+  arrivalTime       String // Consider using DateTime with @db.Time
   bookedSeats       Int            @default(0)
-  totalCapacity     Int            @default(50)  // Added default
-  availableSeats    Int            @default(50)  // Added default
+  totalCapacity     Int            @default(50) // Added default
+  availableSeats    Int            @default(50) // Added default
   isRecurring       Boolean        @default(false)
   recurrencePattern String?
-  frequency         FrequencyType  @default(DAILY)  // Added default
-  validFrom         DateTime       @default(now())  // Added default
+  frequency         FrequencyType  @default(DAILY) // Added default
+  validFrom         DateTime       @default(now()) // Added default
   validUntil        DateTime?
   status            ScheduleStatus @default(SCHEDULED)
   bus               Bus            @relation(fields: [busId], references: [id], onDelete: Cascade)
@@ -322,9 +322,9 @@ model BusSchedule {
   createdAt         DateTime       @default(now())
   updatedAt         DateTime       @updatedAt
 
+  @@index([status]) // Add index for frequent queries
+  @@index([validFrom]) // Add index for date queries
   @@map("bus_schedules")
-  @@index([status])           // Add index for frequent queries
-  @@index([validFrom])        // Add index for date queries
 }
 
 model MaintenanceLog {
@@ -337,22 +337,22 @@ model MaintenanceLog {
   nextDueDate     DateTime?
   bus             Bus             @relation(fields: [busId], references: [id], onDelete: Cascade)
   createdAt       DateTime        @default(now())
-  updatedAt       DateTime       @updatedAt
+  updatedAt       DateTime        @updatedAt
 
+  @@index([maintenanceDate]) // Add index for date queries
   @@map("maintenance_logs")
-  @@index([maintenanceDate])  // Add index for date queries
 }
 
 model Reminder {
-  id              String          @id @default(uuid())
-  studentId       String          // Consider adding proper relation to User/Student model
-  scheduleId      String
-  reminderTime    DateTime
-  busSchedule     BusSchedule     @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
-  createdAt       DateTime        @default(now())
-  updatedAt       DateTime       @updatedAt
+  id           String      @id @default(uuid())
+  studentId    String // Consider adding proper relation to User/Student model
+  scheduleId   String
+  reminderTime DateTime
+  busSchedule  BusSchedule @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
 
+  @@index([reminderTime]) // Add index for date queries
+  @@index([studentId]) // Add index for frequent queries
   @@map("reminders")
-  @@index([reminderTime])     // Add index for date queries
-  @@index([studentId])        // Add index for frequent queries
 }

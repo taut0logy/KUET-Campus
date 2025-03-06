@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import Link from "next/link";
+import { Button } from "@/components/ui/button";
 
 export default function RouteBusesPage({ params }) {
   const router = useRouter();
@@ -66,45 +67,47 @@ export default function RouteBusesPage({ params }) {
   return (
     <div className="container mx-auto p-6 space-y-8">
       {/* Header Section */}
-      <div className="bg-card rounded-lg p-6 shadow-md">
-        <h2 className="text-3xl font-bold text-card-foreground">Route Details</h2>
-        <p className="text-muted-foreground mt-2">Route ID: {params.id}</p>
+      <div className="bg-gradient-to-br from-card/40 to-card rounded-lg p-6 shadow-lg hover:shadow-xl transition-all duration-300 border border-border/50">
+        <h2 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/60">
+          Route Details
+        </h2>
+        <p className="text-muted-foreground/80 mt-2 font-mono">Route ID: {params.id}</p>
       </div>
 
       {/* Stats Overview */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="bg-card">
+        <Card className="bg-gradient-to-br from-card/40 to-card hover:from-card/50 hover:to-card/80 transition-all duration-300 border-border/50">
           <CardHeader>
-            <CardTitle className="text-sm font-medium text-card-foreground">Total Buses</CardTitle>
+            <CardTitle className="text-sm font-medium text-primary/80">Total Buses</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-card-foreground">{buses.length}</div>
+            <div className="text-2xl font-bold text-foreground">{buses.length}</div>
           </CardContent>
         </Card>
-        <Card className="bg-card">
+        <Card className="bg-gradient-to-br from-card/40 to-card hover:from-card/50 hover:to-card/80 transition-all duration-300 border-border/50">
           <CardHeader>
-            <CardTitle className="text-sm font-medium text-card-foreground">Active Buses</CardTitle>
+            <CardTitle className="text-sm font-medium text-primary/80">Active Buses</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-card-foreground">
+            <div className="text-2xl font-bold text-foreground">
               {buses.filter(bus => bus.isActive).length}
             </div>
           </CardContent>
         </Card>
-        <Card className="bg-card">
+        <Card className="bg-gradient-to-br from-card/40 to-card hover:from-card/50 hover:to-card/80 transition-all duration-300 border-border/50">
           <CardHeader>
-            <CardTitle className="text-sm font-medium text-card-foreground">Total Stops</CardTitle>
+            <CardTitle className="text-sm font-medium text-primary/80">Total Stops</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-card-foreground">{busStops.length}</div>
+            <div className="text-2xl font-bold text-foreground">{busStops.length}</div>
           </CardContent>
         </Card>
       </div>
 
       {/* Filter Section */}
-      <Card className="bg-card">
+      <Card className="bg-gradient-to-br from-card/40 to-card hover:from-card/50 hover:to-card/80 transition-all duration-300 border-border/50">
         <CardHeader>
-          <CardTitle className="text-card-foreground">Filter Buses</CardTitle>
+          <CardTitle className="text-primary/80">Filter Buses</CardTitle>
         </CardHeader>
         <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <Input
@@ -137,9 +140,9 @@ export default function RouteBusesPage({ params }) {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Buses Section */}
         <div className="lg:col-span-2 space-y-6">
-          <Card className="bg-card">
+          <Card className="bg-gradient-to-br from-card/40 to-card hover:from-card/50 hover:to-card/80 transition-all duration-300 border-border/50">
             <CardHeader>
-              <CardTitle className="text-card-foreground">Available Buses</CardTitle>
+              <CardTitle className="text-primary/80">Available Buses</CardTitle>
             </CardHeader>
             <CardContent className="grid gap-4">
               {loading ? (
@@ -150,22 +153,29 @@ export default function RouteBusesPage({ params }) {
                 filteredBuses.map((bus) => (
                   <Card 
                     key={bus.id} 
-                    onClick={() => handleBusClick(bus.id)} 
-                    className="cursor-pointer hover:shadow-lg transition-all duration-300 bg-card"
+                    className="cursor-pointer hover:shadow-xl hover:-translate-y-1 transition-all duration-300 bg-gradient-to-br from-background to-card/50 hover:from-card/60 hover:to-card/80 border-border/50 group rounded-xl overflow-hidden"
+                    onClick={() => handleBusClick(bus.id)}
                   >
                     <CardContent className="flex justify-between items-center p-4">
                       <div>
-                        <h3 className="text-xl font-semibold text-card-foreground">Bus {bus.busNumber}</h3>
-                        <p className="text-sm text-muted-foreground">Capacity: {bus.capacity} seats</p>
+                        <h3 className="text-xl font-semibold text-primary/90 group-hover:text-primary transition-colors">
+                          Bus {bus.busNumber}
+                        </h3>
+                        <p className="text-sm text-muted-foreground/80">Capacity: {bus.capacity} seats</p>
                         {bus.description && (
-                          <p className="text-sm text-muted-foreground mt-1">{bus.description}</p>
+                          <p className="text-sm text-muted-foreground/60 mt-1">{bus.description}</p>
                         )}
                       </div>
-                      <Link href={`/bus/${bus.id}`}>
-                        <button className="mt-2 bg-blue-500 text-white rounded px-2 py-1">
-                          View Details
-                        </button>
-                      </Link>
+                      <Button 
+                        variant="outline"
+                        className="bg-primary/10 hover:bg-primary/20 text-primary hover:text-primary/80 transition-all duration-300"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          router.push(`/bus/${bus.id}`);
+                        }}
+                      >
+                        View Details
+                      </Button>
                     </CardContent>
                   </Card>
                 ))
@@ -180,20 +190,29 @@ export default function RouteBusesPage({ params }) {
 
         {/* Bus Stops Section */}
         <div className="lg:col-span-1">
-          <Card className="bg-card">
+          <Card className="bg-gradient-to-br from-card/40 to-card hover:from-card/50 hover:to-card/80 transition-all duration-300 border-border/50">
             <CardHeader>
-              <CardTitle className="text-card-foreground">Bus Stops</CardTitle>
+              <CardTitle className="text-primary/80">Bus Stops</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               {busStops.length > 0 ? (
                 busStops.map((stop) => (
-                  <Card key={stop.id} className="bg-muted">
+                  <Card 
+                    key={stop.id} 
+                    className="bg-muted/20 hover:bg-muted/30 hover:-translate-y-1 hover:shadow-lg transition-all duration-300 rounded-xl overflow-hidden"
+                  >
                     <CardContent className="p-4">
-                      <h4 className="font-semibold text-lg text-card-foreground">{stop.stopName}</h4>
-                      <div className="mt-2 space-y-1 text-muted-foreground">
-                        <p>Sequence: {stop.sequence}</p>
-                        <p>Zone: {stop.campusZone}</p>
-                        <p className="text-xs">
+                      <h4 className="font-semibold text-lg text-primary/80">{stop.stopName}</h4>
+                      <div className="mt-2 space-y-1 text-muted-foreground/80">
+                        <div className="flex items-center space-x-2">
+                          <span className="text-primary/60">Sequence:</span>
+                          <span>{stop.sequence}</span>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <span className="text-primary/60">Zone:</span>
+                          <span>{stop.campusZone}</span>
+                        </div>
+                        <p className="text-xs bg-muted/30 p-2 rounded-md">
                           Location: {stop.latitude}, {stop.longitude}
                         </p>
                       </div>
