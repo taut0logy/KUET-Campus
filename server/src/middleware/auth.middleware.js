@@ -23,6 +23,7 @@ const authenticate = async (req, res, next) => {
         id: true,
         email: true,
         name: true,
+        name: true,
         roles: true,
         status: true,
         emailVerified: true,
@@ -37,6 +38,7 @@ const authenticate = async (req, res, next) => {
     if (user.status === 'INACTIVE') {
       return res.status(401).json({ message: 'Account is not active. Please contact the admin to activate your account.' });
     }
+
 
     if (user.status === 'SUSPENDED') {
       return res.status(401).json({ message: 'Account is suspended. Please contact the admin to activate your account.' });

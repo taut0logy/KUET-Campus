@@ -53,6 +53,11 @@ const getRoutes = (user) => {
         label: "Analytics",
         requireAuth: true,
       },
+      {
+        href: "/schedules",
+        label: "Academic Schedules",
+        requireAuth: true,
+      },
     ];
   }
 
@@ -83,6 +88,11 @@ const getRoutes = (user) => {
         label: "Analytics",
         requireAuth: true,
       },
+      {
+        href: "/schedules",
+        label: "Academic Schedules",
+        requireAuth: true,
+      },
     ];
   }
 
@@ -103,10 +113,14 @@ const getRoutes = (user) => {
       label: "Bus Schedule",
       requireAuth: true,
     },
-
     {
       href: "/cafeteria",
       label: "Cafeteria",
+      requireAuth: true,
+    },
+    {
+      href: "/schedules",
+      label: "Academic Schedules",
       requireAuth: true,
     },
 

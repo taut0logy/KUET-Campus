@@ -61,6 +61,11 @@ model User {
   facultyInfo       FacultyInfo?   @relation("UserFacultyInfo")
   works             Work[]         @relation("UserWorks")
   status            UserStatus     @default(ACTIVE)
+  employeeInfo      EmployeeInfo?  @relation("UserEmployeeInfo")
+  studentInfo       StudentInfo?   @relation("UserStudentInfo")
+  facultyInfo       FacultyInfo?   @relation("UserFacultyInfo")
+  works             Work[]         @relation("UserWorks")
+  status            UserStatus     @default(ACTIVE)
   emailVerified     Boolean        @default(false)
   verificationToken String?
   resetToken        String?
@@ -85,6 +90,8 @@ model User {
   followUnfollowLogs FollowUnfollowLog[]
   eventVisits       EventVisit[]
   eventFollowUnfollowLogs EventFollowUnfollowLog[]
+  Assignment        Assignment[]
+  Exam              Exam[]
 
   @@map("users")
 }
@@ -299,17 +306,17 @@ model CartItem {
 
 model Routine {
   id      String  @id @default(uuid())
-  userId  Int
-  weekday String
-  period1 String?
-  period2 String?
-  period3 String?
-  period4 String?
-  period5 String?
-  period6 String?
-  period7 String?
-  period8 String?
-  period9 String?
+  userId  Int // Foreign key to User
+  weekday String // Weekday (e.g., "Sunday", "Monday", etc.)
+  period1 String? // Course for period 1
+  period2 String? // Course for period 2
+  period3 String? // Course for period 3
+  period4 String? // Course for period 4
+  period5 String? // Course for period 5
+  period6 String? // Course for period 6
+  period7 String? // Course for period 7
+  period8 String? // Course for period 8
+  period9 String? // Course for period 9
   user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([weekday, userId])
@@ -317,15 +324,51 @@ model Routine {
 }
 
 model Course {
-  id         String @id @default(uuid())
-  courseId   String @unique
+  id         String       @id @default(uuid())
+  courseId   String       @unique
   courseName String
-  classTest  String
-  userId     Int
-  user       User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  courseType String
+  userId     Int // Foreign key to User
+  user       User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  Assignment Assignment[]
+  Exam       Exam[] // Add relation to Exam model
 
   @@map("courses")
 }
+
+model Assignment {
+  id                        String   @id @default(uuid()) @map("assignment_id")
+  userId                    Int      @map("user_id")
+  courseId                  String   @map("course_id")
+  assignmentName            String   @map("assignment_name")
+  assignmentContent         String?  @map("assignment_content") @db.Text
+  deadline                  DateTime
+  status                    String   @default("due") // Add status field with default value
+  notifiedFor24HourDeadline Boolean  @default(false)
+  createdAt                 DateTime @default(now())
+  updatedAt                 DateTime @updatedAt
+  user                      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course                    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@map("assignments")
+}
+
+// New model for exams
+model Exam {
+  id        String   @id @default(uuid())
+  userId    Int // Foreign key to User
+  courseId  String // Foreign key to Course
+  examType  String // "term-final", "class-test", "lab-test"
+  syllabus  String?  @db.Text
+  examDate  DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@map("exams")
+}
+
 
 // Bus related models
 enum ScheduleStatus {

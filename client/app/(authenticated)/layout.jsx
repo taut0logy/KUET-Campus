@@ -2,6 +2,7 @@
 
 import { Header } from "@/components/layout/header";
 import { Protected } from "@/components/ui/protected";
+import { Sidebar } from "@/components/layout/sidebar";
 import CafeAiAssistant from "@/components/CafeAiAssistant";
 import useAuthStore from "@/stores/auth-store";
 

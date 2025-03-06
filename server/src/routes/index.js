@@ -6,7 +6,7 @@ const { standardLimiter } = require('../middleware/rate-limit.middleware');
 const authRoutes = require('./auth.routes');
 const cafeteriaRoutes = require('./cafeteria.routes');
 const routineRoutes = require('./routine.routes');
-const busRoutes = require('./bus.routes');
+const assignmentRoutes = require('./assignment.routes');
 const userRoutes = require('./user.routes');
 const notificationRoutes = require('./notification.routes');
 const storageRoutes = require('./storage.routes');
@@ -41,6 +41,7 @@ router.use('/routine', routineRoutes);
 router.use('/bus', busRoutes);  // This will make the routes available at /api/v1/bus/*
 router.use('/events', eventRoutes);
 router.use('/clubs', clubRoutes);
+router.use('/assignments', assignmentRoutes);
 
 // Catch-all 404 handler
 router.use('*', (req, res) => {

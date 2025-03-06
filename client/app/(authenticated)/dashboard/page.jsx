@@ -2,247 +2,95 @@
 
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Routine } from "@/components/dashboard/Routine";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { useRouter } from "next/navigation";
 import useAuthStore from "@/stores/auth-store";
-import useRoutineStore from "@/stores/routine-store";
-import { toast } from "sonner";
+import { BarChart, Bell, BookOpen, Bus, Calendar, Coffee, GraduationCap } from "lucide-react";
 
 export default function DashboardPage() {
-  const [showScheduleModal, setShowScheduleModal] = useState(false);
-  const [showCourseModal, setShowCourseModal] = useState(false);
-  const [weekday, setWeekday] = useState("");
-  const [periods, setPeriods] = useState(Array(9).fill(""));
-  const [newCourse, setNewCourse] = useState({
-    courseId: "",
-    courseName: "",
-    classTest: "class"
-  });
-  
+  const router = useRouter();
   const { user } = useAuthStore();
-  const { 
-    courses, 
-    weeklySchedule, 
-    loading, 
-    error,
-    fetchCourses, 
-    fetchWeeklySchedule,
-    addCourse,
-    setWeeklySchedule 
-  } = useRoutineStore();
-
-  useEffect(() => {
-    if (user) {
-      fetchCourses();
-      fetchWeeklySchedule();
+  
+  const quickLinks = [
+    {
+      title: "Academic Schedules",
+      description: "View class routines and assignments",
+      icon: GraduationCap,
+      href: "/schedules",
+      color: "bg-blue-100 text-blue-700"
+    },
+    {
+      title: "Notices & Announcements",
+      description: "Stay updated with latest announcements",
+      icon: Bell,
+      href: "/notices",
+      color: "bg-amber-100 text-amber-700"
+    },
+    {
+      title: "Bus Schedule",
+      description: "Check bus timings and routes",
+      icon: Bus,
+      href: "/bus",
+      color: "bg-green-100 text-green-700"
+    },
+    {
+      title: "Cafeteria",
+      description: "View menu and meal options",
+      icon: Coffee,
+      href: "/cafeteria",
+      color: "bg-purple-100 text-purple-700"
     }
-  }, [user, fetchCourses, fetchWeeklySchedule]);
-
-  const handleSetSchedule = async () => {
-    try {
-      await setWeeklySchedule(weekday, {
-        period1: periods[0],
-        period2: periods[1],
-        period3: periods[2],
-        period4: periods[3],
-        period5: periods[4],
-        period6: periods[5],
-        period7: periods[6],
-        period8: periods[7],
-        period9: periods[8],
-      });
-
-      toast.success("Schedule set successfully");
-      setShowScheduleModal(false);
-      setWeekday("");
-      setPeriods(Array(9).fill(""));
-    } catch (error) {
-      toast.error(error.message);
-    }
-  };
-
-  const handleAddCourse = async () => {
-    try {
-      await addCourse(newCourse);
-      toast.success("Course added successfully");
-      setShowCourseModal(false);
-      setNewCourse({
-        courseId: "",
-        courseName: "",
-        classTest: "class"
-      });
-    } catch (error) {
-      toast.error(error.message);
-    }
-  };
+  ];
 
   return (
-    <div className="flex-1 space-y-4 p-8 pt-6">
-      <div className="flex items-center justify-between space-y-2">
-        <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
-        <div className="flex gap-2">
-          <Button onClick={() => setShowScheduleModal(true)}>Set Weekly Schedule</Button>
-          <Button onClick={() => setShowCourseModal(true)}>Add Course</Button>
-        </div>
+    <div className="container mx-auto py-8">
+      <h1 className="text-3xl font-bold mb-2">Welcome, {user?.firstName || 'User'}!</h1>
+      <p className="text-muted-foreground mb-8">
+        Here's an overview of your campus resources and activities.
+      </p>
+
+      <h2 className="text-xl font-semibold mb-4">Quick Access</h2>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        {quickLinks.map((link, index) => (
+          <Card key={index} className="shadow-sm hover:shadow-md transition-shadow cursor-pointer" onClick={() => router.push(link.href)}>
+            <CardHeader className="pb-2">
+              <div className={`w-10 h-10 rounded-full ${link.color} flex items-center justify-center mb-2`}>
+                <link.icon className="h-5 w-5" />
+              </div>
+              <CardTitle className="text-lg">{link.title}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <CardDescription>{link.description}</CardDescription>
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Courses</CardTitle>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <Card className="md:col-span-2">
+          <CardHeader>
+            <CardTitle>Recent Announcements</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{courses.length}</div>
-            <p className="text-xs text-muted-foreground">Active courses in the system</p>
+            <p className="text-muted-foreground">No recent announcements.</p>
           </CardContent>
+          <CardFooter>
+            <Button variant="outline" onClick={() => router.push('/notices')}>View All Announcements</Button>
+          </CardFooter>
         </Card>
+
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Scheduled Days</CardTitle>
+          <CardHeader>
+            <CardTitle>Upcoming Deadlines</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {weeklySchedule ? Object.keys(weeklySchedule).length : 0}
-            </div>
-            <p className="text-xs text-muted-foreground">Days with scheduled classes</p>
+            <p className="text-muted-foreground">No upcoming deadlines.</p>
           </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Periods</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">9</div>
-            <p className="text-xs text-muted-foreground">Periods per day</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Status</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{loading ? "Loading..." : "Ready"}</div>
-            <p className="text-xs text-muted-foreground">
-              {error ? "Error loading data" : "System is operational"}
-            </p>
-          </CardContent>
+          <CardFooter>
+            <Button variant="outline" onClick={() => router.push('/schedules/assignments')}>View All Assignments</Button>
+          </CardFooter>
         </Card>
       </div>
-
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-        <Card className="col-span-7">
-          <Routine />
-        </Card>
-      </div>
-
-      {showScheduleModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-background p-4 rounded-lg max-w-4xl w-full">
-            <h2 className="text-lg font-bold mb-4">Set Weekly Schedule</h2>
-            <table className="w-full">
-              <thead>
-                <tr>
-                  <th>Weekday</th>
-                  {Array.from({ length: 9 }, (_, i) => (
-                    <th key={i}>{i + 1}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td>
-                    <select
-                      className="border p-1 rounded"
-                      value={weekday}
-                      onChange={(e) => setWeekday(e.target.value)}
-                    >
-                      <option value="">Select Day</option>
-                      <option value="Sunday">Sunday</option>
-                      <option value="Monday">Monday</option>
-                      <option value="Tuesday">Tuesday</option>
-                      <option value="Wednesday">Wednesday</option>
-                      <option value="Thursday">Thursday</option>
-                    </select>
-                  </td>
-                  {periods.map((period, index) => (
-                    <td key={index}>
-                      <select
-                        className="border p-1 rounded"
-                        value={period}
-                        onChange={(e) => {
-                          const newPeriods = [...periods];
-                          newPeriods[index] = e.target.value;
-                          setPeriods(newPeriods);
-                        }}
-                      >
-                        <option value="">Select Course</option>
-                        {courses.map((course) => (
-                          <option key={course.id} value={course.courseId}>
-                            {course.courseName}
-                          </option>
-                        ))}
-                      </select>
-                    </td>
-                  ))}
-                </tr>
-              </tbody>
-            </table>
-            <div className="mt-4 flex justify-end gap-2">
-              <Button onClick={handleSetSchedule}>Save</Button>
-              <Button variant="ghost" onClick={() => setShowScheduleModal(false)}>
-                Cancel
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {showCourseModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-background p-4 rounded-lg w-full max-w-md">
-            <h2 className="text-lg font-bold mb-4">Add New Course</h2>
-            <div className="space-y-4">
-              <div>
-                <label className="block mb-1">Course ID</label>
-                <input
-                  type="text"
-                  className="w-full border p-2 rounded"
-                  value={newCourse.courseId}
-                  onChange={(e) => setNewCourse({...newCourse, courseId: e.target.value})}
-                  placeholder="E.g., CSE101"
-                />
-              </div>
-              <div>
-                <label className="block mb-1">Course Name</label>
-                <input
-                  type="text"
-                  className="w-full border p-2 rounded"
-                  value={newCourse.courseName}
-                  onChange={(e) => setNewCourse({...newCourse, courseName: e.target.value})}
-                  placeholder="E.g., Introduction to Computer Science"
-                />
-              </div>
-              <div>
-                <label className="block mb-1">Type</label>
-                <select
-                  className="w-full border p-2 rounded"
-                  value={newCourse.classTest}
-                  onChange={(e) => setNewCourse({...newCourse, classTest: e.target.value})}
-                >
-                  <option value="class">Class</option>
-                  <option value="test">Test</option>
-                </select>
-              </div>
-            </div>
-            <div className="mt-4 flex justify-end gap-2">
-              <Button onClick={handleAddCourse}>Save</Button>
-              <Button variant="ghost" onClick={() => setShowCourseModal(false)}>
-                Cancel
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
