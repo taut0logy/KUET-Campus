@@ -2,8 +2,8 @@
 
 import { Header } from "@/components/layout/header";
 import { Protected } from "@/components/ui/protected";
-import CafeAiAssistant from "@/components/CafeAiAssistant";
-import useAuthStore from "@/stores/auth-store";
+import AIAssistant from "@/components/AiAgent";
+import useAuthStore from "@/stores/auth-store"; 
 
 /**
  * Authenticated Layout
@@ -24,7 +24,7 @@ export default function AuthenticatedLayout({ children }) {
         </main>
         
         {/* Render AI Assistant only for cafe managers */}
-        {isCafeManager && <CafeAiAssistant />}
+          <AIAssistant />
       </div>
     </Protected>
   );

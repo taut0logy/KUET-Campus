@@ -34,7 +34,7 @@ export default function RootLayout({ children }) {
           enableSystem
           disableTransitionOnChange
         >
-          <QueryProvider>
+          {/* <QueryProvider> */}
             <AuthProvider>
               <SocketProvider>
                 <div className="flex min-h-screen flex-col">
@@ -44,7 +44,7 @@ export default function RootLayout({ children }) {
                 <Toaster />
               </SocketProvider>
             </AuthProvider>
-          </QueryProvider>
+          {/* </QueryProvider> */}
         </ThemeProvider>
       </body>
     </html>

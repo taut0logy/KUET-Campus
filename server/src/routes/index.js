@@ -10,6 +10,7 @@ const notificationRoutes = require('./notification.routes');
 const storageRoutes = require('./storage.routes');
 const cartRoutes = require('./cart.routes');
 const orderRoutes = require('./order.routes');
+const aiCafeManagerRoutes = require('./ai-cafe-manager.routes');
 
 // Apply standard rate limit to all routes
 router.use(standardLimiter);
@@ -31,7 +32,7 @@ router.use('/notifications', notificationRoutes);
 router.use('/storage', storageRoutes);
 router.use('/cart', cartRoutes);
 router.use('/order', orderRoutes);
-
+router.use('/ai', aiCafeManagerRoutes); 
 
 // Catch-all 404 handler
 router.use('*', (req, res) => {

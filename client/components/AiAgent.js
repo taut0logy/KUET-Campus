@@ -9,16 +9,16 @@ import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar } from '@/components/ui/avatar';
 import { toast } from 'sonner';
-import axios from '@/lib/axios';
+import axios from '@/lib/axios';;
 
-export default function CafeAiAssistant() {
+export default function AiAgent() {
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
   const [messages, setMessages] = useState([
     {
       role: 'assistant',
-      content: "Hello! I'm your cafe management assistant. Ask me anything about your cafe or tell me where you'd like to go."
+      content: "I'm your KUET Campus assistant. How can I help you today?"
     }
   ]);
   const [input, setInput] = useState('');
@@ -42,36 +42,40 @@ export default function CafeAiAssistant() {
     setIsMinimized(!isMinimized);
   };
 
-  const handleRefreshData = async () => {
-    try {
-      // Add a refreshing message
-      setMessages(prev => [
-        ...prev,
-        { role: 'assistant', content: "Refreshing data from database..." }
-      ]);
+// Update the handleRefreshData function:
 
-      // Simple ping to wake up the API if it's sleeping
-      await axios.get('/healthcheck');
-      
-      // Add a success message
-      setMessages(prev => [
-        ...prev,
-        { role: 'assistant', content: "Data refreshed! What would you like to know?" }
-      ]);
-    } catch (error) {
-      setMessages(prev => [
-        ...prev,
-        { role: 'assistant', content: "I couldn't refresh the data. The server might be unavailable." }
-      ]);
-    }
-  };
+const handleRefreshData = async () => {
+  try {
+    // Add a refreshing message
+    setMessages(prev => [
+      ...prev,
+      { role: 'assistant', content: "Refreshing data from database..." }
+    ]);
+
+    // Simple ping to wake up the API if it's sleeping
+    await axios.get('/health'); // Changed from '/healthcheck'
+    
+    // Add a success message
+    setMessages(prev => [
+      ...prev,
+      { role: 'assistant', content: "Data refreshed! What would you like to know?" }
+    ]);
+  } catch (error) {
+    console.error("Error refreshing data:", error);
+    setMessages(prev => [
+      ...prev,
+      { role: 'assistant', content: "I couldn't refresh the data. The server might be unavailable." }
+    ]);
+  }
+};
+
 
   const navigateTo = (path, description) => {
     setMessages((prev) => [
       ...prev, 
       { 
         role: 'assistant', 
-        content: description
+        content: description || `Navigating to ${path}...`
       }
     ]);
     
@@ -80,106 +84,72 @@ export default function CafeAiAssistant() {
     }, 800);
   };
 
-  const handleSendMessage = async (e) => {
-    e.preventDefault();
-    if (!input.trim() || isLoading) return;
+// Update the handleSendMessage function:
 
-    // Add user message to chat
-    const userMessage = { role: 'user', content: input };
-    setMessages((prev) => [...prev, userMessage]);
-    setInput('');
-    setIsLoading(true);
+const handleSendMessage = async (e) => {
+  e.preventDefault();
+  if (!input.trim() || isLoading) return;
 
-    try {
-      // Check for navigation commands first
-      const lowerInput = input.toLowerCase();
-      
-      // Dashboard navigation
-      if (
-        lowerInput.includes('dashboard') || 
-        lowerInput.includes('analytics') ||
-        lowerInput.includes('home') ||
-        lowerInput.includes('main page') ||
-        lowerInput.includes('statistics')
-      ) {
-        navigateTo('/cafe-dashboard', "Taking you to the dashboard now.");
-        setIsLoading(false);
-        return;
-      }
-      
-      // Meal section navigation
-      if (
-        lowerInput.includes('meal') ||
-        lowerInput.includes('food') ||
-        lowerInput.includes('menu items')
-      ) {
-        navigateTo('/cafe-meal-control', "Navigating to meal management section.");
-        setIsLoading(false);
-        return;
-      }
-      
-      // Order section navigation
-      if (
-        lowerInput.includes('order') || 
-        lowerInput.includes('customer request') ||
-        lowerInput.includes('purchase')
-      ) {
-        navigateTo('/cafe-order-control', "Taking you to order management.");
-        setIsLoading(false);
-        return;
-      }
+  // Add user message to chat
+  const userMessage = { role: 'user', content: input };
+  setMessages((prev) => [...prev, userMessage]);
+  const currentInput = input; // Save the input before clearing
+  setInput('');
+  setIsLoading(true);
 
-      // Refresh data request
-      if (
-        lowerInput.includes('refresh') ||
-        lowerInput.includes('reload') ||
-        lowerInput.includes('update data')
-      ) {
-        await handleRefreshData();
-        setIsLoading(false);
-        return;
-      }
+  try {
+    console.log('Sending request to AI assistant:', currentInput);
+    
+    // Use the correct endpoint path - ensure it matches your route configuration
+    const response = await axios.post('/ai/cafe-assistant', { 
+      message: currentInput,
+      history: messages.slice(-5) // Send last 5 messages for context
+    });
 
-      // For other queries, use the backend endpoint
-      const response = await axios.post('/api/ai/cafe-assistant', { 
-        message: input,
-        history: messages.slice(-5) // Send last 5 messages for context
-      });
+    console.log('Response from AI assistant:', response.data);
 
-      if (response.data && response.data.response) {
-        setMessages((prev) => [
-          ...prev,
-          { role: 'assistant', content: response.data.response }
-        ]);
-      } else {
-        throw new Error("Received invalid response from server");
-      }
-    } catch (error) {
-      console.error('Error sending message to AI assistant:', error);
-      
-      // More detailed error handling
-      let errorMessage = "I'm sorry, I encountered an error processing your request.";
-      
-      if (error.response) {
-        // Handle server errors
-        if (error.response.status === 404) {
-          errorMessage = "I couldn't connect to the database. The server endpoint might be missing.";
-        } else if (error.response.status === 500) {
-          errorMessage = "There was a problem with the server. Please try again later.";
-        }
-      } else if (error.request) {
-        // Handle network errors
-        errorMessage = "Network error. Please check your connection and try again.";
-      }
-      
+    if (response.data && response.data.data) {
+      // Add the AI response to messages
       setMessages((prev) => [
         ...prev,
-        { role: 'assistant', content: errorMessage }
+        { role: 'assistant', content: response.data.data.response }
       ]);
-    } finally {
-      setIsLoading(false);
+
+      // If it's a navigation request, navigate to the destination
+      if (response.data.data.action === 'navigate' && response.data.data.destination) {
+        setTimeout(() => {
+          router.push(response.data.data.destination);
+        }, 800);
+      }
+    } else {
+      throw new Error("Invalid response structure from server");
     }
-  };
+  } catch (error) {
+    console.error('Error sending message to AI assistant:', error);
+    
+    // More detailed error handling
+    let errorMessage = "I'm sorry, I encountered an error processing your request.";
+    
+    if (error.response) {
+      console.log('Error response:', error.response);
+      // Handle server errors
+      if (error.response.status === 404) {
+        errorMessage = "I couldn't connect to the server. The endpoint might be missing.";
+      } else if (error.response.status === 500) {
+        errorMessage = "There was a problem with the server. Please try again later.";
+      }
+    } else if (error.request) {
+      errorMessage = "Network error. Please check your connection and try again.";
+    }
+    
+    setMessages((prev) => [
+      ...prev,
+      { role: 'assistant', content: errorMessage }
+    ]);
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   return (
     <>
@@ -201,7 +171,7 @@ export default function CafeAiAssistant() {
               <Avatar className="h-6 w-6 mr-2">
                 <Bot className="h-4 w-4" />
               </Avatar>
-              <span className="font-medium">Cafe Assistant</span>
+              <span className="font-medium">KUET Campus Assistant</span>
             </div>
             <div className="flex items-center space-x-1">
               {!isMinimized && (
