@@ -241,31 +241,7 @@ export default function CafeUserDashboard() {
         );
       },
     },
-    {
-      id: 'actions',
-      header: 'Actions',
-      cell: ({ row }) => {
-        const meal = { id: row.original.id, name: row.original.meal };
-        
-        return row.original.status === 'picked_up' ? (
-          <Button 
-            variant="outline" 
-            size="sm"
-            onClick={() => handleOrderAgain(row.original)}
-          >
-            Order Again
-          </Button>
-        ) : (
-          <Button
-            variant="ghost"
-            size="sm"
-            disabled
-          >
-            -
-          </Button>
-        );
-      },
-    },
+
   ];
 
   const handleOrderAgain = async (orderData) => {
@@ -535,19 +511,7 @@ export default function CafeUserDashboard() {
                               <span className="text-xs text-gray-500">
                                 ৳{item.meal.price} each
                               </span>
-                              <Button 
-                                variant="outline" 
-                                size="sm"
-                                onClick={() => 
-                                  handleOrderAgain({
-                                    id: item.meal.id, 
-                                    quantity: 1
-                                  })
-                                }
-                                className="h-7 text-xs"
-                              >
-                                Order Again
-                              </Button>
+
                             </div>
                             {index < dashboardData.topMeals.length - 1 && (
                               <Separator className="my-2" />
@@ -681,17 +645,7 @@ export default function CafeUserDashboard() {
                               <div className="text-sm">
                                 <span className="text-gray-500">Price:</span> ৳{item.meal.price}
                               </div>
-                              <Button 
-                                size="sm"
-                                onClick={() => 
-                                  handleOrderAgain({
-                                    id: item.meal.id, 
-                                    quantity: 1
-                                  })
-                                }
-                              >
-                                Order Again
-                              </Button>
+
                             </div>
                             {index < dashboardData.topMeals.length - 1 && (
                               <Separator className="mt-4" />
