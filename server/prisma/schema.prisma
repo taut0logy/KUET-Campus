@@ -61,11 +61,6 @@ model User {
   facultyInfo       FacultyInfo?   @relation("UserFacultyInfo")
   works             Work[]         @relation("UserWorks")
   status            UserStatus     @default(ACTIVE)
-  employeeInfo      EmployeeInfo?  @relation("UserEmployeeInfo")
-  studentInfo       StudentInfo?   @relation("UserStudentInfo")
-  facultyInfo       FacultyInfo?   @relation("UserFacultyInfo")
-  works             Work[]         @relation("UserWorks")
-  status            UserStatus     @default(ACTIVE)
   emailVerified     Boolean        @default(false)
   verificationToken String?
   resetToken        String?
@@ -77,8 +72,8 @@ model User {
   receivedMessages  Message[]      @relation("MessageReceiver")
   notifications     Notification[]
   preorders         Preorder[]
-  routines          Routine[]
-  courses           Course[]
+  routine           Routine[]
+  course            Course[]
   clubs             UserClub[]      @relation("UserClubs")
   managedClubs      UserClubManager[]      @relation("ClubManagers")
   moderatedClubs    Club[]          @relation("ClubModerator")
