@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { 
-  Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle 
+import {
+  Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -68,7 +68,7 @@ export default function MealsManagementPage() {
   }, []);
 
   // Filter meals based on search term
-  const filteredMeals = meals.filter(meal => 
+  const filteredMeals = meals.filter(meal =>
     meal.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     meal.category.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -79,14 +79,14 @@ export default function MealsManagementPage() {
         toast.error('Please fill all required fields');
         return;
       }
-  
+
       // Convert price to number
       const price = parseFloat(formData.price);
       if (isNaN(price) || price <= 0) {
         toast.error('Price must be a valid positive number');
         return;
       }
-  
+
       // Validate allergens JSON syntax if provided
       let parsedAllergens = null;
       if (formData.allergens) {
@@ -97,7 +97,7 @@ export default function MealsManagementPage() {
           return;
         }
       }
-  
+
       // Create meal data with individual nutrition fields
       const mealData = {
         name: formData.name,
@@ -153,21 +153,21 @@ export default function MealsManagementPage() {
 
   // Update the handleEditMeal function
 
-const handleEditMeal = async () => {
+  const handleEditMeal = async () => {
     try {
       // Form validation
       if (!formData.name || !formData.price || !formData.category) {
         toast.error('Please fill all required fields');
         return;
       }
-  
+
       // Convert price to number
       const price = parseFloat(formData.price);
       if (isNaN(price) || price <= 0) {
         toast.error('Price must be a valid positive number');
         return;
       }
-  
+
       // Validate allergens JSON syntax
       let parsedAllergens = [];
       try {
@@ -181,7 +181,7 @@ const handleEditMeal = async () => {
         toast.error('Allergens must be a valid JSON array');
         return;
       }
-  
+
       // Create meal data with individual nutrition fields
       const mealData = {
         name: formData.name,
@@ -209,11 +209,11 @@ const handleEditMeal = async () => {
         // JSON fields
         allergens: parsedAllergens
       };
-  
+
       // Submit the update
       setLoading(true);
       await axios.put(`/cafeteria/meals/${selectedMeal.id}`, mealData);
-      
+
       // Update the meals list
       const updatedMeals = meals.map(meal => {
         if (meal.id === selectedMeal.id) {
@@ -221,7 +221,7 @@ const handleEditMeal = async () => {
         }
         return meal;
       });
-      
+
       setMeals(updatedMeals);
       setIsEditDialogOpen(false);
       toast.success('Meal updated successfully');
@@ -274,7 +274,7 @@ const handleEditMeal = async () => {
       isVegan: meal.isVegan || false,
       isGlutenFree: meal.isGlutenFree || false,
       isSugarFree: meal.isSugarFree || false,
-      isLowFat: meal.isLowFat || false, 
+      isLowFat: meal.isLowFat || false,
       isOrganic: meal.isOrganic || false,
       // Nutrition values
       calories: meal.calories || '',
@@ -311,7 +311,7 @@ const handleEditMeal = async () => {
         <h1 className="text-3xl font-bold">Meal Management</h1>
 
 
-<div className="mb-6 flex gap-4">
+        {/* <div className="mb-10 flex gap-10 mt-4 justify-end">
   <Button 
     variant="outline" 
     onClick={() => router.push('/cafe-dashboard/meals')}
@@ -323,42 +323,54 @@ const handleEditMeal = async () => {
   
   <Button 
     variant="outline" 
-    onClick={() => router.push('/cafe-dashboard/menus')}
+    onClick={() => router.push('/cafe-order-control')}
     className="flex items-center gap-2"
   >
     <CalendarDays className="h-4 w-4" />
-    Manage Menus
+    Manage Orders
   </Button>
-</div>
+</div> */}
       </div>
 
       <div className="flex justify-between items-center mb-6">
         <div className="relative w-64">
           <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input 
-            placeholder="Search meals..." 
-            className="pl-8" 
-            value={searchTerm} 
-            onChange={(e) => setSearchTerm(e.target.value)} 
+          <Input
+            placeholder="Search meals..."
+            className="pl-8"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
-        
-        <Button onClick={openCreateDialog}>
-          <PlusCircle className="mr-2 h-4 w-4" />
-          Add New Meal
-        </Button>
+
+        <div className="flex gap-4">
+          <Button
+            variant="outline"
+            onClick={() => router.push('/cafe-order-control')}
+            className="gap-2"
+          >
+            <CalendarDays className="h-4 w-4" />
+            Manage Orders
+          </Button>
+
+          <Button onClick={openCreateDialog}>
+            <PlusCircle className="mr-2 h-4 w-4" />
+            Add New Meal
+          </Button>
+        </div>
       </div>
+
 
       {loading ? (
         <div className="text-center py-8">Loading meals...</div>
       ) : filteredMeals.length > 0 ? (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {filteredMeals.map((meal) => (
-            <MealCard 
-              key={meal.id} 
-              meal={meal} 
-              onEdit={() => openEditDialog(meal)} 
-              onDelete={() => openDeleteDialog(meal)} 
+            <MealCard
+              key={meal.id}
+              meal={meal}
+              onEdit={() => openEditDialog(meal)}
+              onDelete={() => openDeleteDialog(meal)}
             />
           ))}
         </div>
@@ -379,10 +391,10 @@ const handleEditMeal = async () => {
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
               <Label htmlFor="name">Name *</Label>
-              <Input 
-                id="name" 
-                value={formData.name} 
-                onChange={(e) => setFormData({...formData, name: e.target.value})} 
+              <Input
+                id="name"
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 placeholder="Fried Rice"
                 required
               />
@@ -390,10 +402,10 @@ const handleEditMeal = async () => {
 
             <div className="grid gap-2">
               <Label htmlFor="description">Description</Label>
-              <Textarea 
-                id="description" 
-                value={formData.description} 
-                onChange={(e) => setFormData({...formData, description: e.target.value})} 
+              <Textarea
+                id="description"
+                value={formData.description}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 placeholder="Describe the meal"
               />
             </div>
@@ -401,23 +413,23 @@ const handleEditMeal = async () => {
             <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
                 <Label htmlFor="price">Price (৳) *</Label>
-                <Input 
-                  id="price" 
-                  type="number" 
-                  min="0" 
-                  step="0.01" 
-                  value={formData.price} 
-                  onChange={(e) => setFormData({...formData, price: e.target.value})} 
+                <Input
+                  id="price"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={formData.price}
+                  onChange={(e) => setFormData({ ...formData, price: e.target.value })}
                   placeholder="100.00"
                   required
                 />
               </div>
-              
+
               <div className="grid gap-2">
                 <Label htmlFor="category">Category *</Label>
-                <Select 
-                  value={formData.category} 
-                  onValueChange={(value) => setFormData({...formData, category: value})}
+                <Select
+                  value={formData.category}
+                  onValueChange={(value) => setFormData({ ...formData, category: value })}
                 >
                   <SelectTrigger id="category">
                     <SelectValue placeholder="Select category" />
@@ -436,198 +448,198 @@ const handleEditMeal = async () => {
 
             <div className="grid grid-cols-2 gap-4">
               <div className="flex items-center space-x-2">
-                <Switch 
-                  id="isVegan" 
-                  checked={formData.isVegan} 
-                  onCheckedChange={(checked) => setFormData({...formData, isVegan: checked})} 
+                <Switch
+                  id="isVegan"
+                  checked={formData.isVegan}
+                  onCheckedChange={(checked) => setFormData({ ...formData, isVegan: checked })}
                 />
                 <Label htmlFor="isVegan">Vegan</Label>
               </div>
-              
+
               <div className="flex items-center space-x-2">
-                <Switch 
-                  id="isGlutenFree" 
-                  checked={formData.isGlutenFree} 
-                  onCheckedChange={(checked) => setFormData({...formData, isGlutenFree: checked})} 
+                <Switch
+                  id="isGlutenFree"
+                  checked={formData.isGlutenFree}
+                  onCheckedChange={(checked) => setFormData({ ...formData, isGlutenFree: checked })}
                 />
                 <Label htmlFor="isGlutenFree">Gluten Free</Label>
               </div>
 
               <div className="flex items-center space-x-2">
-    <Switch 
-      id="isLowFat" 
-      checked={formData.isLowFat} 
-      onCheckedChange={(checked) => setFormData({...formData, isLowFat: checked})} 
-    />
-    <Label htmlFor="isLowFat">Low Fat</Label>
-  </div>
+                <Switch
+                  id="isLowFat"
+                  checked={formData.isLowFat}
+                  onCheckedChange={(checked) => setFormData({ ...formData, isLowFat: checked })}
+                />
+                <Label htmlFor="isLowFat">Low Fat</Label>
+              </div>
 
-  <div className="flex items-center space-x-2">
-    <Switch 
-      id="isOrganic" 
-      checked={formData.isOrganic} 
-      onCheckedChange={(checked) => setFormData({...formData, isOrganic: checked})} 
-    />
-    <Label htmlFor="isOrganic">Organic</Label>
-  </div>
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="isOrganic"
+                  checked={formData.isOrganic}
+                  onCheckedChange={(checked) => setFormData({ ...formData, isOrganic: checked })}
+                />
+                <Label htmlFor="isOrganic">Organic</Label>
+              </div>
 
 
             </div>
 
             <div className="grid gap-2">
               <Label htmlFor="allergens">Allergens (JSON format)</Label>
-              <Textarea 
-                id="allergens" 
-                value={formData.allergens} 
-                onChange={(e) => setFormData({...formData, allergens: e.target.value})} 
+              <Textarea
+                id="allergens"
+                value={formData.allergens}
+                onChange={(e) => setFormData({ ...formData, allergens: e.target.value })}
                 placeholder='["nuts", "dairy", "eggs"]'
               />
               <p className="text-xs text-muted-foreground">Enter as a JSON array of strings</p>
             </div>
 
             <div className="grid gap-4">
-  <h3 className="text-sm font-medium">Nutrition Information</h3>
-  
-  <div className="grid grid-cols-2 gap-3">
-    <div className="grid gap-2">
-      <Label htmlFor="calories">Calories (kcal)</Label>
-      <Input 
-        id="calories" 
-        type="number" 
-        min="0"
-        value={formData.calories || ''} 
-        onChange={(e) => setFormData({...formData, calories: parseInt(e.target.value) || ''})} 
-        placeholder="0"
-      />
-    </div>
-    
-    <div className="grid gap-2">
-      <Label htmlFor="protein">Protein (g)</Label>
-      <Input 
-        id="protein" 
-        type="number" 
-        min="0"
-        value={formData.protein || ''} 
-        onChange={(e) => setFormData({...formData, protein: parseInt(e.target.value) || ''})} 
-        placeholder="0"
-      />
-    </div>
-    
-    <div className="grid gap-2">
-      <Label htmlFor="carbs">Carbs (g)</Label>
-      <Input 
-        id="carbs" 
-        type="number" 
-        min="0"
-        value={formData.carbs || ''} 
-        onChange={(e) => setFormData({...formData, carbs: parseInt(e.target.value) || ''})} 
-        placeholder="0"
-      />
-    </div>
-    
-    <div className="grid gap-2">
-      <Label htmlFor="fat">Fat (g)</Label>
-      <Input 
-        id="fat" 
-        type="number" 
-        min="0"
-        value={formData.fat || ''} 
-        onChange={(e) => setFormData({...formData, fat: parseInt(e.target.value) || ''})} 
-        placeholder="0"
-      />
-    </div>
-  </div>
-  
-  {/* Advanced nutrition */}
-  <details className="mt-2">
-    <summary className="text-sm font-medium cursor-pointer">Advanced Nutrition Details</summary>
-    <div className="grid grid-cols-2 gap-3 mt-3">
-      <div className="grid gap-2">
-        <Label htmlFor="fiber">Fiber (g)</Label>
-        <Input 
-          id="fiber" 
-          type="number" 
-          min="0"
-          value={formData.fiber || ''} 
-          onChange={(e) => setFormData({...formData, fiber: parseInt(e.target.value) || ''})} 
-          placeholder="0"
-        />
-      </div>
-      
-      <div className="grid gap-2">
-        <Label htmlFor="sugar">Sugar (g)</Label>
-        <Input 
-          id="sugar" 
-          type="number" 
-          min="0"
-          value={formData.sugar || ''} 
-          onChange={(e) => setFormData({...formData, sugar: parseInt(e.target.value) || ''})} 
-          placeholder="0"
-        />
-      </div>
-      
-      <div className="grid gap-2">
-        <Label htmlFor="sodium">Sodium (mg)</Label>
-        <Input 
-          id="sodium" 
-          type="number" 
-          min="0"
-          value={formData.sodium || ''} 
-          onChange={(e) => setFormData({...formData, sodium: parseInt(e.target.value) || ''})} 
-          placeholder="0"
-        />
-      </div>
-      
-      <div className="grid gap-2">
-        <Label htmlFor="vitaminA">Vitamin A (IU)</Label>
-        <Input 
-          id="vitaminA" 
-          type="number" 
-          min="0"
-          value={formData.vitaminA || ''} 
-          onChange={(e) => setFormData({...formData, vitaminA: parseInt(e.target.value) || ''})} 
-          placeholder="0"
-        />
-      </div>
-      
-      <div className="grid gap-2">
-        <Label htmlFor="vitaminC">Vitamin C (mg)</Label>
-        <Input 
-          id="vitaminC" 
-          type="number" 
-          min="0"
-          value={formData.vitaminC || ''} 
-          onChange={(e) => setFormData({...formData, vitaminC: parseInt(e.target.value) || ''})} 
-          placeholder="0"
-        />
-      </div>
-      
-      <div className="grid gap-2">
-        <Label htmlFor="calcium">Calcium (mg)</Label>
-        <Input 
-          id="calcium" 
-          type="number" 
-          min="0"
-          value={formData.calcium || ''} 
-          onChange={(e) => setFormData({...formData, calcium: parseInt(e.target.value) || ''})} 
-          placeholder="0"
-        />
-      </div>
-      
-      <div className="grid gap-2">
-        <Label htmlFor="iron">Iron (mg)</Label>
-        <Input 
-          id="iron" 
-          type="number" 
-          min="0"
-          value={formData.iron || ''} 
-          onChange={(e) => setFormData({...formData, iron: parseInt(e.target.value) || ''})} 
-          placeholder="0"
-        />
-      </div>
-    </div>
-  </details>
-</div>
+              <h3 className="text-sm font-medium">Nutrition Information</h3>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="grid gap-2">
+                  <Label htmlFor="calories">Calories (kcal)</Label>
+                  <Input
+                    id="calories"
+                    type="number"
+                    min="0"
+                    value={formData.calories || ''}
+                    onChange={(e) => setFormData({ ...formData, calories: parseInt(e.target.value) || '' })}
+                    placeholder="0"
+                  />
+                </div>
+
+                <div className="grid gap-2">
+                  <Label htmlFor="protein">Protein (g)</Label>
+                  <Input
+                    id="protein"
+                    type="number"
+                    min="0"
+                    value={formData.protein || ''}
+                    onChange={(e) => setFormData({ ...formData, protein: parseInt(e.target.value) || '' })}
+                    placeholder="0"
+                  />
+                </div>
+
+                <div className="grid gap-2">
+                  <Label htmlFor="carbs">Carbs (g)</Label>
+                  <Input
+                    id="carbs"
+                    type="number"
+                    min="0"
+                    value={formData.carbs || ''}
+                    onChange={(e) => setFormData({ ...formData, carbs: parseInt(e.target.value) || '' })}
+                    placeholder="0"
+                  />
+                </div>
+
+                <div className="grid gap-2">
+                  <Label htmlFor="fat">Fat (g)</Label>
+                  <Input
+                    id="fat"
+                    type="number"
+                    min="0"
+                    value={formData.fat || ''}
+                    onChange={(e) => setFormData({ ...formData, fat: parseInt(e.target.value) || '' })}
+                    placeholder="0"
+                  />
+                </div>
+              </div>
+
+              {/* Advanced nutrition */}
+              <details className="mt-2">
+                <summary className="text-sm font-medium cursor-pointer">Advanced Nutrition Details</summary>
+                <div className="grid grid-cols-2 gap-3 mt-3">
+                  <div className="grid gap-2">
+                    <Label htmlFor="fiber">Fiber (g)</Label>
+                    <Input
+                      id="fiber"
+                      type="number"
+                      min="0"
+                      value={formData.fiber || ''}
+                      onChange={(e) => setFormData({ ...formData, fiber: parseInt(e.target.value) || '' })}
+                      placeholder="0"
+                    />
+                  </div>
+
+                  <div className="grid gap-2">
+                    <Label htmlFor="sugar">Sugar (g)</Label>
+                    <Input
+                      id="sugar"
+                      type="number"
+                      min="0"
+                      value={formData.sugar || ''}
+                      onChange={(e) => setFormData({ ...formData, sugar: parseInt(e.target.value) || '' })}
+                      placeholder="0"
+                    />
+                  </div>
+
+                  <div className="grid gap-2">
+                    <Label htmlFor="sodium">Sodium (mg)</Label>
+                    <Input
+                      id="sodium"
+                      type="number"
+                      min="0"
+                      value={formData.sodium || ''}
+                      onChange={(e) => setFormData({ ...formData, sodium: parseInt(e.target.value) || '' })}
+                      placeholder="0"
+                    />
+                  </div>
+
+                  <div className="grid gap-2">
+                    <Label htmlFor="vitaminA">Vitamin A (IU)</Label>
+                    <Input
+                      id="vitaminA"
+                      type="number"
+                      min="0"
+                      value={formData.vitaminA || ''}
+                      onChange={(e) => setFormData({ ...formData, vitaminA: parseInt(e.target.value) || '' })}
+                      placeholder="0"
+                    />
+                  </div>
+
+                  <div className="grid gap-2">
+                    <Label htmlFor="vitaminC">Vitamin C (mg)</Label>
+                    <Input
+                      id="vitaminC"
+                      type="number"
+                      min="0"
+                      value={formData.vitaminC || ''}
+                      onChange={(e) => setFormData({ ...formData, vitaminC: parseInt(e.target.value) || '' })}
+                      placeholder="0"
+                    />
+                  </div>
+
+                  <div className="grid gap-2">
+                    <Label htmlFor="calcium">Calcium (mg)</Label>
+                    <Input
+                      id="calcium"
+                      type="number"
+                      min="0"
+                      value={formData.calcium || ''}
+                      onChange={(e) => setFormData({ ...formData, calcium: parseInt(e.target.value) || '' })}
+                      placeholder="0"
+                    />
+                  </div>
+
+                  <div className="grid gap-2">
+                    <Label htmlFor="iron">Iron (mg)</Label>
+                    <Input
+                      id="iron"
+                      type="number"
+                      min="0"
+                      value={formData.iron || ''}
+                      onChange={(e) => setFormData({ ...formData, iron: parseInt(e.target.value) || '' })}
+                      placeholder="0"
+                    />
+                  </div>
+                </div>
+              </details>
+            </div>
 
           </div>
 
@@ -641,268 +653,268 @@ const handleEditMeal = async () => {
       </Dialog>
 
       {/* Edit Meal Dialog */}
-<Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-<DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-    <DialogHeader>
-      <DialogTitle>Edit Meal</DialogTitle>
-      <DialogDescription>Update meal details and nutrition information.</DialogDescription>
-    </DialogHeader>
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Edit Meal</DialogTitle>
+            <DialogDescription>Update meal details and nutrition information.</DialogDescription>
+          </DialogHeader>
 
-    <div className="grid gap-4 py-4">
-      <div className="grid grid-cols-2 gap-4">
-        <div className="grid gap-2">
-          <Label htmlFor="name">Name</Label>
-          <Input
-            id="name"
-            value={formData.name}
-            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-          />
-        </div>
-        <div className="grid gap-2">
-          <Label htmlFor="price">Price ($)</Label>
-          <Input
-            id="price"
-            type="number"
-            step="0.01"
-            value={formData.price}
-            onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-          />
-        </div>
-      </div>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="name">Name</Label>
+                <Input
+                  id="name"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="price">Price ($)</Label>
+                <Input
+                  id="price"
+                  type="number"
+                  step="0.01"
+                  value={formData.price}
+                  onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                />
+              </div>
+            </div>
 
-      <div className="grid gap-2">
-        <Label htmlFor="category">Category</Label>
-        <Input
-          id="category"
-          value={formData.category}
-          onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-        />
-      </div>
+            <div className="grid gap-2">
+              <Label htmlFor="category">Category</Label>
+              <Input
+                id="category"
+                value={formData.category}
+                onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+              />
+            </div>
 
-      <div className="grid gap-2">
-        <Label htmlFor="description">Description</Label>
-        <Textarea
-          id="description"
-          value={formData.description || ""}
-          onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-          rows={3}
-        />
-      </div>
+            <div className="grid gap-2">
+              <Label htmlFor="description">Description</Label>
+              <Textarea
+                id="description"
+                value={formData.description || ""}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                rows={3}
+              />
+            </div>
 
-      {/* Nutrition Information - Updated to individual fields */}
-      <div className="grid gap-4">
-        <h3 className="text-sm font-medium">Nutrition Information</h3>
-        
-        <div className="grid grid-cols-2 gap-3">
-          <div className="grid gap-2">
-            <Label htmlFor="calories">Calories (kcal)</Label>
-            <Input 
-              id="calories" 
-              type="number" 
-              min="0"
-              value={formData.calories || ''} 
-              onChange={(e) => setFormData({...formData, calories: e.target.value ? parseInt(e.target.value) : ''})} 
-              placeholder="0"
-            />
+            {/* Nutrition Information - Updated to individual fields */}
+            <div className="grid gap-4">
+              <h3 className="text-sm font-medium">Nutrition Information</h3>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="grid gap-2">
+                  <Label htmlFor="calories">Calories (kcal)</Label>
+                  <Input
+                    id="calories"
+                    type="number"
+                    min="0"
+                    value={formData.calories || ''}
+                    onChange={(e) => setFormData({ ...formData, calories: e.target.value ? parseInt(e.target.value) : '' })}
+                    placeholder="0"
+                  />
+                </div>
+
+                <div className="grid gap-2">
+                  <Label htmlFor="protein">Protein (g)</Label>
+                  <Input
+                    id="protein"
+                    type="number"
+                    min="0"
+                    value={formData.protein || ''}
+                    onChange={(e) => setFormData({ ...formData, protein: e.target.value ? parseInt(e.target.value) : '' })}
+                    placeholder="0"
+                  />
+                </div>
+
+                <div className="grid gap-2">
+                  <Label htmlFor="carbs">Carbs (g)</Label>
+                  <Input
+                    id="carbs"
+                    type="number"
+                    min="0"
+                    value={formData.carbs || ''}
+                    onChange={(e) => setFormData({ ...formData, carbs: e.target.value ? parseInt(e.target.value) : '' })}
+                    placeholder="0"
+                  />
+                </div>
+
+                <div className="grid gap-2">
+                  <Label htmlFor="fat">Fat (g)</Label>
+                  <Input
+                    id="fat"
+                    type="number"
+                    min="0"
+                    value={formData.fat || ''}
+                    onChange={(e) => setFormData({ ...formData, fat: e.target.value ? parseInt(e.target.value) : '' })}
+                    placeholder="0"
+                  />
+                </div>
+              </div>
+
+              {/* Advanced nutrition */}
+              <details className="mt-2">
+                <summary className="text-sm font-medium cursor-pointer">Advanced Nutrition Details</summary>
+                <div className="grid grid-cols-2 gap-3 mt-3">
+                  <div className="grid gap-2">
+                    <Label htmlFor="fiber">Fiber (g)</Label>
+                    <Input
+                      id="fiber"
+                      type="number"
+                      min="0"
+                      value={formData.fiber || ''}
+                      onChange={(e) => setFormData({ ...formData, fiber: e.target.value ? parseInt(e.target.value) : '' })}
+                      placeholder="0"
+                    />
+                  </div>
+
+                  <div className="grid gap-2">
+                    <Label htmlFor="sugar">Sugar (g)</Label>
+                    <Input
+                      id="sugar"
+                      type="number"
+                      min="0"
+                      value={formData.sugar || ''}
+                      onChange={(e) => setFormData({ ...formData, sugar: e.target.value ? parseInt(e.target.value) : '' })}
+                      placeholder="0"
+                    />
+                  </div>
+
+                  <div className="grid gap-2">
+                    <Label htmlFor="sodium">Sodium (mg)</Label>
+                    <Input
+                      id="sodium"
+                      type="number"
+                      min="0"
+                      value={formData.sodium || ''}
+                      onChange={(e) => setFormData({ ...formData, sodium: e.target.value ? parseInt(e.target.value) : '' })}
+                      placeholder="0"
+                    />
+                  </div>
+
+                  <div className="grid gap-2">
+                    <Label htmlFor="vitaminA">Vitamin A (IU)</Label>
+                    <Input
+                      id="vitaminA"
+                      type="number"
+                      min="0"
+                      value={formData.vitaminA || ''}
+                      onChange={(e) => setFormData({ ...formData, vitaminA: e.target.value ? parseInt(e.target.value) : '' })}
+                      placeholder="0"
+                    />
+                  </div>
+
+                  <div className="grid gap-2">
+                    <Label htmlFor="vitaminC">Vitamin C (mg)</Label>
+                    <Input
+                      id="vitaminC"
+                      type="number"
+                      min="0"
+                      value={formData.vitaminC || ''}
+                      onChange={(e) => setFormData({ ...formData, vitaminC: e.target.value ? parseInt(e.target.value) : '' })}
+                      placeholder="0"
+                    />
+                  </div>
+
+                  <div className="grid gap-2">
+                    <Label htmlFor="calcium">Calcium (mg)</Label>
+                    <Input
+                      id="calcium"
+                      type="number"
+                      min="0"
+                      value={formData.calcium || ''}
+                      onChange={(e) => setFormData({ ...formData, calcium: e.target.value ? parseInt(e.target.value) : '' })}
+                      placeholder="0"
+                    />
+                  </div>
+
+                  <div className="grid gap-2">
+                    <Label htmlFor="iron">Iron (mg)</Label>
+                    <Input
+                      id="iron"
+                      type="number"
+                      min="0"
+                      value={formData.iron || ''}
+                      onChange={(e) => setFormData({ ...formData, iron: e.target.value ? parseInt(e.target.value) : '' })}
+                      placeholder="0"
+                    />
+                  </div>
+                </div>
+              </details>
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="allergens">Allergens (JSON Array)</Label>
+              <Textarea
+                id="allergens"
+                value={formData.allergens || '[]'}
+                onChange={(e) => setFormData({ ...formData, allergens: e.target.value })}
+                rows={2}
+                placeholder='["Gluten", "Dairy", "Nuts"]'
+              />
+              <p className="text-xs text-muted-foreground">Enter allergens as a JSON array</p>
+            </div>
+
+            {/* Dietary Preferences */}
+            <div className="grid grid-cols-3 gap-4 mt-2">
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="isVegan"
+                  checked={formData.isVegan}
+                  onCheckedChange={(checked) => setFormData({ ...formData, isVegan: checked })}
+                />
+                <Label htmlFor="isVegan">Vegan</Label>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="isGlutenFree"
+                  checked={formData.isGlutenFree}
+                  onCheckedChange={(checked) => setFormData({ ...formData, isGlutenFree: checked })}
+                />
+                <Label htmlFor="isGlutenFree">Gluten Free</Label>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="isSugarFree"
+                  checked={formData.isSugarFree}
+                  onCheckedChange={(checked) => setFormData({ ...formData, isSugarFree: checked })}
+                />
+                <Label htmlFor="isSugarFree">Sugar Free</Label>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="isLowFat"
+                  checked={formData.isLowFat}
+                  onCheckedChange={(checked) => setFormData({ ...formData, isLowFat: checked })}
+                />
+                <Label htmlFor="isLowFat">Low Fat</Label>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="isOrganic"
+                  checked={formData.isOrganic}
+                  onCheckedChange={(checked) => setFormData({ ...formData, isOrganic: checked })}
+                />
+                <Label htmlFor="isOrganic">Organic</Label>
+              </div>
+            </div>
           </div>
-          
-          <div className="grid gap-2">
-            <Label htmlFor="protein">Protein (g)</Label>
-            <Input 
-              id="protein" 
-              type="number" 
-              min="0"
-              value={formData.protein || ''} 
-              onChange={(e) => setFormData({...formData, protein: e.target.value ? parseInt(e.target.value) : ''})} 
-              placeholder="0"
-            />
-          </div>
-          
-          <div className="grid gap-2">
-            <Label htmlFor="carbs">Carbs (g)</Label>
-            <Input 
-              id="carbs" 
-              type="number" 
-              min="0"
-              value={formData.carbs || ''} 
-              onChange={(e) => setFormData({...formData, carbs: e.target.value ? parseInt(e.target.value) : ''})} 
-              placeholder="0"
-            />
-          </div>
-          
-          <div className="grid gap-2">
-            <Label htmlFor="fat">Fat (g)</Label>
-            <Input 
-              id="fat" 
-              type="number" 
-              min="0"
-              value={formData.fat || ''} 
-              onChange={(e) => setFormData({...formData, fat: e.target.value ? parseInt(e.target.value) : ''})} 
-              placeholder="0"
-            />
-          </div>
-        </div>
-        
-        {/* Advanced nutrition */}
-        <details className="mt-2">
-          <summary className="text-sm font-medium cursor-pointer">Advanced Nutrition Details</summary>
-          <div className="grid grid-cols-2 gap-3 mt-3">
-            <div className="grid gap-2">
-              <Label htmlFor="fiber">Fiber (g)</Label>
-              <Input 
-                id="fiber" 
-                type="number" 
-                min="0"
-                value={formData.fiber || ''} 
-                onChange={(e) => setFormData({...formData, fiber: e.target.value ? parseInt(e.target.value) : ''})} 
-                placeholder="0"
-              />
-            </div>
-            
-            <div className="grid gap-2">
-              <Label htmlFor="sugar">Sugar (g)</Label>
-              <Input 
-                id="sugar" 
-                type="number" 
-                min="0"
-                value={formData.sugar || ''} 
-                onChange={(e) => setFormData({...formData, sugar: e.target.value ? parseInt(e.target.value) : ''})} 
-                placeholder="0"
-              />
-            </div>
-            
-            <div className="grid gap-2">
-              <Label htmlFor="sodium">Sodium (mg)</Label>
-              <Input 
-                id="sodium" 
-                type="number" 
-                min="0"
-                value={formData.sodium || ''} 
-                onChange={(e) => setFormData({...formData, sodium: e.target.value ? parseInt(e.target.value) : ''})} 
-                placeholder="0"
-              />
-            </div>
-            
-            <div className="grid gap-2">
-              <Label htmlFor="vitaminA">Vitamin A (IU)</Label>
-              <Input 
-                id="vitaminA" 
-                type="number" 
-                min="0"
-                value={formData.vitaminA || ''} 
-                onChange={(e) => setFormData({...formData, vitaminA: e.target.value ? parseInt(e.target.value) : ''})} 
-                placeholder="0"
-              />
-            </div>
-            
-            <div className="grid gap-2">
-              <Label htmlFor="vitaminC">Vitamin C (mg)</Label>
-              <Input 
-                id="vitaminC" 
-                type="number" 
-                min="0"
-                value={formData.vitaminC || ''} 
-                onChange={(e) => setFormData({...formData, vitaminC: e.target.value ? parseInt(e.target.value) : ''})} 
-                placeholder="0"
-              />
-            </div>
-            
-            <div className="grid gap-2">
-              <Label htmlFor="calcium">Calcium (mg)</Label>
-              <Input 
-                id="calcium" 
-                type="number" 
-                min="0"
-                value={formData.calcium || ''} 
-                onChange={(e) => setFormData({...formData, calcium: e.target.value ? parseInt(e.target.value) : ''})} 
-                placeholder="0"
-              />
-            </div>
-            
-            <div className="grid gap-2">
-              <Label htmlFor="iron">Iron (mg)</Label>
-              <Input 
-                id="iron" 
-                type="number" 
-                min="0"
-                value={formData.iron || ''} 
-                onChange={(e) => setFormData({...formData, iron: e.target.value ? parseInt(e.target.value) : ''})} 
-                placeholder="0"
-              />
-            </div>
-          </div>
-        </details>
-      </div>
 
-      <div className="grid gap-2">
-        <Label htmlFor="allergens">Allergens (JSON Array)</Label>
-        <Textarea
-          id="allergens"
-          value={formData.allergens || '[]'}
-          onChange={(e) => setFormData({ ...formData, allergens: e.target.value })}
-          rows={2}
-          placeholder='["Gluten", "Dairy", "Nuts"]'
-        />
-        <p className="text-xs text-muted-foreground">Enter allergens as a JSON array</p>
-      </div>
-
-      {/* Dietary Preferences */}
-      <div className="grid grid-cols-3 gap-4 mt-2">
-        <div className="flex items-center space-x-2">
-          <Switch 
-            id="isVegan" 
-            checked={formData.isVegan} 
-            onCheckedChange={(checked) => setFormData({...formData, isVegan: checked})} 
-          />
-          <Label htmlFor="isVegan">Vegan</Label>
-        </div>
-        
-        <div className="flex items-center space-x-2">
-          <Switch 
-            id="isGlutenFree" 
-            checked={formData.isGlutenFree} 
-            onCheckedChange={(checked) => setFormData({...formData, isGlutenFree: checked})} 
-          />
-          <Label htmlFor="isGlutenFree">Gluten Free</Label>
-        </div>
-        
-        <div className="flex items-center space-x-2">
-          <Switch 
-            id="isSugarFree" 
-            checked={formData.isSugarFree} 
-            onCheckedChange={(checked) => setFormData({...formData, isSugarFree: checked})} 
-          />
-          <Label htmlFor="isSugarFree">Sugar Free</Label>
-        </div>
-        
-        <div className="flex items-center space-x-2">
-          <Switch 
-            id="isLowFat" 
-            checked={formData.isLowFat} 
-            onCheckedChange={(checked) => setFormData({...formData, isLowFat: checked})} 
-          />
-          <Label htmlFor="isLowFat">Low Fat</Label>
-        </div>
-        
-        <div className="flex items-center space-x-2">
-          <Switch 
-            id="isOrganic" 
-            checked={formData.isOrganic} 
-            onCheckedChange={(checked) => setFormData({...formData, isOrganic: checked})} 
-          />
-          <Label htmlFor="isOrganic">Organic</Label>
-        </div>
-      </div>
-    </div>
-
-    <DialogFooter>
-      <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
-        Cancel
-      </Button>
-      <Button onClick={handleEditMeal}>Save Changes</Button>
-    </DialogFooter>
-  </DialogContent>
-</Dialog>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleEditMeal}>Save Changes</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
@@ -913,7 +925,7 @@ const handleEditMeal = async () => {
               Are you sure you want to delete "{selectedMeal?.name}"? This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
-          
+
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
               Cancel
@@ -950,14 +962,14 @@ function MealCard({ meal, onEdit, onDelete }) {
           </span>
         </div>
       </CardHeader>
-      
+
       <CardContent className="p-4">
         {meal.description && (
           <CardDescription className="text-gray-300 mb-4">
             {meal.description}
           </CardDescription>
         )}
-        
+
         {/* Nutrition information */}
         <div className="grid grid-cols-2 gap-2 text-sm mb-4">
           <div>
@@ -973,7 +985,7 @@ function MealCard({ meal, onEdit, onDelete }) {
             <span className="font-semibold">Fat:</span> {meal.fat ? `${meal.fat}g` : 'N/A'}
           </div>
         </div>
-        
+
         {/* Dietary preferences as text-based visuals */}
         <div className="flex flex-wrap gap-2 mt-3">
           {meal.isVegan && (
@@ -1007,15 +1019,15 @@ function MealCard({ meal, onEdit, onDelete }) {
             </div>
           )}
         </div>
-        
+
         {/* Allergens */}
         {meal.allergens && meal.allergens.length > 0 && (
           <div className="mt-4 text-sm">
             <span className="font-semibold">Allergens: </span>
             <div className="flex flex-wrap gap-1 mt-1">
               {meal.allergens.map((allergen, i) => (
-                <span 
-                  key={i} 
+                <span
+                  key={i}
                   className="px-1.5 py-0.5 bg-red-50 text-red-700 text-xs rounded"
                 >
                   {allergen}
@@ -1025,7 +1037,7 @@ function MealCard({ meal, onEdit, onDelete }) {
           </div>
         )}
       </CardContent>
-      
+
       <CardFooter className="p-4 border-t flex justify-between">
         <Button variant="outline" size="sm" onClick={onEdit}>
           <Pencil className="h-4 w-4 mr-1" />
