@@ -206,6 +206,15 @@ function getSimpleNavigationDestination(message) {
     return { name: 'Register', path: '/register' };
   }
 
+  if (msg.includes('map') || 
+      (msg.includes('campus') && msg.includes('navigation')) ||
+      (msg.includes('find') && (msg.includes('building') || msg.includes('location'))) || 
+      msg.includes('direction') || 
+      msg.includes('navigate to') || 
+      msg.includes('where is')) {
+    return { name: 'Campus Map', path: '/campus-map' };
+  }
+
   // Help and support
   if (msg.includes('help') || msg.includes('support') || msg.includes('faq')) {
     return { name: 'Help & Support', path: '/help' };
