@@ -1,4 +1,14 @@
-const { param } = require('express-validator');
+const { param, query } = require('express-validator');
+
+// validation for following an event
+const followEventValidation = [
+  param('eventId').isInt().withMessage('Event ID must be an integer')
+];
+
+// validation for unfollowing an event
+const unfollowEventValidation = [
+  param('eventId').isInt().withMessage('Event ID must be an integer')
+];
 
 // Validation for fetching event info
 const eventInfoValidation = [
@@ -19,6 +29,8 @@ const searchEventsValidation = [
 ];
 
 module.exports = {
+  followEventValidation,
+  unfollowEventValidation,
   eventInfoValidation,
   eventDetailsValidation,
   searchEventsValidation

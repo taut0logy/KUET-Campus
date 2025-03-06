@@ -1,8 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const clubController = require('../controllers/club.controller');
-const { authorizeAdmin, authorizeModeratorOrManager } = require('../middleware/auth.middleware');
-const upload = require('../middleware/upload.middleware'); // Assuming you have a file upload middleware
+const { authenticate, authorizeAdmin, authorizeModeratorOrManager } = require('../middleware/auth.middleware');
 const { 
   createClubValidation,
   updateClubValidation,
@@ -12,8 +11,9 @@ const {
   removeAlbumPhotoValidation,
   addUserToClubValidation,
   changeUserRoleValidation,
-  changeUserStatusValidation
-} = require('../middleware/validators/club.validation');
+  changeUserStatusValidation,
+  searchClubsValidation
+} = require('../middleware/validators/club.validator');
 
 // Create a new club
 router.post('/', authorizeAdmin, createClubValidation, clubController.createClub);
@@ -31,7 +31,7 @@ router.post('/:clubId/follow', followClubValidation, clubController.followClub);
 router.delete('/:clubId/unfollow', unfollowClubValidation, clubController.unfollowClub);
 
 // Add album photo
-router.post('/:clubId/album', upload.single('photo'), addAlbumPhotoValidation, clubController.addAlbumPhoto);
+router.post('/:clubId/album', addAlbumPhotoValidation, clubController.addAlbumPhoto);
 
 // Remove album photo
 router.delete('/album/:photoId', removeAlbumPhotoValidation, clubController.removeAlbumPhoto);

@@ -3,7 +3,7 @@ const router = express.Router();
 const { authenticate } = require('../middleware/auth.middleware');
 const eventController = require('../controllers/event.controller');
 const { authorizeModeratorOrManager } = require('../middleware/auth.middleware');
-const { followEventValidation, unfollowEventValidation, eventInfoValidation, eventDetailsValidation, searchEventsValidation } = require('../middleware/validators/event.validation');
+const { followEventValidation, unfollowEventValidation, eventInfoValidation, eventDetailsValidation, searchEventsValidation } = require('../middleware/validators/event.validator');
 
 // Create a new event
 router.post('/', authenticate, eventController.createEvent);
@@ -21,10 +21,10 @@ router.delete('/:eventId/unfollow', authenticate, unfollowEventValidation, event
 router.post('/:eventId/visit', authenticate, eventController.logUserVisit);
 
 // Get concise info of an event
-router.get('/:eventId/info', eventInfoValidation, eventController.getEventInfo);
+router.get('/:eventId/info', authenticate, eventInfoValidation, eventController.getEventInfo);
 
 // Get detailed info of an event
-router.get('/:eventId/details', eventDetailsValidation, eventController.getEventDetails);
+router.get('/:eventId/details', authenticate, eventDetailsValidation, eventController.getEventDetails);
 
 // Get analytics data for an event
 router.get('/:eventId/analytics', authenticate, authorizeModeratorOrManager, eventController.getEventAnalytics);
@@ -32,4 +32,4 @@ router.get('/:eventId/analytics', authenticate, authorizeModeratorOrManager, eve
 // Search for events
 router.get('/search', searchEventsValidation, eventController.searchEvents);
 
-module.exports = router; 
+module.exports = router;

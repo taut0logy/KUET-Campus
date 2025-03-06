@@ -194,5 +194,6 @@ module.exports = {
   logUserVisit,
   getEventInfo,
   getEventDetails,
-  getEventAnalytics
+  getEventAnalytics,
+  searchEvents
 }; 
