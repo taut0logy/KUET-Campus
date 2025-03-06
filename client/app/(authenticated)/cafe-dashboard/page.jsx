@@ -260,11 +260,7 @@ export default function CafeDashboard() {
             Refresh
           </Button>
           
-          {/* Export button */}
-          <Button>
-            <Download className="h-4 w-4 mr-2" />
-            Export
-          </Button>
+         
         </div>
       </div>
       

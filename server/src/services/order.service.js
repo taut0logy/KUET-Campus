@@ -1,6 +1,7 @@
 const { PrismaClient } = require("@prisma/client");
 const crypto = require('crypto');
 const prisma = new PrismaClient();
+const notificationService = require('./notification.service');
 
 exports.createOrder = async (userId, cartItems) => {
   try {
@@ -121,13 +122,30 @@ exports.updateOrderStatus = async (orderId, status, pickupTime = null) => {
     updateData.pickupTime = new Date(pickupTime);
   }
   
-  return await prisma.preorder.update({
+  const updatedOrder = await prisma.preorder.update({
     where: { id: parseInt(orderId) },
     data: updateData,
     include: {
-      meal: true
+      meal: true,
+      user: {
+        select: {
+          id: true,
+          firstName: true,
+          lastName: true,
+          email: true
+        }
+      }
     }
   });
+
+  // Send notification to user
+  await notificationService.createNotification({
+    userId: updatedOrder.user.id,
+    title: 'Order status updated',
+    message: `Your order has been updated to ${status}`
+  });
+
+  return updatedOrder;
 };
 
 // Update the verifyOrder function
@@ -185,6 +203,12 @@ exports.verifyOrder = async (verificationCode) => {
       }
     });
 
+    // Send notification to user
+    await notificationService.createNotification({
+      userId: updatedOrder.user.id,
+      title: 'Order picked up',
+      message: `Your order has been picked up at ${updatedOrder.pickupTime}`
+    });
     return updatedOrder;
   } catch (error) {
     console.error('Order verification error:', error);
@@ -231,7 +255,7 @@ exports.approveOrder = async (orderId) => {
   }
   
   // Update the order status to placed (approved)
-  return await prisma.preorder.update({
+  const updatedOrder = await prisma.preorder.update({
     where: { id: orderId },
     data: { 
       status: 'placed',
@@ -241,6 +265,7 @@ exports.approveOrder = async (orderId) => {
       meal: true,
       user: {
         select: {
+          id: true,
           firstName: true,
           lastName: true,
           email: true
@@ -248,6 +273,15 @@ exports.approveOrder = async (orderId) => {
       }
     }
   });
+
+  // Send notification to user
+  await notificationService.createNotification({
+    userId: order.user.id,
+    title: 'Order approved',
+    message: 'Your order has been approved and is ready for pickup'
+  });
+
+  return updatedOrder;
 };
 
 
@@ -263,7 +297,7 @@ exports.rejectOrder = async (orderId, rejectionReason) => {
   }
   
   // Update the order status to cancelled with a reason
-  return await prisma.preorder.update({
+  const updatedOrder = await prisma.preorder.update({
     where: { id: orderId },
     data: { 
       status: 'cancelled',
@@ -273,6 +307,7 @@ exports.rejectOrder = async (orderId, rejectionReason) => {
       meal: true,
       user: {
         select: {
+          id: true,
           firstName: true,
           lastName: true,
           email: true
@@ -280,4 +315,13 @@ exports.rejectOrder = async (orderId, rejectionReason) => {
       }
     }
   });
+
+  // Send notification to user
+  await notificationService.createNotification({
+    userId: order.user.id,
+    title: 'Order rejected',
+    message: 'Your order has been rejected'
+  });
+
+  return updatedOrder;
 };
