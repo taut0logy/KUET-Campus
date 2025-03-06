@@ -7,6 +7,7 @@ WORKDIR /app
 COPY package*.json ./
 
 # Install dependencies
+RUN apk add --no-cache openssl
 RUN npm ci --only=production
 
 # Install Prisma CLI as a development dependency - needed for migrations
@@ -16,7 +17,7 @@ RUN npm install prisma --save-dev
 COPY prisma ./prisma/
 
 # Generate Prisma client
-RUN npx prisma generate
+# RUN npx prisma generate
 
 # Copy application code
 COPY . .
