@@ -27,6 +27,7 @@ COPY . .
 # Create a .env file from build arguments
 ARG NODE_ENV
 ARG PORT
+ARG CLIENT_URL
 ARG DATABASE_URL
 ARG DIRECT_URL
 ARG SUPABASE_URL
@@ -50,6 +51,7 @@ ARG HCAPTCHA_SECRET_KEY
 # Write build arguments to .env file
 RUN echo "NODE_ENV=${NODE_ENV}" > .env && \
     echo "PORT=${PORT}" >> .env && \
+    echo "CLIENT_URL=${CLIENT_URL}" >> .env && \
     echo "DATABASE_URL=${DATABASE_URL}" >> .env && \
     echo "DIRECT_URL=${DIRECT_URL}" >> .env && \
     echo "SUPABASE_URL=${SUPABASE_URL}" >> .env && \
