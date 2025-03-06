@@ -119,9 +119,6 @@ jobs:
             echo "Waiting for the server container to be ready..."
             sleep 10
 
-            # Generate prisma client
-            docker exec -it kuet-server npx prisma generate
-
             # Check server logs
             echo "Checking server logs..."
             docker logs kuet-server

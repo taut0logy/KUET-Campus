@@ -17,7 +17,7 @@ RUN npm install prisma --save-dev
 COPY prisma ./prisma/
 
 # Generate Prisma client
-# RUN npx prisma generate
+RUN npx prisma generate
 
 # Copy application code
 COPY . .
