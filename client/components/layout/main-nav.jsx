@@ -103,14 +103,21 @@ const getRoutes = (user) => {
       label: "Dashboard",
       requireAuth: true,
     },
-    {
-      href: "/notices",
-      label: "Notices & Announcements",
-      requireAuth: true,
-    },
+
     {
       href: "/bus",
       label: "Bus Schedule",
+      requireAuth: true,
+    },
+    {
+      href: "/clubs-and-events",
+      label: "Clubs & Events",
+      requireAuth: true,
+    },
+    
+    {
+      href: "/schedules",
+      label: "Academic Schedules",
       requireAuth: true,
     },
     {
@@ -118,12 +125,6 @@ const getRoutes = (user) => {
       label: "Cafeteria",
       requireAuth: true,
     },
-    {
-      href: "/schedules",
-      label: "Academic Schedules",
-      requireAuth: true,
-    },
-
     {
       href: "/cart",
       label: "Cart",

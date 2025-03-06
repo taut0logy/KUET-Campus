@@ -85,10 +85,47 @@ async function safelyRunFunction(fn) {
 /**
  * Update the function to handle navigation for all parts of the application
  */
+// Update the getSimpleNavigationDestination function to include all application routes
 function getSimpleNavigationDestination(message) {
   if (!message) return null;
 
   const msg = message.toLowerCase();
+
+  // Academic-related pages
+  if ((msg.includes('class') || msg.includes('academic') || msg.includes('lecture')) && 
+      (msg.includes('schedule') || msg.includes('routine') || msg.includes('timetable'))) {
+    return { name: 'Academic Schedule', path: '/schedules' };
+  }
+  
+  if (msg.includes('routine') || msg.includes('academic schedule') || msg.includes('class schedule')) {
+    return { name: 'Academic Schedule', path: '/schedules/routine' };
+  }
+
+  if (msg.includes('assignment') || msg.includes('homework') || msg.includes('coursework')) {
+    return { name: 'Assignments', path: '/schedules/assignments' };
+  }
+  
+  // Transportation
+  if (msg.includes('bus') || msg.includes('shuttle') || 
+      (msg.includes('transport') && msg.includes('schedule'))) {
+    return { name: 'Bus Schedule', path: '/bus' };
+  }
+  
+  // Department related pages
+  if (msg.includes('department') || msg.includes('faculty') || msg.includes('school of')) {
+    return { name: 'Departments', path: '/departments' };
+  }
+
+  // Campus events
+  if ((msg.includes('event') || msg.includes('happening') || msg.includes('activity')) && 
+      !msg.includes('club')) {
+    return { name: 'Campus Events', path: '/clubs-and-events' };
+  }
+  
+  // Campus clubs
+  if (msg.includes('club') || msg.includes('society') || msg.includes('organization')) {
+    return { name: 'Campus Clubs', path: '/clubs-and-events' };
+  }
 
   // User cafe dashboard - Must come BEFORE the general cafeteria check
   if ((msg.includes('user') || msg.includes('my')) && 
@@ -129,7 +166,7 @@ function getSimpleNavigationDestination(message) {
     return { name: 'Preorders', path: '/preorder' };
   }
 
-  // Cafeteria related pages - MOVED AFTER user cafe dashboard check
+  // Cafeteria related pages
   if (msg.includes('cafe') || msg.includes('cafeteria') || msg.includes('canteen')) {
     return { name: 'Cafeteria', path: '/cafeteria' };
   }
@@ -163,12 +200,6 @@ function getSimpleNavigationDestination(message) {
   // User authentication
   if (msg.includes('login') || msg.includes('sign in')) {
     return { name: 'Login', path: '/login' };
-  }
-
-  if ((msg.includes('my') || msg.includes('user')) &&
-    (msg.includes('cafe') || msg.includes('cafeteria')) &&
-    msg.includes('dashboard')) {
-    return { name: 'User Cafe Dashboard', path: '/cafe-user-dashboard' };
   }
 
   if (msg.includes('register') || msg.includes('sign up') || msg.includes('create account')) {

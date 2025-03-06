@@ -9,18 +9,32 @@ const useOrderStore = create((set, get) => ({
   createOrder: async (cartItems) => {
     try {
       set({ loading: true, error: null });
+      
+      // Log what's being sent to help debug
+      console.log("Sending order with items:", cartItems);
+      
       const response = await axios.post('/order', {
         items: cartItems.map(item => ({
-          mealId: item.mealId,
-          quantity: item.quantity
+          mealId: parseInt(item.mealId), 
+          quantity: parseInt(item.quantity) 
         }))
       });
+      
       set(state => ({
         orders: [...response.data.orders, ...state.orders]
       }));
+      
       return response.data.orders;
     } catch (error) {
-      set({ error: error.response?.data?.message || 'Failed to create order' });
+      console.error("Order creation error:", error);
+      console.error("Error response:", error.response?.data);
+      
+      set({ 
+        error: error.response?.data?.error || 
+              error.response?.data?.details || 
+              'Failed to create order' 
+      });
+      
       throw error;
     } finally {
       set({ loading: false });

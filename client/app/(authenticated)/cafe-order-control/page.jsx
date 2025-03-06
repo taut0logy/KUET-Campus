@@ -48,14 +48,26 @@ export default function CafeManagerPage() {
     const fetchOrders = async () => {
         setLoading(true);
         try {
-            const response = await axios.get('/order/manage');
-            setOrders(response.data.orders);
+          console.log("Fetching orders for cafe manager...");
+          const response = await axios.get('/order/manage');
+          console.log(`Received ${response.data.orders.length} orders from server`);
+          setOrders(response.data.orders);
         } catch (error) {
-            toast.error(error.response?.data?.message || 'Failed to fetch orders');
+          console.error("Error fetching orders:", error);
+          let errorMessage = 'Failed to fetch orders';
+          
+          if (error.response) {
+            errorMessage = error.response.data?.message || errorMessage;
+            if (error.response.data?.details) {
+              console.error("Error details:", error.response.data.details);
+            }
+          }
+          
+          toast.error(errorMessage);
         } finally {
-            setLoading(false);
+          setLoading(false);
         }
-    };
+      };
 
     useEffect(() => {
         fetchOrders();
@@ -66,8 +78,7 @@ export default function CafeManagerPage() {
         const matchesStatus = filterStatus === 'all' || order.status === filterStatus;
         const matchesSearch = searchTerm === '' ||
             order.meal?.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            order.user?.firstName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            order.user?.lastName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            order.user?.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
             order.verificationCode.toLowerCase().includes(searchTerm.toLowerCase());
 
         return matchesStatus && matchesSearch;
@@ -305,22 +316,7 @@ export default function CafeManagerPage() {
                     </Select>
 
 
-                    {/* Add datetime picker when setting status to "ready" */}
-                    {newStatus === 'ready' && (
-                        <div className="mt-4">
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                                Set Pickup Time
-                            </label>
-                            <DateTimePicker
-                                onChange={setPickupDateTime}
-                                value={pickupDateTime}
-                                className="w-full border rounded-md"
-                                disableClock={true}
-                                minDate={new Date()}
-                                clearIcon={null}
-                            />
-                        </div>
-                    )}
+
 
                     <DialogFooter>
                         <Button variant="outline" onClick={() => setIsUpdateDialogOpen(false)}>

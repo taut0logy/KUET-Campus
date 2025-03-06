@@ -8,13 +8,23 @@ exports.createOrder = async (req, res) => {
   console.log("Order request received for user:", userId);
   console.log("Items in request:", JSON.stringify(items));
 
-  if (!items || !Array.isArray(items)) {
-    return res.status(400).json({ error: "Invalid cart items" });
+  if (!items || !Array.isArray(items) || items.length === 0) {
+    return res.status(400).json({ error: "Invalid or empty cart items" });
   }
 
   try {
+    // Validate meal IDs are integers
+    for (const item of items) {
+      if (!item.mealId || typeof item.mealId !== 'number' || !Number.isInteger(item.mealId)) {
+        return res.status(400).json({ error: `Invalid meal ID: ${item.mealId}` });
+      }
+      if (!item.quantity || typeof item.quantity !== 'number' || !Number.isInteger(item.quantity) || item.quantity <= 0) {
+        return res.status(400).json({ error: `Invalid quantity for meal ${item.mealId}: ${item.quantity}` });
+      }
+    }
+
     const orders = await orderService.createOrder(userId, items);
-    return res.json({ orders });
+    return res.status(201).json({ orders });
   } catch (error) {
     console.error("Error in createOrder controller:", error);
     return res.status(500).json({
@@ -52,11 +62,16 @@ exports.updateOrderStatus = async (req, res) => {
 // Get all orders for cafe manager
 exports.getOrdersForManagement = async (req, res) => {
   try {
+    console.log("CAFE_MANAGER requesting all orders");
     const orders = await orderService.getAllOrders();
+    console.log(`Successfully fetched ${orders.length} orders`);
     return res.json({ orders });
   } catch (error) {
     console.error("Error in getOrdersForManagement controller:", error);
-    return res.status(500).json({ message: "Failed to fetch orders" });
+    return res.status(500).json({ 
+      message: "Failed to fetch orders", 
+      details: error.message 
+    });
   }
 };
 

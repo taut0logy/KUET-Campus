@@ -20,13 +20,6 @@ export default function DashboardPage() {
       color: "bg-blue-100 text-blue-700"
     },
     {
-      title: "Notices & Announcements",
-      description: "Stay updated with latest announcements",
-      icon: Bell,
-      href: "/notices",
-      color: "bg-amber-100 text-amber-700"
-    },
-    {
       title: "Bus Schedule",
       description: "Check bus timings and routes",
       icon: Bus,
