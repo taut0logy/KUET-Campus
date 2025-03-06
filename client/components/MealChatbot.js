@@ -86,7 +86,7 @@ export default function MealChatbot({ meals }) {
       <CardHeader>
         <CardTitle className="text-2xl">Meal Assistant</CardTitle>
         <p className="text-sm text-muted-foreground">
-          Describe your needs (e.g., "I need post-workout protein")
+          Describe your needs (e.g., `&quot;`I need post-workout protein`&quot;`)
         </p>
       </CardHeader>
       <CardContent>
