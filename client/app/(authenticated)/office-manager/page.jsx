@@ -20,7 +20,9 @@ export default function OfficeManagerPage() {
     busNumber: "",
     licensePlate: "",
     capacity: "",
-    type: "SHUTTLE"
+    type: "SHUTTLE",
+    isActive: true,
+    description: ""
   });
 
   useEffect(() => {
@@ -72,7 +74,9 @@ export default function OfficeManagerPage() {
       busNumber: bus.busNumber,
       licensePlate: bus.licensePlate,
       capacity: bus.capacity,
-      type: bus.type
+      type: bus.type,
+      isActive: bus.isActive,
+      description: bus.description
     });
     setShowEditModal(true);
   };
@@ -85,7 +89,9 @@ export default function OfficeManagerPage() {
       busNumber: "",
       licensePlate: "",
       capacity: "",
-      type: "SHUTTLE"
+      type: "SHUTTLE",
+      isActive: true,
+      description: ""
     });
   };
 
@@ -115,6 +121,8 @@ export default function OfficeManagerPage() {
                   <TableHead>License Plate</TableHead>
                   <TableHead>Capacity</TableHead>
                   <TableHead>Type</TableHead>
+                  <TableHead>Active</TableHead>
+                  <TableHead>Description</TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -125,6 +133,8 @@ export default function OfficeManagerPage() {
                     <TableCell>{bus.licensePlate}</TableCell>
                     <TableCell>{bus.capacity}</TableCell>
                     <TableCell>{bus.type}</TableCell>
+                    <TableCell>{bus.isActive ? 'Yes' : 'No'}</TableCell>
+                    <TableCell>{bus.description}</TableCell>
                     <TableCell className="flex gap-2">
                       <Button variant="outline" size="icon" onClick={() => handleEdit(bus)}>
                         <Pencil className="h-4 w-4" />
@@ -186,6 +196,24 @@ export default function OfficeManagerPage() {
                   <SelectItem value="ARTICULATED">Articulated</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+            <div className="space-y-2">
+              <label>
+                <input
+                  type="checkbox"
+                  checked={formData.isActive}
+                  onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
+                />
+                Is Active
+              </label>
+            </div>
+            <div className="space-y-2">
+              <label>Description</label>
+              <Input
+                value={formData.description}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                placeholder="Enter bus description"
+              />
             </div>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={handleCloseModal}>
