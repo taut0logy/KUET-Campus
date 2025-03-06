@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Toaster, toast } from "sonner";
 import useCafeteriaStore from "@/stores/cafeteria-store";
 import useCartStore from "@/stores/cart-store";
-import { Wheat, Loader2, ArrowDown01, ArrowUp01, Filter, Sparkles, Vegan, WheatOff, Square, ShoppingCart, Search, ChevronLeft, ChevronRight } from "lucide-react";
+import { Wheat, Loader2, ArrowDown01, ArrowUp01, Filter, Sparkles, Vegan, WheatOff, Square, ShoppingCart, Search, ChevronLeft, ChevronRight, Badge } from "lucide-react";
 import { motion } from "framer-motion";
 import { Slider } from "@/components/ui/slider";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -62,8 +62,8 @@ export default function Cafeteria() {
   }, [searchTerm, selectedCategories, priceRange, sortType, sortOrder]);
 
 
-    // Filter meals based on search and category
-    const filteredMeals = meals
+  // Filter meals based on search and category
+  const filteredMeals = meals
     .filter((meal) => {
       const matchesSearch = meal.name.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesCategory = selectedCategories.length === 0 || selectedCategories.includes(meal.category);
@@ -207,9 +207,9 @@ export default function Cafeteria() {
     // Calculate TDEE and meal targets
     const tdee = bmr * activityMultiplier * weatherAdjustment;
     const mealCalories = tdee * 0.35;
-    const targetCarbs = (mealCalories * 0.5) / 4; 
-    const targetFats = (mealCalories * 0.3) / 9; 
-    const targetProteins = (mealCalories * 0.2) / 4; 
+    const targetCarbs = (mealCalories * 0.5) / 4;
+    const targetFats = (mealCalories * 0.3) / 9;
+    const targetProteins = (mealCalories * 0.2) / 4;
 
     // Find the best matching meal
     let bestMeal = null;
@@ -546,7 +546,7 @@ export default function Cafeteria() {
                   </div>
                 </div>
               </Card>
-              
+
             </div>
 
             <div className="w-full sm:w-64">
@@ -681,37 +681,50 @@ export default function Cafeteria() {
                     <CardDescription className="text-gray-300 mb-4">
                       {meal.description || "No description available."}
                     </CardDescription>
-                    <div className="mt-4 space-y-4">
-                      {meal.nutrition && (
-                        <div className="grid grid-cols-4 gap-2 text-sm">
-                          <div className="bg-gray-100 p-2 rounded text-center">
-                            <p className="text-black font-bold">{meal.nutrition.calories || "N/A"}</p>
-                            <p className="text-xs text-gray-600">Cal</p>
-                          </div>
-                          <div className="bg-gray-100 p-2 rounded text-center">
-                            <p className="text-black font-bold">{meal.nutrition.protein || "N/A"}g</p>
-                            <p className="text-xs text-gray-600">Protein</p>
-                          </div>
-                          <div className="bg-gray-100 p-2 rounded text-center">
-                            <p className="text-black font-bold">{meal.nutrition.carbs || "N/A"}g</p>
-                            <p className="text-xs text-gray-600">Carbs</p>
-                          </div>
-                          <div className="bg-gray-100 p-2 rounded text-center">
-                            <p className="text-black font-bold">{meal.nutrition.fat || "N/A"}g</p>
-                            <p className="text-xs text-gray-600">Fat</p>
-                          </div>
+                    <div className="grid grid-cols-2 gap-2 text-sm">
+                      <div>
+                        <span className="font-semibold">Cal:</span> {meal.calories || 'N/A'}
+                      </div>
+                      <div>
+                        <span className="font-semibold">Protein:</span> {meal.protein ? `${meal.protein}g` : 'N/A'}
+                      </div>
+                      <div>
+                        <span className="font-semibold">Carbs:</span> {meal.carbs ? `${meal.carbs}g` : 'N/A'}
+                      </div>
+                      <div>
+                        <span className="font-semibold">Fat:</span> {meal.fat ? `${meal.fat}g` : 'N/A'}
+                      </div>
+                    </div>
+
+                    <div className="flex flex-wrap gap-2 mt-3">
+                      {meal.isVegan && (
+                        <div className="text-xs font-medium text-green-600">
+                          <span className="inline-block w-2 h-2 rounded-full bg-green-600 mr-1"></span>
+                          Vegan
                         </div>
                       )}
-                      {meal.allergens && meal.allergens.length > 0 && (
-                        <div className="text-sm text-gray-600">
-                          <p className="font-semibold mb-1">Allergens:</p>
-                          <div className="flex flex-wrap gap-1">
-                            {meal.allergens.map((allergen) => (
-                              <span key={allergen} className="px-2 py-1 bg-red-100 text-red-800 text-xs rounded-full">
-                                {allergen}
-                              </span>
-                            ))}
-                          </div>
+                      {meal.isGlutenFree && (
+                        <div className="text-xs font-medium text-blue-600">
+                          <span className="inline-block w-2 h-2 rounded-full bg-blue-600 mr-1"></span>
+                          Gluten-Free
+                        </div>
+                      )}
+                      {meal.isSugarFree && (
+                        <div className="text-xs font-medium text-purple-600">
+                          <span className="inline-block w-2 h-2 rounded-full bg-purple-600 mr-1"></span>
+                          Sugar-Free
+                        </div>
+                      )}
+                      {meal.isLowFat && (
+                        <div className="text-xs font-medium text-amber-600">
+                          <span className="inline-block w-2 h-2 rounded-full bg-amber-600 mr-1"></span>
+                          Low-Fat
+                        </div>
+                      )}
+                      {meal.isOrganic && (
+                        <div className="text-xs font-medium text-emerald-600">
+                          <span className="inline-block w-2 h-2 rounded-full bg-emerald-600 mr-1"></span>
+                          Organic
                         </div>
                       )}
                     </div>
@@ -730,92 +743,92 @@ export default function Cafeteria() {
           </motion.div>
 
         )}
-{filteredMeals.length > itemsPerPage && (
-  <div className="mt-8 flex justify-center">
-    <nav className="flex items-center space-x-2">
-      <Button 
-        variant="outline" 
-        onClick={prevPage} 
-        disabled={currentPage === 1}
-        className="w-10 h-10 p-0"
-      >
-        <ChevronLeft className="h-4 w-4" />
-      </Button>
-      
-      <div className="flex items-center space-x-1">
-        {Array.from({ length: totalPages }, (_, i) => {
-          const page = i + 1;
-          // Show limited page numbers with ellipsis for better UX
-          if (
-            page === 1 || 
-            page === totalPages || 
-            (page >= currentPage - 1 && page <= currentPage + 1)
-          ) {
-            return (
+        {filteredMeals.length > itemsPerPage && (
+          <div className="mt-8 flex justify-center">
+            <nav className="flex items-center space-x-2">
               <Button
-                key={page}
-                variant={currentPage === page ? "default" : "outline"}
-                onClick={() => goToPage(page)}
+                variant="outline"
+                onClick={prevPage}
+                disabled={currentPage === 1}
                 className="w-10 h-10 p-0"
               >
-                {page}
+                <ChevronLeft className="h-4 w-4" />
               </Button>
-            );
-          } else if (
-            page === currentPage - 2 || 
-            page === currentPage + 2
-          ) {
-            return <span key={page}>...</span>;
-          }
-          return null;
-        })}
-      </div>
-      
-      <Button 
-        variant="outline" 
-        onClick={nextPage} 
-        disabled={currentPage === totalPages}
-        className="w-10 h-10 p-0"
-      >
-        <ChevronRight className="h-4 w-4" />
-      </Button>
-    </nav>
-  </div>
-)}
 
-{/* Items per page selector */}
-<div className="mt-4 flex justify-center">
-  <div className="flex items-center space-x-2">
-    <span className="text-sm text-gray-400">Items per page:</span>
-    <Select 
-      value={String(itemsPerPage)} 
-      onValueChange={(value) => {
-        setItemsPerPage(Number(value));
-        setCurrentPage(1);
-      }}
-    >
-      <SelectTrigger className="w-16">
-        <SelectValue placeholder={itemsPerPage} />
-      </SelectTrigger>
-      <SelectContent>
-        <SelectItem value="6">6</SelectItem>
-        <SelectItem value="9">9</SelectItem>
-        <SelectItem value="12">12</SelectItem>
-        <SelectItem value="24">24</SelectItem>
-      </SelectContent>
-    </Select>
-  </div>
-  <div className="ml-4">
-    <span className="text-sm text-gray-400">
-      Showing {indexOfFirstMeal + 1}-{Math.min(indexOfLastMeal, filteredMeals.length)} of {filteredMeals.length} meals
-    </span>
-  </div>
-</div>
+              <div className="flex items-center space-x-1">
+                {Array.from({ length: totalPages }, (_, i) => {
+                  const page = i + 1;
+                  // Show limited page numbers with ellipsis for better UX
+                  if (
+                    page === 1 ||
+                    page === totalPages ||
+                    (page >= currentPage - 1 && page <= currentPage + 1)
+                  ) {
+                    return (
+                      <Button
+                        key={page}
+                        variant={currentPage === page ? "default" : "outline"}
+                        onClick={() => goToPage(page)}
+                        className="w-10 h-10 p-0"
+                      >
+                        {page}
+                      </Button>
+                    );
+                  } else if (
+                    page === currentPage - 2 ||
+                    page === currentPage + 2
+                  ) {
+                    return <span key={page}>...</span>;
+                  }
+                  return null;
+                })}
+              </div>
+
+              <Button
+                variant="outline"
+                onClick={nextPage}
+                disabled={currentPage === totalPages}
+                className="w-10 h-10 p-0"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </nav>
+          </div>
+        )}
+
+        {/* Items per page selector */}
+        <div className="mt-4 flex justify-center">
+          <div className="flex items-center space-x-2">
+            <span className="text-sm text-gray-400">Items per page:</span>
+            <Select
+              value={String(itemsPerPage)}
+              onValueChange={(value) => {
+                setItemsPerPage(Number(value));
+                setCurrentPage(1);
+              }}
+            >
+              <SelectTrigger className="w-16">
+                <SelectValue placeholder={itemsPerPage} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="6">6</SelectItem>
+                <SelectItem value="9">9</SelectItem>
+                <SelectItem value="12">12</SelectItem>
+                <SelectItem value="24">24</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="ml-4">
+            <span className="text-sm text-gray-400">
+              Showing {indexOfFirstMeal + 1}-{Math.min(indexOfLastMeal, filteredMeals.length)} of {filteredMeals.length} meals
+            </span>
+          </div>
+        </div>
 
 
 
-          
-        
+
+
       </div>
     </div>
   );

@@ -116,11 +116,24 @@ model Meal {
   id          Int        @id @default(autoincrement()) @map("meal_id")
   name        String
   description String?    @db.Text
-  nutrition   Json?
   price       Decimal
   category    String
   isVegan        Boolean    @default(false)
   isGlutenFree   Boolean    @default(false)
+  isSugarFree  Boolean      @default(false) 
+  isLowFat     Boolean      @default(false) 
+  isOrganic    Boolean      @default(false) 
+  calories     Int?
+  protein      Int?       // in grams
+  carbs        Int?       // in grams
+  fat          Int?       // in grams
+  fiber        Int?       // in grams
+  sugar        Int?       // in grams
+  sodium       Int?       // in mg
+  vitaminA     Int?       // in IU
+  vitaminC     Int?       // in mg
+  calcium      Int?       // in mg
+  iron         Int?       // in mg
   allergens      Json?
   cartItems   CartItem[]
   preorders   Preorder[]
