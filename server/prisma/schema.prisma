@@ -54,6 +54,7 @@ model User {
   email             String         @unique @db.VarChar(255)
   password          String
   name              String         @db.VarChar(255)
+  cart              Cart?
   roles             UserRole[]     @default([STUDENT])
   employeeInfo      EmployeeInfo?  @relation("UserEmployeeInfo")
   studentInfo       StudentInfo?   @relation("UserStudentInfo")
@@ -179,52 +180,80 @@ model Notification {
 }
 
 model Meal {
-  id           Int        @id @default(autoincrement()) @map("meal_id")
-  name         String
-  description  String?    @db.Text
-  nutrition    Json?
-  price        Decimal
-  category     String
-  isVegan      Boolean    @default(false)
-  isGlutenFree Boolean    @default(false)
-  allergens    Json?
-  menuMeals    MenuMeal[]
-
+  id          Int        @id @default(autoincrement()) @map("meal_id")
+  name        String
+  description String?    @db.Text
+  price       Decimal
+  category    String
+  isVegan        Boolean    @default(false)
+  isGlutenFree   Boolean    @default(false)
+  isSugarFree  Boolean      @default(false) 
+  isLowFat     Boolean      @default(false) 
+  isOrganic    Boolean      @default(false) 
+  calories     Int?
+  protein      Int?       // in grams
+  carbs        Int?       // in grams
+  fat          Int?       // in grams
+  fiber        Int?       // in grams
+  sugar        Int?       // in grams
+  sodium       Int?       // in mg
+  vitaminA     Int?       // in IU
+  vitaminC     Int?       // in mg
+  calcium      Int?       // in mg
+  iron         Int?       // in mg
+  allergens      Json?
+  cartItems   CartItem[]
+  preorders   Preorder[]
   @@map("meals")
 }
 
-model Menu {
-  id        Int        @id @default(autoincrement()) @map("menu_id")
-  date      DateTime   @db.Date
-  menuMeals MenuMeal[]
 
-  @@map("menus")
-}
-
-model MenuMeal {
-  id        Int        @id @default(autoincrement()) @map("menu_meal_id")
-  menuId    Int        @map("menu_id")
-  mealId    Int        @map("meal_id")
-  price     Decimal    @db.Decimal(10, 2)
-  available Boolean    @default(true)
-  menu      Menu       @relation(fields: [menuId], references: [id])
-  meal      Meal       @relation(fields: [mealId], references: [id])
-  preorders Preorder[]
-
-  @@map("menu_meals")
-}
 
 model Preorder {
-  id         Int      @id @default(autoincrement()) @map("order_id")
-  userId     Int      @map("user_id")
-  menuMealId Int      @map("menu_meal_id")
-  orderTime  DateTime @default(now()) @map("order_time")
-  status     String   @default("placed") // "placed", "ready", "picked_up"
-  user       User     @relation(fields: [userId], references: [id])
-  menuMeal   MenuMeal @relation(fields: [menuMealId], references: [id])
+  id               Int      @id @default(autoincrement())
+  userId           String
+  user             User     @relation(fields: [userId], references: [id])
+  mealId           Int
+  meal             Meal     @relation(fields: [mealId], references: [id])
+  quantity         Int      @default(1)
+  status           String   @default("pending_approval") 
+  orderTime        DateTime @default(now())
+  pickupTime       DateTime?
+  verificationCode String   @unique
+  rejectionReason  String?  
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 
   @@map("preorders")
 }
+
+
+model Cart {
+  id        Int        @id @default(autoincrement()) @map("cart_id")
+  userId    String     @unique
+  user      User       @relation(fields: [userId], references: [id])
+  items     CartItem[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  @@map("carts")
+}
+
+model CartItem {
+  id         Int      @id @default(autoincrement()) @map("cart_item_id")
+  cartId     Int
+  cart       Cart     @relation(fields: [cartId], references: [id])
+  mealId     Int
+  meal       Meal     @relation(fields: [mealId], references: [id])
+  quantity   Int      @default(1)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([cartId, mealId])
+  @@map("cart_items")
+}
+
+
 
 model Routine {
   id      String  @id @default(uuid())

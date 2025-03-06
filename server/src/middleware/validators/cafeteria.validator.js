@@ -9,9 +9,48 @@ const createMealValidator = [
     body('description')
         .optional()
         .isString().withMessage('Description must be a string'),
-    body('nutrition')
+    body('calories')
         .optional()
-        .isJSON().withMessage('Nutrition must be valid JSON'),
+        .isInt({ min: 0 }).withMessage('Calories must be a positive number'),
+    body('protein')
+        .optional()
+        .isInt({ min: 0 }).withMessage('Protein must be a positive number'),
+    body('carbs')
+        .optional()
+        .isInt({ min: 0 }).withMessage('Carbs must be a positive number'),
+    body('fat')
+        .optional()
+        .isInt({ min: 0 }).withMessage('Fat must be a positive number'),
+    body('fiber')
+        .optional()
+        .isInt({ min: 0 }).withMessage('Fiber must be a positive number'),
+    body('sugar')
+        .optional()
+        .isInt({ min: 0 }).withMessage('Sugar must be a positive number'),
+    body('sodium')
+        .optional()
+        .isInt({ min: 0 }).withMessage('Sodium must be a positive number'),
+    body('vitaminA')
+        .optional()
+        .isInt({ min: 0 }).withMessage('Vitamin A must be a positive number'),
+    body('vitaminC')
+        .optional()
+        .isInt({ min: 0 }).withMessage('Vitamin C must be a positive number'),
+    body('calcium')
+        .optional()
+        .isInt({ min: 0 }).withMessage('Calcium must be a positive number'),
+    body('iron')
+        .optional()
+        .isInt({ min: 0 }).withMessage('Iron must be a positive number'),
+    body('isSugarFree')
+        .optional()
+        .isBoolean().withMessage('Sugar free flag must be a boolean'),
+    body('isLowFat')
+        .optional()
+        .isBoolean().withMessage('Low fat flag must be a boolean'),
+    body('isOrganic')
+        .optional()
+        .isBoolean().withMessage('Organic flag must be a boolean'),
 ];
 
 const updateMealValidator = [
@@ -23,9 +62,48 @@ const updateMealValidator = [
     body('description')
         .optional()
         .isString().withMessage('Description must be a string'),
-    body('nutrition')
+    body('calories')
         .optional()
-        .isJSON().withMessage('Nutrition must be valid JSON'),
+        .isInt({ min: 0 }).withMessage('Calories must be a positive number'),
+    body('protein')
+        .optional()
+        .isInt({ min: 0 }).withMessage('Protein must be a positive number'),
+    body('carbs')
+        .optional()
+        .isInt({ min: 0 }).withMessage('Carbs must be a positive number'),
+    body('fat')
+        .optional()
+        .isInt({ min: 0 }).withMessage('Fat must be a positive number'),
+    body('fiber')
+        .optional()
+        .isInt({ min: 0 }).withMessage('Fiber must be a positive number'),
+    body('sugar')
+        .optional()
+        .isInt({ min: 0 }).withMessage('Sugar must be a positive number'),
+    body('sodium')
+        .optional()
+        .isInt({ min: 0 }).withMessage('Sodium must be a positive number'),
+    body('vitaminA')
+        .optional()
+        .isInt({ min: 0 }).withMessage('Vitamin A must be a positive number'),
+    body('vitaminC')
+        .optional()
+        .isInt({ min: 0 }).withMessage('Vitamin C must be a positive number'),
+    body('calcium')
+        .optional()
+        .isInt({ min: 0 }).withMessage('Calcium must be a positive number'),
+    body('iron')
+        .optional()
+        .isInt({ min: 0 }).withMessage('Iron must be a positive number'),
+    body('isSugarFree')
+        .optional()
+        .isBoolean().withMessage('Sugar free flag must be a boolean'),
+    body('isLowFat')
+        .optional()
+        .isBoolean().withMessage('Low fat flag must be a boolean'),
+    body('isOrganic')
+        .optional()
+        .isBoolean().withMessage('Organic flag must be a boolean'),
 ];
 
 const deleteMealValidator = [

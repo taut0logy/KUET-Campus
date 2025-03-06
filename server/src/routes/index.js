@@ -1,15 +1,19 @@
 const express = require('express');
 const router = express.Router();
+
+const { standardLimiter } = require('../middleware/rate-limit.middleware');
+
 const authRoutes = require('./auth.routes');
 const cafeteriaRoutes = require('./cafeteria.routes');
 const routineRoutes = require('./routine.routes');
-const { standardLimiter } = require('../middleware/rate-limit.middleware');
 const userRoutes = require('./user.routes');
 const notificationRoutes = require('./notification.routes');
 const storageRoutes = require('./storage.routes');
 const departmentRoutes = require('./department.routes');
 const eventRoutes = require('./event.routes');
 const clubRoutes = require('./club.routes');
+const cartRoutes = require('./cart.routes');
+const orderRoutes = require('./order.routes');
 
 // Apply standard rate limit to all routes
 router.use(standardLimiter);
@@ -29,13 +33,12 @@ router.use('/cafeteria', cafeteriaRoutes);
 router.use('/users', userRoutes);
 router.use('/notifications', notificationRoutes);
 router.use('/storage', storageRoutes);
+router.use('/cart', cartRoutes);
+router.use('/order', orderRoutes);
 router.use('/departments', departmentRoutes);
 router.use('/routine', routineRoutes);
 router.use('/events', eventRoutes);
 router.use('/clubs', clubRoutes);
-// Future route modules
-// router.use('/profiles', profileRoutes);
-// etc.
 
 // Catch-all 404 handler
 router.use('*', (req, res) => {

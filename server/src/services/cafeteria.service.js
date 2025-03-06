@@ -7,8 +7,8 @@ const { logger } = require('../utils/logger.util');
 const getAllMeals = async () => {
   try {
     logger.debug('Retrieving all meals');
-    
-    return await prisma.meal.findMany();
+    const meals = await prisma.meal.findMany();
+    return meals;
   } catch (error) {
     logger.error('Error retrieving meals:', error);
     throw error;
