@@ -30,13 +30,13 @@ export default function OfficeManagerPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await fetch('http://localhost:8000/api/v1/bus/buses', {
+      const response = await fetch('http://localhost:8000/api/v1/bus/buses' + (showEditModal ? `/${selectedBus.id}` : ''), {
         method: showEditModal ? 'PUT' : 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(showEditModal ? 
-          { ...formData, id: selectedBus.id } : 
+          { ...formData } : 
           formData
         ),
       });
