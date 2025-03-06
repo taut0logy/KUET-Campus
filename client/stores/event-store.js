@@ -15,6 +15,10 @@ const useEventStore = create((set) => ({
   unfollowEvent: async (eventId) => {
     await axios.delete(`/events/${eventId}/unfollow`);
     // Optionally update local state or refetch events
+  },
+  fetchEventDetails: async (eventId) => {
+    const response = await axios.get(`/events/${eventId}/details`);
+    set({ eventDetails: response.data.event });
   }
 }));
 

@@ -66,4 +66,10 @@ router.post('/:clubId/visit', clubController.logUserVisit);
 // Search for clubs
 router.get('/search', searchClubsValidation, clubController.searchClubs);
 
+// Get short details of a club
+router.get('/:clubId/short', clubController.getClubShortDetails);
+
+// Get paginated and sortable list of clubs
+router.get('/list', clubController.getPaginatedClubs);
+
 module.exports = router; 

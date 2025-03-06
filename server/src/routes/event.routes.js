@@ -32,4 +32,10 @@ router.get('/:eventId/analytics', authenticate, authorizeModeratorOrManager, eve
 // Search for events
 router.get('/search', searchEventsValidation, eventController.searchEvents);
 
+// Get short details of an event
+router.get('/:eventId/short', eventController.getEventShortDetails);
+
+// Get paginated and sortable list of events
+router.get('/list', eventController.getPaginatedEvents);
+
 module.exports = router;

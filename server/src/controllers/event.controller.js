@@ -186,6 +186,46 @@ const searchEvents = async (req, res) => {
   }
 };
 
+// Get short details of an event
+const getEventShortDetails = async (req, res) => {
+  const { eventId } = req.params;
+  try {
+    const event = await prisma.event.findUnique({
+      where: { id: parseInt(eventId) },
+      select: {
+        id: true,
+        name: true,
+        startTime: true,
+        endTime: true,
+        club: { select: { name: true } }
+      }
+    });
+    return sendSuccess(res, { event }, 'Event short details retrieved successfully');
+  } catch (error) {
+    logger.error('Error retrieving event short details:', error);
+    return sendError(res, error);
+  }
+};
+
+// Get paginated and sortable list of events
+const getPaginatedEvents = async (req, res) => {
+  const { page = 1, limit = 10, sort } = req.query;
+  try {
+    const where = {};
+    const events = await prisma.event.findMany({
+      where,
+      skip: (page - 1) * limit,
+      take: limit,
+      orderBy: sort === 'latest' ? { startTime: 'desc' } : sort === 'oldest' ? { startTime: 'asc' } : { name: 'asc' }
+    });
+    const totalCount = await prisma.event.count({ where });
+    return sendSuccess(res, { events, totalCount }, 'Events retrieved successfully');
+  } catch (error) {
+    logger.error('Error retrieving paginated events:', error);
+    return sendError(res, error);
+  }
+};
+
 module.exports = {
   createEvent,
   updateEvent,
@@ -195,5 +235,7 @@ module.exports = {
   getEventInfo,
   getEventDetails,
   getEventAnalytics,
-  searchEvents
+  searchEvents,
+  getEventShortDetails,
+  getPaginatedEvents
 }; 

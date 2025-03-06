@@ -335,6 +335,48 @@ const searchClubs = async (req, res) => {
   }
 };
 
+// Get short details of a club
+const getClubShortDetails = async (req, res) => {
+  const { clubId } = req.params;
+  try {
+    const club = await prisma.club.findUnique({
+      where: { id: parseInt(clubId) },
+      select: {
+        id: true,
+        name: true,
+        coverPhoto: true,
+        followerCount: {
+          select: { _count: true }
+        },
+        description: true
+      }
+    });
+    return sendSuccess(res, { club }, 'Club short details retrieved successfully');
+  } catch (error) {
+    logger.error('Error retrieving club short details:', error);
+    return sendError(res, error);
+  }
+};
+
+// Get paginated and sortable list of clubs
+const getPaginatedClubs = async (req, res) => {
+  const { page = 1, limit = 10, sort } = req.query;
+  try {
+    const where = {};
+    const clubs = await prisma.club.findMany({
+      where,
+      skip: (page - 1) * limit,
+      take: limit,
+      orderBy: sort === 'alphabetical' ? { name: 'asc' } : { foundingDate: 'desc' }
+    });
+    const totalCount = await prisma.club.count({ where });
+    return sendSuccess(res, { clubs, totalCount }, 'Clubs retrieved successfully');
+  } catch (error) {
+    logger.error('Error retrieving paginated clubs:', error);
+    return sendError(res, error);
+  }
+};
+
 module.exports = {
   createClub,
   updateClub,
@@ -352,5 +394,7 @@ module.exports = {
   getClubEvents,
   getClubAnalytics,
   logUserVisit,
-  searchClubs
+  searchClubs,
+  getClubShortDetails,
+  getPaginatedClubs
 }; 

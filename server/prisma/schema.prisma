@@ -91,48 +91,6 @@ model User {
   @@map("users")
 }
 
-model Club {
-  id           Int        @id @default(autoincrement())
-  name         String     @db.VarChar(255)
-  coverPhoto   String?    @db.VarChar(255)
-  slug         String     @unique @db.VarChar(255)
-  description  String?    @db.Text
-  foundingDate DateTime
-  moderatorId  Int
-  moderator    User       @relation("ClubModerator", fields: [moderatorId], references: [id])
-  managers     UserClubManager[]
-  tags         Json
-  members      UserClub[] @relation
-  events       Event[]    @relation
-  clubTag      ClubTag?   @relation(fields: [clubTagId], references: [id])
-  clubTagId    Int?
-  followers    User[]     @relation("ClubFollowers")
-  clubAlbums   ClubAlbum[]
-  userVisits   UserVisit[]
-  followUnfollowLogs FollowUnfollowLog[]
-}
-
-model UserClub {
-  id       Int        @id @default(autoincrement())
-  userId   Int
-  clubId   Int
-  joinDate DateTime   @default(now())
-  role     ClubRole   @default(MEMBER)
-  status   ClubStatus @default(ACTIVE)
-  user     User       @relation("UserClubs", fields: [userId], references: [id], map: "UserClub_userId_fkey1")
-  club     Club       @relation(fields: [clubId], references: [id], map: "UserClub_clubId_fkey1")
-}
-
-model UserClubManager {
-  id       Int        @id @default(autoincrement())
-  userId   Int
-  clubId   Int
-  joinDate DateTime   @default(now())
-  role     ClubRole   @default(MANAGER)
-  user     User       @relation("ClubManagers", fields: [userId], references: [id], map: "UserClubManager_userId_fkey")
-  club     Club       @relation(fields: [clubId], references: [id], map: "UserClubManager_clubId_fkey")
-}
-
 model Work {
   id          Int         @id @default(autoincrement())
   title       String      @db.VarChar(255)
@@ -531,6 +489,47 @@ model Reminder {
   @@map("reminders")
 }
 
+model Club {
+  id           Int        @id @default(autoincrement())
+  name         String     @db.VarChar(255)
+  coverPhoto   String?    @db.VarChar(255)
+  slug         String     @unique @db.VarChar(255)
+  description  String?    @db.Text
+  foundingDate DateTime
+  moderatorId  Int
+  moderator    User       @relation("ClubModerator", fields: [moderatorId], references: [id])
+  managers     UserClubManager[]
+  tags         Json
+  members      UserClub[] @relation
+  events       Event[]    @relation
+  clubTag      ClubTag?   @relation(fields: [clubTagId], references: [id])
+  clubTagId    Int?
+  followers    User[]     @relation("ClubFollowers")
+  clubAlbums   ClubAlbum[]
+  userVisits   UserVisit[]
+  followUnfollowLogs FollowUnfollowLog[]
+}
+
+model UserClub {
+  id       Int        @id @default(autoincrement())
+  userId   Int
+  clubId   Int
+  joinDate DateTime   @default(now())
+  role     ClubRole   @default(MEMBER)
+  status   ClubStatus @default(ACTIVE)
+  user     User       @relation("UserClubs", fields: [userId], references: [id], map: "UserClub_userId_fkey1")
+  club     Club       @relation(fields: [clubId], references: [id], map: "UserClub_clubId_fkey1")
+}
+
+model UserClubManager {
+  id       Int        @id @default(autoincrement())
+  userId   Int
+  clubId   Int
+  joinDate DateTime   @default(now())
+  role     ClubRole   @default(MANAGER)
+  user     User       @relation("ClubManagers", fields: [userId], references: [id], map: "UserClubManager_userId_fkey")
+  club     Club       @relation(fields: [clubId], references: [id], map: "UserClubManager_clubId_fkey")
+}
 
 model ClubTag {
   id          Int     @id @default(autoincrement())
