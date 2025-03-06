@@ -319,8 +319,6 @@ model Routine {
 model Course {
   id         String @id @default(uuid())
   courseId   String @unique
-  id         String @id @default(uuid())
-  courseId   String @unique
   courseName String
   classTest  String
   userId     Int
