@@ -11,6 +11,21 @@ import { Calendar, Plus, Trash, X, ChevronRight, Clock, CheckCircle, AlertTriang
 import { format } from "date-fns";
 import axios from '@/lib/axios';
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { Calendar as CalendarIcon } from "lucide-react";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 export default function AssignmentsPage() {
   const [showAssignmentModal, setShowAssignmentModal] = useState(false);
@@ -41,6 +56,11 @@ export default function AssignmentsPage() {
 
   // Add this state for tracking solution generation
   const [isGeneratingSolution, setIsGeneratingSolution] = useState(false);
+
+  // Add these state variables inside the AssignmentsPage component
+  const [filterType, setFilterType] = useState("none"); // "none", "date", "deadline"
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [deadlineRange, setDeadlineRange] = useState("24h");
 
   useEffect(() => {
     if (user) {
@@ -343,11 +363,51 @@ const handleStatusUpdate = async (assignmentId, newStatus) => {
   }
 };
 
-// Filter assignments based on selected status
-const filteredAssignments = assignments.filter(assignment => {
-  console.log("Assignment:", assignment.assignmentName, "Status:", assignment.status); // Debug log
-  return assignment.status === selectedStatus;
-});
+// Add this function to filter assignments based on selected filters
+const applyFilters = (assignments) => {
+  if (!assignments) return [];
+  
+  // First apply status filter
+  let filtered = assignments.filter(assignment => assignment.status === selectedStatus);
+  
+  // Then apply date/deadline filters if active
+  if (filterType === "date" && selectedDate) {
+    const dateStr = format(selectedDate, "yyyy-MM-dd");
+    filtered = filtered.filter(assignment => {
+      const assignmentDate = format(new Date(assignment.deadline), "yyyy-MM-dd");
+      return assignmentDate === dateStr;
+    });
+  } else if (filterType === "deadline") {
+    const now = new Date();
+    let maxDate = new Date();
+    
+    // Set the maximum date based on selected range
+    if (deadlineRange === "24h") {
+      maxDate.setHours(now.getHours() + 24);
+    } else if (deadlineRange === "7d") {
+      maxDate.setDate(now.getDate() + 7);
+    } else if (deadlineRange === "30d") {
+      maxDate.setDate(now.getDate() + 30);
+    }
+    
+    filtered = filtered.filter(assignment => {
+      const deadlineDate = new Date(assignment.deadline);
+      return deadlineDate >= now && deadlineDate <= maxDate;
+    });
+  }
+  
+  return filtered;
+};
+
+// Replace the filteredAssignments definition with this
+const filteredAssignments = applyFilters(assignments);
+
+// Add this function to handle filter reset
+const resetFilters = () => {
+  setFilterType("none");
+  setSelectedDate(new Date());
+  setDeadlineRange("24h");
+};
 
 // Count assignments by status with fallback to empty array
 const assignmentCounts = {
@@ -474,6 +534,97 @@ ${solution}`;
             </CardContent>
           </Card>
         ))}
+      </div>
+
+      {/* Filter section */}
+      <div className="mb-6 bg-card border rounded-lg p-4 shadow-sm">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4">
+          <h3 className="text-lg font-medium mb-2 sm:mb-0">Filter Assignments</h3>
+          {filterType !== "none" && (
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={resetFilters}
+              className="flex items-center gap-1"
+            >
+              <X className="h-3.5 w-3.5" /> Clear filters
+            </Button>
+          )}
+        </div>
+        
+        <RadioGroup 
+          className="flex flex-wrap gap-4" 
+          value={filterType} 
+          onValueChange={setFilterType}
+        >
+          <div className="flex items-center space-x-2">
+            <RadioGroupItem value="none" id="filter-none" />
+            <label htmlFor="filter-none" className="cursor-pointer">No filter</label>
+          </div>
+          <div className="flex items-center space-x-2">
+            <RadioGroupItem value="date" id="filter-date" />
+            <label htmlFor="filter-date" className="cursor-pointer">By specific date</label>
+          </div>
+          <div className="flex items-center space-x-2">
+            <RadioGroupItem value="deadline" id="filter-deadline" />
+            <label htmlFor="filter-deadline" className="cursor-pointer">By deadline range</label>
+          </div>
+        </RadioGroup>
+        
+        {filterType === "date" && (
+          <div className="mt-4">
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className="w-full sm:w-auto flex items-center justify-between gap-2"
+                >
+                  <CalendarIcon className="h-4 w-4" />
+                  {selectedDate ? format(selectedDate, "PPP") : "Pick a date"}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <CalendarComponent
+                  mode="single"
+                  selected={selectedDate}
+                  onSelect={setSelectedDate}
+                  initialFocus
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
+        )}
+        
+        {filterType === "deadline" && (
+          <div className="mt-4">
+            <Select value={deadlineRange} onValueChange={setDeadlineRange}>
+              <SelectTrigger className="w-full sm:w-[250px]">
+                <SelectValue placeholder="Select deadline range" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="24h">Less than 24 hours</SelectItem>
+                <SelectItem value="7d">Less than 7 days</SelectItem>
+                <SelectItem value="30d">Less than a month</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+        
+        {filterType !== "none" && (
+          <div className="mt-4 p-2 bg-muted/50 rounded-md text-sm">
+            {filterType === "date" ? (
+              <p className="flex items-center gap-1.5">
+                <Calendar className="h-4 w-4 text-primary" />
+                Showing assignments due on {format(selectedDate, "MMMM d, yyyy")}
+              </p>
+            ) : (
+              <p className="flex items-center gap-1.5">
+                <Clock className="h-4 w-4 text-primary" />
+                Showing assignments due within {deadlineRange === "24h" ? "24 hours" : deadlineRange === "7d" ? "7 days" : "30 days"}
+              </p>
+            )}
+          </div>
+        )}
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">

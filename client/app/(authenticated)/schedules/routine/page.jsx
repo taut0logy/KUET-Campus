@@ -15,7 +15,7 @@ import {
   PopoverContent, 
   PopoverTrigger 
 } from "@/components/ui/popover";
-import { Check, ChevronDown, X, Calendar, BookOpen, Clock, LayoutGrid } from "lucide-react";
+import { Check, ChevronDown, X, Calendar, BookOpen, Clock, LayoutGrid, Beaker } from "lucide-react";
 import Image from "next/image";
 
 export default function RoutinePage() {
@@ -380,9 +380,7 @@ export default function RoutinePage() {
                           <option value="">Select Course</option>
                           {courses.map((course) => (
                             <option key={course.id} value={course.courseId}>
-                              {course.courseId} - {course.courseName.length > 15 
-                                ? `${course.courseName.substring(0, 15)}...` 
-                                : course.courseName}
+                              {course.courseId} - {course.courseName}
                             </option>
                           ))}
                         </select>
@@ -396,6 +394,7 @@ export default function RoutinePage() {
               <Button 
                 onClick={handleSetSchedule}
                 className="transition-all duration-300 hover:shadow-md hover:-translate-y-1"
+                disabled={!weekday}
               >
                 Save Schedule
               </Button>
@@ -415,8 +414,8 @@ export default function RoutinePage() {
       {showCourseModal && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 animate-in fade-in duration-300">
           <div className="bg-background p-6 rounded-lg w-full max-w-md shadow-xl border border-border dark:border-primary/20">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-bold">Add New Course</h2>
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">Add New Course</h2>
               <Button 
                 variant="ghost" 
                 size="sm" 
@@ -426,52 +425,78 @@ export default function RoutinePage() {
                 <X className="h-5 w-5" />
               </Button>
             </div>
-            <div className="space-y-4">
+            
+            <div className="space-y-5">
               <div>
-                <label className="block mb-2 font-medium">Course ID</label>
+                <label className="block mb-2 font-medium text-foreground/80">Course ID</label>
                 <input
                   type="text"
-                  className="w-full border p-2 rounded-md focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all duration-200"
+                  className="w-full border p-3 rounded-md focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all duration-200 bg-background/50 shadow-sm"
                   value={newCourse.courseId}
                   onChange={(e) => setNewCourse({...newCourse, courseId: e.target.value})}
                   placeholder="E.g., CSE101"
                 />
+                <p className="text-xs text-muted-foreground mt-1">Enter a unique identifier for this course</p>
               </div>
+              
               <div>
-                <label className="block mb-2 font-medium">Course Name</label>
+                <label className="block mb-2 font-medium text-foreground/80">Course Name</label>
                 <input
                   type="text"
-                  className="w-full border p-2 rounded-md focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all duration-200"
+                  className="w-full border p-3 rounded-md focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all duration-200 bg-background/50 shadow-sm"
                   value={newCourse.courseName}
                   onChange={(e) => setNewCourse({...newCourse, courseName: e.target.value})}
                   placeholder="E.g., Introduction to Computer Science"
                 />
+                <p className="text-xs text-muted-foreground mt-1">Full name of the course as it appears in your curriculum</p>
               </div>
+              
               <div>
-                <label className="block mb-2 font-medium">Type</label>
-                <select
-                  className="w-full border p-2 rounded-md focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all duration-200"
-                  value={newCourse.courseType}
-                  onChange={(e) => setNewCourse({...newCourse, courseType: e.target.value})}
-                >
-                  <option value="theory">Theory</option>
-                  <option value="lab">Lab</option>
-                </select>
+                <label className="block mb-2 font-medium text-foreground/80">Course Type</label>
+                <div className="flex gap-4">
+                  <div className="flex items-center">
+                    <input
+                      type="radio"
+                      id="theory"
+                      name="courseType"
+                      value="theory"
+                      checked={newCourse.courseType === "theory"}
+                      onChange={() => setNewCourse({...newCourse, courseType: "theory"})}
+                      className="mr-2 h-4 w-4 accent-primary"
+                    />
+                    <label htmlFor="theory" className="cursor-pointer">Theory</label>
+                  </div>
+                  <div className="flex items-center">
+                    <input
+                      type="radio"
+                      id="lab"
+                      name="courseType"
+                      value="lab"
+                      checked={newCourse.courseType === "lab"}
+                      onChange={() => setNewCourse({...newCourse, courseType: "lab"})}
+                      className="mr-2 h-4 w-4 accent-primary"
+                    />
+                    <label htmlFor="lab" className="cursor-pointer">Lab</label>
+                  </div>
+                </div>
               </div>
             </div>
-            <div className="mt-6 flex justify-end gap-2">
-              <Button 
-                onClick={handleAddCourse}
-                className="transition-all duration-300 hover:shadow-md hover:-translate-y-1"
-              >
-                Save Course
-              </Button>
+            
+            <div className="mt-8 flex justify-end gap-3">
               <Button 
                 variant="outline" 
                 onClick={() => setShowCourseModal(false)}
-                className="transition-all duration-300 hover:shadow-md hover:-translate-y-1"
+                className="transition-all duration-300 hover:shadow-md hover:-translate-y-1 border-muted"
               >
                 Cancel
+              </Button>
+              <Button 
+                onClick={handleAddCourse}
+                className="transition-all duration-300 hover:shadow-md hover:-translate-y-1 bg-gradient-to-r from-primary to-primary/80"
+                disabled={!newCourse.courseId || !newCourse.courseName}
+              >
+                <BookOpen className="mr-2 h-4 w-4" />
+                Save Course
               </Button>
             </div>
           </div>
@@ -482,8 +507,8 @@ export default function RoutinePage() {
       {showExamModal && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 animate-in fade-in duration-300">
           <div className="bg-background p-6 rounded-lg w-full max-w-md shadow-xl border border-border dark:border-primary/20">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-bold">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
                 {editingExam ? "Edit Exam" : "Add New Exam"}
               </h2>
               <Button 
@@ -498,11 +523,11 @@ export default function RoutinePage() {
                 <X className="h-5 w-5" />
               </Button>
             </div>
-            <div className="space-y-4">
+            <div className="space-y-5">
               <div>
-                <label className="block mb-2 font-medium">Course</label>
+                <label className="block mb-2 font-medium text-foreground/80">Course</label>
                 <select
-                  className="w-full border p-2 rounded-md focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all duration-200"
+                  className="w-full border p-3 rounded-md focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all duration-200 bg-background/50 shadow-sm"
                   value={newExam.courseId}
                   onChange={(e) => setNewExam({...newExam, courseId: e.target.value})}
                 >
@@ -513,55 +538,88 @@ export default function RoutinePage() {
                     </option>
                   ))}
                 </select>
+                <p className="text-xs text-muted-foreground mt-1">Select the course this exam belongs to</p>
               </div>
+              
               <div>
-                <label className="block mb-2 font-medium">Exam Type</label>
-                <select
-                  className="w-full border p-2 rounded-md focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all duration-200"
-                  value={newExam.examType}
-                  onChange={(e) => setNewExam({...newExam, examType: e.target.value})}
-                >
-                  <option value="class-test">Class Test</option>
-                  <option value="term-final">Term Final</option>
-                  <option value="lab-test">Lab Test</option>
-                </select>
+                <label className="block mb-2 font-medium text-foreground/80">Exam Type</label>
+                <div className="grid grid-cols-3 gap-3">
+                  {["class-test", "term-final", "lab-test"].map((type) => (
+                    <div 
+                      key={type}
+                      onClick={() => setNewExam({...newExam, examType: type})}
+                      className={`
+                        p-3 rounded-md border cursor-pointer transition-all duration-200
+                        flex flex-col items-center justify-center text-center
+                        ${newExam.examType === type 
+                          ? "border-primary bg-primary/10 shadow-sm" 
+                          : "border-muted hover:border-primary/30 hover:bg-primary/5"}
+                      `}
+                    >
+                      <div className="mb-1">
+                        {type === "class-test" && <BookOpen className="h-5 w-5 text-blue-500" />}
+                        {type === "term-final" && <Calendar className="h-5 w-5 text-red-500" />}
+                        {type === "lab-test" && <Beaker className="h-5 w-5 text-green-500" />}
+                      </div>
+                      <span className="text-sm capitalize">
+                        {type.split('-').join(' ')}
+                      </span>
+                    </div>
+                  ))}
+                </div>
               </div>
+              
               <div>
-                <label className="block mb-2 font-medium">Exam Date</label>
+                <label className="block mb-2 font-medium text-foreground/80">Exam Date & Time</label>
                 <input
                   type="datetime-local"
-                  className="w-full border p-2 rounded-md focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all duration-200"
+                  className="w-full border p-3 rounded-md focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all duration-200 bg-background/50 shadow-sm"
                   value={newExam.examDate}
                   onChange={(e) => setNewExam({...newExam, examDate: e.target.value})}
                 />
+                <p className="text-xs text-muted-foreground mt-1">When will this exam take place?</p>
               </div>
+              
               <div>
-                <label className="block mb-2 font-medium">Syllabus</label>
+                <label className="block mb-2 font-medium text-foreground/80">Syllabus</label>
                 <textarea
-                  className="w-full border p-2 rounded-md focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all duration-200"
+                  className="w-full border p-3 rounded-md focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all duration-200 bg-background/50 shadow-sm"
                   value={newExam.syllabus}
                   onChange={(e) => setNewExam({...newExam, syllabus: e.target.value})}
-                  placeholder="Enter exam syllabus"
+                  placeholder="Enter topics covered in this exam..."
                   rows={4}
                 />
+                <p className="text-xs text-muted-foreground mt-1">Optional: List the topics that will be covered</p>
               </div>
             </div>
-            <div className="mt-6 flex justify-end gap-2">
-              <Button 
-                onClick={handleAddExam}
-                className="transition-all duration-300 hover:shadow-md hover:-translate-y-1"
-              >
-                {editingExam ? "Update Exam" : "Save Exam"}
-              </Button>
+            
+            <div className="mt-8 flex justify-end gap-3">
               <Button 
                 variant="outline" 
                 onClick={() => {
                   setShowExamModal(false);
                   setEditingExam(null);
                 }}
-                className="transition-all duration-300 hover:shadow-md hover:-translate-y-1"
+                className="transition-all duration-300 hover:shadow-md hover:-translate-y-1 border-muted"
               >
                 Cancel
+              </Button>
+              <Button 
+                onClick={handleAddExam}
+                className="transition-all duration-300 hover:shadow-md hover:-translate-y-1 bg-gradient-to-r from-primary to-primary/80"
+                disabled={!newExam.courseId || !newExam.examDate}
+              >
+                {editingExam ? (
+                  <>
+                    <Check className="mr-2 h-4 w-4" />
+                    Update Exam
+                  </>
+                ) : (
+                  <>
+                    <Clock className="mr-2 h-4 w-4" />
+                    Save Exam
+                  </>
+                )}
               </Button>
             </div>
           </div>
