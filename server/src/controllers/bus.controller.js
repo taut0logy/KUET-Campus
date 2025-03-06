@@ -102,10 +102,93 @@ const deleteBus = async (req, res, next) => {
   }
 };
 
+/**
+ * Create a new driver
+ */
+const createDriver = async (req, res, next) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      const errorMessages = errors.array().map(err => `${err.path}: ${err.msg}`).join(', ');
+      logger.debug('Validation errors:', errors.array());
+      throw new ValidationError(`Validation failed: ${errorMessages}`, errors.array());
+    }
+    
+    const driverData = req.body;
+    const driver = await busService.createDriver(driverData);
+    
+    return sendSuccess(res, { driver }, 'Driver created successfully', 201);
+  } catch (error) {
+    logger.error('Error creating driver:', error);
+    next(error);
+  }
+};
+
+/**
+ * Update a driver
+ */
+const updateDriver = async (req, res, next) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      const errorMessages = errors.array().map(err => `${err.path}: ${err.msg}`).join(', ');
+      logger.debug('Validation errors:', errors.array());
+      throw new ValidationError(`Validation failed: ${errorMessages}`, errors.array());
+    }
+    
+    const { id } = req.params;
+    const driverData = req.body;
+    
+    const driver = await busService.updateDriver(id, driverData);
+    
+    return sendSuccess(res, { driver }, 'Driver updated successfully');
+  } catch (error) {
+    logger.error(`Error updating driver with ID ${req.params.id}:`, error);
+    next(error);
+  }
+};
+
+/**
+ * Delete a driver
+ */
+const deleteDriver = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    await busService.deleteDriver(id);
+    
+    return sendSuccess(res, null, 'Driver deleted successfully');
+  } catch (error) {
+    logger.error(`Error deleting driver with ID ${req.params.id}:`, error);
+    
+    if (error.code === 'P2025') {
+      return sendError(res, 'Driver not found', 404);
+    }
+    
+    next(error);
+  }
+};
+
+/**
+ * Get all drivers
+ */
+const getDrivers = async (req, res, next) => {
+  try {
+    const drivers = await busService.getAllDrivers();
+    return sendSuccess(res, { drivers }, 'Drivers retrieved successfully');
+  } catch (error) {
+    logger.error('Error retrieving drivers:', error);
+    next(error);
+  }
+};
+
 module.exports = {
   getBuses,
   getBusById,
   createBus,
   updateBus,
   deleteBus,
+  createDriver,
+  updateDriver,
+  deleteDriver,
+  getDrivers,
 };

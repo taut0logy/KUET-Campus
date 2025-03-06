@@ -358,4 +358,16 @@ router.get('/routes/:id', async (req, res) => {
   }
 });
 
+// POST create a new driver
+router.post('/drivers', busController.createDriver);
+
+// PUT update a driver
+router.put('/drivers/:id', busController.updateDriver);
+
+// DELETE a driver
+router.delete('/drivers/:id', busController.deleteDriver);
+
+// New endpoint to get all drivers
+router.get('/drivers', busController.getDrivers);
+
 module.exports = router;

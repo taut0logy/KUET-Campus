@@ -75,10 +75,73 @@ const deleteBus = async (id) => {
   }
 };
 
+/**
+ * Get all drivers
+ */
+const getAllDrivers = async () => {
+  try {
+    logger.debug('Retrieving all drivers');
+    return await prisma.driver.findMany();
+  } catch (error) {
+    logger.error('Error retrieving drivers:', error);
+    throw error;
+  }
+};
+
+/**
+ * Create a new driver
+ */
+const createDriver = async (driverData) => {
+  try {
+    logger.debug('Creating a new driver', driverData);
+    return await prisma.driver.create({
+      data: driverData
+    });
+  } catch (error) {
+    logger.error('Error creating driver:', error);
+    throw error;
+  }
+};
+
+/**
+ * Update a driver
+ */
+const updateDriver = async (id, driverData) => {
+  try {
+    logger.debug(`Updating driver with ID: ${id}`, driverData);
+    return await prisma.driver.update({
+      where: { id },
+      data: driverData
+    });
+  } catch (error) {
+    logger.error(`Error updating driver with ID ${id}:`, error);
+    throw error;
+  }
+};
+
+/**
+ * Delete a driver
+ */
+const deleteDriver = async (id) => {
+  try {
+    logger.debug(`Deleting driver with ID: ${id}`);
+    return await prisma.driver.delete({
+      where: { id }
+    });
+  } catch (error) {
+    logger.error(`Error deleting driver with ID ${id}:`, error);
+    throw error;
+  }
+};
+
 module.exports = {
   getAllBuses,
   getBusById,
   createBus,
   updateBus,
   deleteBus,
+  getAllDrivers,
+  createDriver,
+  updateDriver,
+  deleteDriver,
 };
