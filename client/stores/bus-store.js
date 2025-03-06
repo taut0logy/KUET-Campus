@@ -36,8 +36,15 @@ const useBusStore = create((set) => ({
       }
 
       const data = await response.json();
+      console.log('Fetched buses response:', data);
+
+      if (!Array.isArray(data.data.buses)) {
+        console.error('Data is not an array:', data.data.buses);
+        throw new Error('Expected an array of buses');
+      }
+
       set({ 
-        buses: data.data || [],
+        buses: data.data.buses || [],
         loading: false,
         retryCount: 0 // Reset retry count on success
       });

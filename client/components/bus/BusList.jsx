@@ -35,6 +35,9 @@ export function BusList() {
   const router = useRouter();
   const { buses, loading, error, fetchBuses, clearError } = useBusStore();
 
+  // Log the buses to see what data is being passed
+  console.log('BusList Buses:', buses);
+
   const handleBusClick = (busId) => {
     router.push(`/bus/${busId}`);
   };
@@ -86,7 +89,7 @@ export function BusList() {
     );
   }
 
-  if (!buses || buses.length === 0) {
+  if (!Array.isArray(buses) || buses.length === 0) {
     return (
       <Card className="animate-in fade-in-50 duration-500">
         <CardContent className="flex flex-col items-center gap-4 p-8">

@@ -67,7 +67,8 @@ export default function BusPage() {
     await Promise.all(routePromises);
   };
 
-  const activeBuses = buses.filter(bus => bus.isActive);
+  // Ensure buses is an array before using filter
+  const activeBuses = Array.isArray(buses) ? buses.filter(bus => bus.isActive) : [];
   const totalCapacity = buses.reduce((sum, bus) => sum + bus.capacity, 0);
 
   return (

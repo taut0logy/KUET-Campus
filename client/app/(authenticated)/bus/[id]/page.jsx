@@ -65,7 +65,7 @@ export default function BusDetailsPage({ params }) {
         }
 
         const data = await response.json();
-        setBus(data.data);
+        setBus(data.data.bus);
 
         const schedulesResponse = await fetch(`http://localhost:8000/api/bus/buses/${resolvedParams.id}/schedules`);
         if (!schedulesResponse.ok) {
