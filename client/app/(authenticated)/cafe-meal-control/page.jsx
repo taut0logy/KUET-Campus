@@ -308,28 +308,8 @@ export default function MealsManagementPage() {
           <ArrowLeft className="mr-2 h-4 w-4" />
           Back
         </Button>
-        <h1 className="text-3xl font-bold">Meal Management</h1>
+        <h1 className="text-3xl font-bold">Meal Management Dashboard</h1>
 
-
-        {/* <div className="mb-10 flex gap-10 mt-4 justify-end">
-  <Button 
-    variant="outline" 
-    onClick={() => router.push('/cafe-dashboard/meals')}
-    className="flex items-center gap-2"
-  >
-    <Utensils className="h-4 w-4" />
-    Manage Meals
-  </Button>
-  
-  <Button 
-    variant="outline" 
-    onClick={() => router.push('/cafe-order-control')}
-    className="flex items-center gap-2"
-  >
-    <CalendarDays className="h-4 w-4" />
-    Manage Orders
-  </Button>
-</div> */}
       </div>
 
       <div className="flex justify-between items-center mb-6">

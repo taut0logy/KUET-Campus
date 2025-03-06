@@ -173,7 +173,7 @@ export default function CafeManagerPage() {
 
     return (
         <div className="container mx-auto p-4">
-            <h1 className="text-3xl font-bold mb-8">Cafe Manager Dashboard</h1>
+            <h1 className="text-3xl font-bold mb-8">Order Management Dashboard</h1>
 
             <div className="flex flex-col md:flex-row gap-4 mb-6 justify-between items-start md:items-center">
                 <div className="flex gap-2 items-center">
