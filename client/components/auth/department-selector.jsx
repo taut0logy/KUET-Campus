@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/popover";
 import { Icons } from "@/components/ui/icons";
 import useDepartmentStore from "@/stores/department-store";
+import { toast } from "sonner";
 
 export function DepartmentSelector({form}) {
   const [open, setOpen] = React.useState(false);
@@ -31,6 +32,12 @@ export function DepartmentSelector({form}) {
   React.useEffect(() => {
     fetchDepartments();
   }, [fetchDepartments]);
+
+  React.useEffect(() => {
+    if (error) {
+      toast.error(error);
+    }
+  }, [error]);
 
   const handleSelectDepartment = (selectedDepartment) => {
     setValue(selectedDepartment.id);
@@ -58,12 +65,19 @@ export function DepartmentSelector({form}) {
             <CommandEmpty>No departments found.</CommandEmpty>
             <CommandGroup>
               {loading && (
-                <Icons.spinner
-                  className="h-4 w-4 animate-spin"
-                  aria-hidden="true"
-                />
+                <div className="flex items-center justify-center">
+                  <Icons.spinner
+                    className="h-4 w-4 animate-spin"
+                    aria-hidden="true"
+                  />
+                </div>
               )}
-              {error && <p className="text-red-500">{error}</p>}
+              {error && <div className="flex items-center justify-center flex-col">
+                <p className="text-red-500/80 text-center text-sm mb-2">{error}</p>
+                <Button variant="ghost" onClick={() => fetchDepartments()}>
+                  Retry
+                </Button>
+                </div>}
               {departments.map((department) => (
                 <CommandItem
                   key={department.id}

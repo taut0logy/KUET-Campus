@@ -211,7 +211,7 @@ async function checkClubRole(req, res, next) {
     where: {
       userId: userId,
       clubId: parseInt(clubId),
-      status: 'active'
+      status: 'ACTIVE'
     }
   });
 
@@ -220,16 +220,42 @@ async function checkClubRole(req, res, next) {
   }
 
   // Check if the user is a moderator or manager
-  if (userClub.role === 'moderator' || userClub.role === 'manager') {
+  if (userClub.role === 'MODERATOR' || userClub.role === 'MANAGER') {
     return next(); // User has the required role
   }
 
-  return res.status(403).json({ message: 'Access denied: You do not have the required role.' });
+  return res.status(403).json({ message: 'Access denied: You do not have the required role for this club.' });
 }
+
+const authorizeAdmin = (req, res, next) => {
+  if (req.user.role !== 'ADMIN') {
+    return res.status(403).json({ message: 'Access denied: Admins only.' });
+  }
+  next();
+};
+
+const authorizeModeratorOrManager = async (req, res, next) => {
+  const { userId } = req.user;
+  const { clubId } = req.params;
+  // Check if the user is a moderator or manager of the club
+  const userClub = await prisma.userClub.findFirst({
+    where: {
+      userId,
+      clubId: parseInt(clubId),
+      status: 'ACTIVE'
+    }
+  });
+  if (!userClub || (userClub.role !== 'MODERATOR' && userClub.role !== 'MANAGER')) {
+    return res.status(403).json({ message: 'Access denied: You do not have the required role.' });
+  }
+  next();
+};
 
 module.exports = {
   authenticate,
   authorize,
+  authorizeAdmin,
+  authorizeModeratorOrManager,
   hasPermission,
   getUserPermissions,
   requireEmailVerified,

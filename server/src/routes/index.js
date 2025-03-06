@@ -8,6 +8,9 @@ const userRoutes = require('./user.routes');
 const notificationRoutes = require('./notification.routes');
 const storageRoutes = require('./storage.routes');
 const departmentRoutes = require('./department.routes');
+const eventRoutes = require('./event.routes');
+const clubRoutes = require('./club.routes');
+
 // Apply standard rate limit to all routes
 router.use(standardLimiter);
 
@@ -28,6 +31,8 @@ router.use('/notifications', notificationRoutes);
 router.use('/storage', storageRoutes);
 router.use('/departments', departmentRoutes);
 router.use('/routine', routineRoutes);
+router.use('/events', eventRoutes);
+router.use('/clubs', clubRoutes);
 // Future route modules
 // router.use('/profiles', profileRoutes);
 // etc.

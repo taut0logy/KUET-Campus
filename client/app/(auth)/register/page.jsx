@@ -108,7 +108,7 @@ function RegisterTabs() {
         <TabsTrigger value="faculty" onClick={() => setSelectedTab("faculty")}>Faculty</TabsTrigger>
         <TabsTrigger value="employee" onClick={() => setSelectedTab("employee")}>Employee</TabsTrigger>
       </TabsList>
-      <TabsContent value={selectedTab}>
+      <TabsContent value="student">
         <Card>
           <CardHeader>
             <CardTitle>Student Registration</CardTitle>

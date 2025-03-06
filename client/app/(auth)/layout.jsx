@@ -40,7 +40,7 @@ export default function AuthLayout({ children }) {
             </div>
           </div>
         </header>
-        <main className="flex-1 flex items-center justify-center py-10 px-4 container mx-auto">
+        <main className="flex-1 flex items-center justify-center px-4 container mx-auto">
           <div className="text-center">
             <Icons.spinner className="h-8 w-8 mx-auto animate-spin text-primary" />
             <p className="mt-2 text-sm text-muted-foreground">Loading...</p>

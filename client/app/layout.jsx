@@ -41,7 +41,7 @@ export default function RootLayout({ children }) {
                   <main className="flex-1">{children}</main>
                   <Footer />
                 </div>
-                <Toaster />
+                <Toaster richColors closeButton />
               </SocketProvider>
             </AuthProvider>
           </QueryProvider>
