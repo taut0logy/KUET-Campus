@@ -62,7 +62,7 @@ export default function MealChatbot({ meals }) {
       const botMessage = {
         text: suggestedMeals.length > 0 
           ? "Here are some recommendations based on your needs:" 
-          : "I couldn't find matching meals. Try being more specific!",
+          : "I could not find matching meals. Try being more specific!",
         isBot: true,
         meals: suggestedMeals
       };
@@ -70,7 +70,7 @@ export default function MealChatbot({ meals }) {
       setMessages(prev => [...prev, botMessage]);
     } catch (error) {
       setMessages(prev => [...prev, { 
-        text: "Sorry, I'm having trouble processing your request.", 
+        text: "I am having trouble processing your request.", 
         isBot: true 
       }]);
     }
@@ -86,7 +86,7 @@ export default function MealChatbot({ meals }) {
       <CardHeader>
         <CardTitle className="text-2xl">Meal Assistant</CardTitle>
         <p className="text-sm text-muted-foreground">
-          Describe your needs (e.g., "I need post-workout protein")
+          Describe your needs (e.g., `&quot;`I need post-workout protein`&quot;`)
         </p>
       </CardHeader>
       <CardContent>

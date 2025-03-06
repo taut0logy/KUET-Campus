@@ -82,7 +82,7 @@ export default function QRScanner({ onSuccess, onError }) {
         }
       }
     };
-  }, [onSuccess, onError]);
+  }, [onSuccess, onError, isScanning]);
 
   const handleReset = () => {
     setScanResult(null);
