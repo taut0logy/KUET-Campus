@@ -319,6 +319,8 @@ model Routine {
 model Course {
   id         String @id @default(uuid())
   courseId   String @unique
+  id         String @id @default(uuid())
+  courseId   String @unique
   courseName String
   classTest  String
   userId     Int
@@ -326,6 +328,173 @@ model Course {
 
   @@map("courses")
 }
+
+// Bus related models
+enum ScheduleStatus {
+  SCHEDULED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+  DELAYED
+  PENDING
+}
+
+enum MaintenanceType {
+  ROUTINE
+  REPAIR
+  INSPECTION
+}
+
+enum BusType {
+  SHUTTLE
+  MINIBUS
+  ARTICULATED
+}
+
+enum FrequencyType {
+  DAILY
+  WEEKDAYS
+  WEEKLY
+}
+
+enum Direction {
+  CLOCKWISE
+  COUNTER_CLOCKWISE
+}
+
+model Bus {
+  id           String           @id @default(uuid())
+  busNumber    String           @unique
+  licensePlate String? // Made nullable first
+  capacity     Int
+  type         BusType? // Using enum instead of String
+  isActive     Boolean          @default(true)
+  description  String?
+  routes       BusRoute[] // Add reverse relation
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+  schedules    BusSchedule[]
+  drivers      Driver[]
+  maintenance  MaintenanceLog[]
+
+  @@map("buses")
+}
+
+model Driver {
+  id            String        @id @default(uuid())
+  firstName     String
+  lastName      String
+  licenseNumber String        @unique
+  phone         String?
+  isAvailable   Boolean       @default(true)
+  availability  String? // Consider creating an enum for this
+  schedules     BusSchedule[]
+  buses         Bus[]
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  @@index([isAvailable]) // Add index for frequent queries
+  @@map("drivers")
+}
+
+model BusRoute {
+  id         String        @id @default(uuid())
+  routeName  String
+  routeCode  String? // Made nullable first
+  startPoint String
+  endPoint   String
+  distance   Float // in kilometers
+  duration   Int // in minutes
+  direction  Direction? // Using enum instead of String
+  isActive   Boolean       @default(true)
+  busId      String
+  bus        Bus           @relation(fields: [busId], references: [id], onDelete: Cascade)
+  schedules  BusSchedule[]
+  stops      BusStop[]
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+
+  @@index([isActive]) // Add index for frequent queries
+  @@map("bus_routes")
+}
+
+model BusStop {
+  id            String   @id @default(uuid())
+  stopName      String
+  sequence      Int
+  timeFromStart Int? // First make it nullable
+  routeId       String
+  route         BusRoute @relation(fields: [routeId], references: [id], onDelete: Cascade)
+  campusZone    String?
+  latitude      Float?
+  longitude     Float?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@unique([routeId, sequence])
+  @@unique([stopName, routeId])
+  @@index([routeId])
+  @@map("bus_stops")
+}
+
+model BusSchedule {
+  id                String         @id @default(uuid())
+  busId             String
+  routeId           String
+  driverId          String?
+  departureTime     String // Consider using DateTime with @db.Time
+  arrivalTime       String // Consider using DateTime with @db.Time
+  bookedSeats       Int            @default(0)
+  totalCapacity     Int            @default(50) // Added default
+  availableSeats    Int            @default(50) // Added default
+  isRecurring       Boolean        @default(false)
+  recurrencePattern String?
+  frequency         FrequencyType  @default(DAILY) // Added default
+  validFrom         DateTime       @default(now()) // Added default
+  validUntil        DateTime?
+  status            ScheduleStatus @default(SCHEDULED)
+  bus               Bus            @relation(fields: [busId], references: [id], onDelete: Cascade)
+  route             BusRoute       @relation(fields: [routeId], references: [id], onDelete: Cascade)
+  driver            Driver?        @relation(fields: [driverId], references: [id], onDelete: SetNull)
+  reminders         Reminder[]
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+
+  @@index([status]) // Add index for frequent queries
+  @@index([validFrom]) // Add index for date queries
+  @@map("bus_schedules")
+}
+
+model MaintenanceLog {
+  id              String          @id @default(uuid())
+  busId           String
+  maintenanceDate DateTime
+  type            MaintenanceType // Using enum instead of String
+  description     String
+  cost            Decimal?        @db.Decimal(10, 2)
+  nextDueDate     DateTime?
+  bus             Bus             @relation(fields: [busId], references: [id], onDelete: Cascade)
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  @@index([maintenanceDate]) // Add index for date queries
+  @@map("maintenance_logs")
+}
+
+model Reminder {
+  id           String      @id @default(uuid())
+  studentId    String // Consider adding proper relation to User/Student model
+  scheduleId   String
+  reminderTime DateTime
+  busSchedule  BusSchedule @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  @@index([reminderTime]) // Add index for date queries
+  @@index([studentId]) // Add index for frequent queries
+  @@map("reminders")
+}
+
 
 model ClubTag {
   id          Int     @id @default(autoincrement())
