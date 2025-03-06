@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useRouter } from 'next/navigation';
-import { Loader2, ShoppingCart, ChevronLeft, Trash2 } from 'lucide-react';
+import { Loader2, ShoppingCart, ChevronLeft, Trash2, User } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -99,34 +99,48 @@ export default function CartPage() {
     const handlePreorder = async () => {
         setIsPreordering(true);
         try {
-          const orderItems = items.map(item => ({
-            mealId: item.mealId,
-            quantity: item.quantity
-          }));
-          
-          await createOrder(orderItems);
-          await resetCart();
-          toast.success("Order placed successfully!");
-          router.push('/preorder');
+            const orderItems = items.map(item => ({
+                mealId: item.mealId,
+                quantity: item.quantity
+            }));
+
+            await createOrder(orderItems);
+            await resetCart();
+            toast.success("Order placed successfully!");
+            router.push('/preorder');
         } catch (error) {
-          console.error(error);
-          toast.error(error.response?.data?.error || "Failed to place order");
+            console.error(error);
+            toast.error(error.response?.data?.error || "Failed to place order");
         } finally {
-          setIsPreordering(false);
+            setIsPreordering(false);
         }
-      };
+    };
 
     return (
         <div className="container max-w-7xl mx-auto px-4 py-8">
             <div className="flex items-center justify-between mb-8">
                 <h1 className="text-3xl font-bold">Shopping Cart</h1>
-                <Link href="/cafeteria">
-                    <Button variant="outline" className="flex items-center space-x-2">
+                <div className="flex gap-4">
+                    <Button
+                        variant="outline"
+                        className="flex items-center space-x-2"
+                        onClick={() => router.push('/cafe-user-dashboard')}
+                    >
+                        <User className="h-4 w-4" />
+                        <span>View User Dashboard</span>
+                    </Button>
+
+                    <Button
+                        variant="outline"
+                        className="flex items-center space-x-2"
+                        onClick={() => router.push('/cafeteria')}
+                    >
                         <ChevronLeft className="h-4 w-4" />
                         <span>Go to Cafeteria</span>
                     </Button>
-                </Link>
+                </div>
             </div>
+
 
             <div className="grid gap-8 md:grid-cols-3">
                 <div className="md:col-span-2">
@@ -227,45 +241,45 @@ export default function CartPage() {
                             </div>
                         </div>
                         <Dialog>
-                    <DialogTrigger asChild>
-                        <Button
-                            className="w-full mt-6 py-6 text-lg"
-                            disabled={isPreordering}
-                        >
-                            {isPreordering ? (
-                                <>
-                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                    Processing...
-                                </>
-                            ) : (
-                                "Proceed to Preorder"
-                            )}
-                        </Button>
-                    </DialogTrigger>
-                    <DialogContent>
-                        <DialogHeader>
-                            <DialogTitle>Confirm Preorder</DialogTitle>
-                            <DialogDescription>
-                                Your order will be ready for pickup after the preorder is confirmed. Do you want to proceed?
-                            </DialogDescription>
-                        </DialogHeader>
-                        <div className="flex justify-end space-x-2">
-                            <Button variant="outline" onClick={() => document.querySelector('[data-dialog-close]').click()}>
-                                Cancel
-                            </Button>
-                            <Button onClick={handlePreorder} disabled={isPreordering}>
-                                {isPreordering ? (
-                                    <>
-                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                        Processing...
-                                    </>
-                                ) : (
-                                    "Confirm Order"
-                                )}
-                            </Button>
-                        </div>
-                    </DialogContent>
-                </Dialog>
+                            <DialogTrigger asChild>
+                                <Button
+                                    className="w-full mt-6 py-6 text-lg"
+                                    disabled={isPreordering}
+                                >
+                                    {isPreordering ? (
+                                        <>
+                                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                            Processing...
+                                        </>
+                                    ) : (
+                                        "Proceed to Preorder"
+                                    )}
+                                </Button>
+                            </DialogTrigger>
+                            <DialogContent>
+                                <DialogHeader>
+                                    <DialogTitle>Confirm Preorder</DialogTitle>
+                                    <DialogDescription>
+                                        Your order will be ready for pickup after the preorder is confirmed. Do you want to proceed?
+                                    </DialogDescription>
+                                </DialogHeader>
+                                <div className="flex justify-end space-x-2">
+                                    <Button variant="outline" onClick={() => document.querySelector('[data-dialog-close]').click()}>
+                                        Cancel
+                                    </Button>
+                                    <Button onClick={handlePreorder} disabled={isPreordering}>
+                                        {isPreordering ? (
+                                            <>
+                                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                                Processing...
+                                            </>
+                                        ) : (
+                                            "Confirm Order"
+                                        )}
+                                    </Button>
+                                </div>
+                            </DialogContent>
+                        </Dialog>
                     </Card>
                 </div>
             </div>

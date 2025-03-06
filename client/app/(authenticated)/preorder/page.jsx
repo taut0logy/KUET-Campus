@@ -6,7 +6,7 @@ import useOrderStore from '@/stores/order-store';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Loader2, Clock, ArrowLeft, Copy, History, AlertTriangle } from 'lucide-react';
+import { Loader2, Clock, ArrowLeft, Copy, History, AlertTriangle, User, ChevronLeft } from 'lucide-react';
 import { format, differenceInDays } from 'date-fns';
 import Link from 'next/link';
 import { QRCodeSVG } from 'qrcode.react';
@@ -150,12 +150,25 @@ export default function PreorderPage() {
     <div className="container max-w-4xl mx-auto px-4 py-8 bg-gray-900 text-gray-100">
       <div className="flex items-center justify-between mb-8">
         <h1 className="text-3xl font-bold text-white">My Orders</h1>
-        <Link href="/cafeteria">
-          <Button variant="outline" className="flex items-center gap-2 border-gray-700 text-gray-200 hover:bg-gray-800 hover:text-white">
-            <ArrowLeft className="h-4 w-4" />
-            Back to Cafeteria
-          </Button>
-        </Link>
+        <div className="flex gap-2">
+        <Button
+                        variant="outline"
+                        className="flex items-center space-x-2"
+                        onClick={() => router.push('/cafe-user-dashboard')}
+                    >
+                        <User className="h-4 w-4" />
+                        <span>View User Dashboard</span>
+                    </Button>
+        
+        <Button 
+        variant="outline"
+        className="flex items-center space-x-2"
+        onClick={() => router.push('/cafeteria')}
+        >
+            <ChevronLeft className="h-4 w-4" />
+            <span>Go to Cafeteria</span>
+        </Button>
+        </div>
       </div>
 
       {/* Order Status Summary */}
