@@ -11,10 +11,10 @@
     "prisma:migrate": "prisma migrate dev",
     "lint": "eslint .",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "seed": "node prisma/seed.js"
+    "seed": "node prisma/seeders/seed.js"
   },
   "prisma": {
-    "seed": "node prisma/seed.js"
+    "seed": "node prisma/seeders/seed.js"
   },
   "keywords": [
     "express",

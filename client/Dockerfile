@@ -22,6 +22,18 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
+# Capture all build arguments dynamically
+# Use a shell script to write all build arguments to .env
+RUN echo "Dynamically writing all build arguments to .env file..." && \
+    for var in $(printenv | grep '^ARG_' | cut -d= -f1); do \
+      arg_name="${var#ARG_}"; \
+      arg_value="${!var}"; \
+      if [ -n "$arg_value" ]; then \
+        echo "$arg_name=$arg_value" >> .env; \
+      fi; \
+    done
+
+
 # Next.js collects completely anonymous telemetry data about general usage.
 # Learn more here: https://nextjs.org/telemetry
 # Uncomment the following line in case you want to disable telemetry during the build.

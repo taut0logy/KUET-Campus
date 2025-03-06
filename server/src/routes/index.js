@@ -15,6 +15,7 @@ const eventRoutes = require('./event.routes');
 const clubRoutes = require('./club.routes');
 const cartRoutes = require('./cart.routes');
 const orderRoutes = require('./order.routes');
+const busRoutes = require('./bus.routes');
 
 // Apply standard rate limit to all routes
 router.use(standardLimiter);

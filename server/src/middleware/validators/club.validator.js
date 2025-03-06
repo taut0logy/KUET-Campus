@@ -5,6 +5,7 @@ const createClubValidation = [
   body('name').notEmpty().withMessage('Club name is required'),
   body('description').optional().isString().withMessage('Description must be a string'),
   body('moderatorId').isInt().withMessage('Moderator ID must be an integer')
+  
 ];
 
 // Validation for updating a club

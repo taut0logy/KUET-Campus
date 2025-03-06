@@ -1,0 +1,128 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build Docker images
+        run: |
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/kuet-client:latest \
+            --file client/Dockerfile \
+            --build-arg NEXT_PUBLIC_API_URL=https://api.kuet.taut0logy.tech \
+            --build-arg NEXT_PUBLIC_SOCKET_URL=https://api.kuet.taut0logy.tech \
+            --build-arg NEXT_PUBLIC_HCAPTCHA_SITE_KEY=${{ secrets.NEXT_PUBLIC_HCAPTCHA_SITE_KEY }} \
+            --build-arg NEXT_PUBLIC_SUPABASE_URL=${{ secrets.SUPABASE_URL }} \
+            --build-arg NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY }} \
+            client
+
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/kuet-server:latest \
+            --file server/Dockerfile \
+            --build-arg NODE_ENV=production \
+            --build-arg PORT=8000 \
+            --build-arg CLIENT_URL=https://kuet.taut0logy.tech \
+            --build-arg DATABASE_URL=${{ secrets.DATABASE_URL }} \
+            --build-arg DIRECT_URL=${{ secrets.DIRECT_URL }} \
+            --build-arg SUPABASE_URL=${{ secrets.SUPABASE_URL }} \
+            --build-arg SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY }} \
+            --build-arg SUPABASE_SERVICE_KEY=${{ secrets.SUPABASE_SERVICE_KEY }} \
+            --build-arg JWT_SECRET=${{ secrets.JWT_SECRET }} \
+            --build-arg JWT_EXPIRES_IN=${{ secrets.JWT_EXPIRES_IN }} \
+            --build-arg JWT_REFRESH_SECRET=${{ secrets.JWT_REFRESH_SECRET }} \
+            --build-arg JWT_REFRESH_EXPIRES_IN=${{ secrets.JWT_REFRESH_EXPIRES_IN }} \
+            --build-arg JWT_VERIFICATION_SECRET=${{ secrets.JWT_VERIFICATION_SECRET }} \
+            --build-arg JWT_VERIFICATION_EXPIRES_IN=${{ secrets.JWT_VERIFICATION_EXPIRES_IN }} \
+            --build-arg EMAIL_HOST=${{ secrets.EMAIL_HOST }} \
+            --build-arg EMAIL_PORT=${{ secrets.EMAIL_PORT }} \
+            --build-arg EMAIL_USER=${{ secrets.EMAIL_USER }} \
+            --build-arg EMAIL_PASS='"${{ secrets.EMAIL_PASS }}"' \
+            --build-arg EMAIL_FROM=${{ secrets.EMAIL_FROM }} \
+            --build-arg RATE_LIMIT_WINDOW_MS=${{ secrets.RATE_LIMIT_WINDOW_MS }} \
+            --build-arg RATE_LIMIT_MAX=${{ secrets.RATE_LIMIT_MAX }} \
+            --build-arg HCAPTCHA_SECRET_KEY=${{ secrets.HCAPTCHA_SECRET_KEY }} \
+            server
+
+      - name: Push images to Docker Hub
+        run: |
+          docker push ${{ secrets.DOCKER_USERNAME }}/kuet-client:latest
+          docker push ${{ secrets.DOCKER_USERNAME }}/kuet-server:latest
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+
+    steps:
+      - name: Deploy to Server
+        uses: appleboy/ssh-action@v0.1.6
+        with:
+          host: ${{ secrets.CLOUD_SERVER_IP }}
+          username: ${{ secrets.CLOUD_SERVER_USER }}
+          password: ${{ secrets.CLOUD_SERVER_PASSWORD }}
+          script: |
+            # Create Docker network if it doesn't exist
+            docker network create kuet-network || true
+
+            # Stop and remove existing containers
+            docker stop kuet-server || true
+            docker rm kuet-server || true
+            docker stop kuet-client || true
+            docker rm kuet-client || true
+
+            # Pull latest images
+            docker pull ${{ secrets.DOCKER_USERNAME }}/kuet-server:latest
+            docker pull ${{ secrets.DOCKER_USERNAME }}/kuet-client:latest
+
+            # Remove dangling images
+            docker image prune -f || true
+
+            # Run kuet-server container
+            docker run -d \
+              --name kuet-server \
+              -p 8000:8000 \
+              --network kuet-network \
+              ${{ secrets.DOCKER_USERNAME }}/kuet-server:latest
+
+            # Run kuet-client container
+            docker run -d \
+              --name kuet-client \
+              -p 80:80 \
+              --network kuet-network \
+              ${{ secrets.DOCKER_USERNAME }}/kuet-client:latest
+
+            # Remove dangling images
+            docker image prune -f || true
+
+            # Remove dangling volumes
+            docker volume prune -f || true
+
+            # Wait for the server container to be ready
+            echo "Waiting for the server container to be ready..."
+            sleep 10
+
+            # Check server logs
+            echo "Checking server logs..."
+            docker logs kuet-server
+
+            # Check client logs
+            echo "Checking client logs..."
+            docker logs kuet-client

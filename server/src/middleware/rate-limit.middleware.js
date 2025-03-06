@@ -1,5 +1,5 @@
-// const rateLimit = require('express-rate-limit');
-// require('dotenv').config();
+const rateLimit = require('express-rate-limit');
+require('dotenv').config();
 
 // Parse environment variables
 const WINDOW_MS = eval(process.env.RATE_LIMIT_WINDOW_MS) || 5 * 60 * 1000; // Default: 5 minutes

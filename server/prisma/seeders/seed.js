@@ -1,10 +1,13 @@
 import { PrismaClient } from "@prisma/client";
 
+
 const prisma = new PrismaClient();
 
 async function main() {
   // Clear existing meals
   await prisma.meal.deleteMany({});
+
+
   console.log("Cleared existing meals");
 
   // Create new meals with updated schema

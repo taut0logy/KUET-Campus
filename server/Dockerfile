@@ -21,9 +21,16 @@ RUN npx prisma generate
 # Copy application code
 COPY . .
 
-# Set environment variables
-ENV NODE_ENV=production
-ENV PORT=8000
+# Capture all build arguments dynamically
+# Use a shell script to write all build arguments to .env
+RUN echo "Dynamically writing all build arguments to .env file..." && \
+    for var in $(printenv | grep '^ARG_' | cut -d= -f1); do \
+      arg_name="${var#ARG_}"; \
+      arg_value="${!var}"; \
+      if [ -n "$arg_value" ]; then \
+        echo "$arg_name=$arg_value" >> .env; \
+      fi; \
+    done
 
 # Create non-root user for security
 RUN addgroup -g 1001 -S nodejs && \
@@ -37,4 +44,4 @@ USER nodejs
 EXPOSE 8000
 
 # Start the application
-CMD ["npm", "start"] 
+CMD ["npm", "start"]
