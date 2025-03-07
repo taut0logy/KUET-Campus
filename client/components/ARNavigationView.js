@@ -1,256 +1,285 @@
-'use client';
+import { useEffect, useRef, useState } from 'react';
+import { ArrowUp, CornerDownLeft, CornerUpRight, MapPin, Navigation } from 'lucide-react';
+import { motion } from 'framer-motion';
+import ARWaypoints from './ARWaypoints';
+import MilitaryIndoorNavigation from './MilitaryIndoorNavigation';
+import ObjectRecognition from './ObjectRecognition';
+export default function ARNavigationView({ destination, userPosition, onClose, calculateDistance }) {
+    const videoRef = useRef(null);
+    const [deviceOrientation, setDeviceOrientation] = useState({ alpha: 0, beta: 0, gamma: 0 });
+    const [compassHeading, setCompassHeading] = useState(0);
+    const [arDirections, setArDirections] = useState([]);
+    const [currentStep, setCurrentStep] = useState(0);
+    const [permissionStatus, setPermissionStatus] = useState('pending');
+    const [remainingDistance, setRemainingDistance] = useState(0);
+    const [indoorModeActive, setIndoorModeActive] = useState(false);
+    const [showTacticalOverlay, setShowTacticalOverlay] = useState(false);
+    const [objectDetectionActive, setObjectDetectionActive] = useState(true); 
 
-import { useState, useEffect, useRef } from 'react';
-import { ArrowUp, X, Navigation, CornerUpLeft, CornerUpRight, ArrowRight, ArrowLeft } from 'lucide-react';
-
-export default function ARNavigationView({ 
-  destination, 
-  userPosition, 
-  onClose,
-  calculateDistance 
-}) {
-  const [heading, setHeading] = useState(0);
-  const [deviceOrientation, setDeviceOrientation] = useState(0);
-  const [instructions, setInstructions] = useState('');
-  const [previousPositions, setPreviousPositions] = useState([]);
-  const [currentDirection, setCurrentDirection] = useState('straight');
-  const [actionRequired, setActionRequired] = useState(false);
-  const lastUpdateTime = useRef(Date.now());
-  const [arElements, setArElements] = useState([]);
-  
-  // Store previous positions to determine direction of travel
+  // Initialize camera and sensors
   useEffect(() => {
-    if (!userPosition) return;
-    
-    setPreviousPositions(prev => {
-      // Keep only last 5 positions for movement analysis
-      const newPositions = [...prev, userPosition].slice(-5);
-      return newPositions;
-    });
-  }, [userPosition]);
-
-  // Calculate direction to destination with improved guidance
-  useEffect(() => {
-    if (!userPosition || !destination?.position) return;
-    
-    // Calculate heading to destination
-    const deltaX = destination.position[1] - userPosition[1];
-    const deltaY = destination.position[0] - userPosition[0];
-    const headingInRadians = Math.atan2(deltaX, deltaY);
-    let headingInDegrees = (headingInRadians * 180 / Math.PI);
-    if (headingInDegrees < 0) headingInDegrees += 360;
-    setHeading(headingInDegrees);
-    
-    // Generate detailed instructions
-    const distance = calculateDistance(userPosition, destination.position);
-    
-    // Calculate absolute angle difference
-    let angleDiff = Math.abs(headingInDegrees - deviceOrientation);
-    if (angleDiff > 180) angleDiff = 360 - angleDiff;
-    
-    // Direction based on relative angle
-    const relativeAngle = ((headingInDegrees - deviceOrientation) + 360) % 360;
-    
-    // Determine if we need to turn and which direction
-    let direction = '';
-    let actionNeeded = false;
-    
-    if (angleDiff < 15) {
-      direction = 'straight ahead';
-      setCurrentDirection('straight');
-      actionNeeded = false;
-    } else if (angleDiff < 45) {
-      if (relativeAngle < 180) {
-        direction = 'slightly right';
-        setCurrentDirection('slight-right');
-      } else {
-        direction = 'slightly left';
-        setCurrentDirection('slight-left');
-      }
-      actionNeeded = angleDiff > 30;
-    } else if (angleDiff < 90) {
-      if (relativeAngle < 180) {
-        direction = 'turn right';
-        setCurrentDirection('right');
-      } else {
-        direction = 'turn left';
-        setCurrentDirection('left');
-      }
-      actionNeeded = true;
-    } else {
-      if (relativeAngle < 180) {
-        direction = 'make a sharp right turn';
-        setCurrentDirection('sharp-right');
-      } else {
-        direction = 'make a sharp left turn';
-        setCurrentDirection('sharp-left');
-      }
-      actionNeeded = true;
-    }
-    
-    // Update instruction with distance and direction
-    const distanceText = distance < 50 
-      ? "You've arrived at your destination!" 
-      : `${Math.round(distance/10)/100} km ${direction}`;
-    
-    setInstructions(distanceText);
-    setActionRequired(actionNeeded);
-    
-    // Generate virtual AR waypoints when close to destination
-    if (distance < 200 && Date.now() - lastUpdateTime.current > 2000) {
-      lastUpdateTime.current = Date.now();
-      
-      // Create AR navigation elements at various distances
-      const newElements = [];
-      
-      // Add waypoints along the path
-      for (let i = 1; i <= 3; i++) {
-        const factor = i / 4;
-        const waypointPos = [
-          userPosition[0] + (destination.position[0] - userPosition[0]) * factor,
-          userPosition[1] + (destination.position[1] - userPosition[1]) * factor
-        ];
-        
-        // Calculate waypoint heading
-        const wpDeltaX = waypointPos[1] - userPosition[1];
-        const wpDeltaY = waypointPos[0] - userPosition[0];
-        const wpHeading = Math.atan2(wpDeltaX, wpDeltaY) * 180 / Math.PI;
-        
-        newElements.push({
-          type: 'waypoint',
-          position: waypointPos,
-          heading: wpHeading,
-          distance: calculateDistance(userPosition, waypointPos)
+    // Request camera permission
+    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+      navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+        .then(stream => {
+          if (videoRef.current) {
+            videoRef.current.srcObject = stream;
+            setPermissionStatus('granted');
+          }
+        })
+        .catch(error => {
+          console.error("Camera access error:", error);
+          setPermissionStatus('denied');
         });
-      }
-      
-      setArElements(newElements);
     }
-  }, [userPosition, destination, deviceOrientation, calculateDistance]);
-  
-  // More realistic device orientation simulation
-  useEffect(() => {
-    // Instead of continuously rotating, let's simulate more realistic movement
-    const interval = setInterval(() => {
-      // Simulate user looking around or walking
-      setDeviceOrientation(prev => {
-        // More realistic orientation changes
-        const change = (Math.random() - 0.5) * 5; // Random change between -2.5 and 2.5 degrees
-        return (prev + change + 360) % 360;
-      });
-    }, 500);
-    
-    return () => clearInterval(interval);
-  }, []);
-  
-  // Calculate arrow rotation based on heading and device orientation
-  const arrowRotation = heading - deviceOrientation;
-  
-  // Get direction icon based on current direction
-  const getDirectionIcon = () => {
-    switch(currentDirection) {
-      case 'slight-right':
-      case 'right':
-      case 'sharp-right':
-        return <CornerUpRight 
-          size={120} 
-          className={`text-primary ${actionRequired ? 'animate-pulse' : ''}`}
-        />;
-      case 'slight-left':
-      case 'left':
-      case 'sharp-left':
-        return <CornerUpLeft 
-          size={120} 
-          className={`text-primary ${actionRequired ? 'animate-pulse' : ''}`}
-        />;
-      case 'straight':
-      default:
-        return <ArrowUp
-          size={120}
-          className="text-primary"
-        />;
+
+    // Request device orientation permission
+    if (typeof DeviceOrientationEvent !== 'undefined' && 
+        DeviceOrientationEvent.requestPermission) {
+      DeviceOrientationEvent.requestPermission()
+        .then(response => {
+          if (response === 'granted') {
+            window.addEventListener('deviceorientation', handleOrientation);
+          }
+        })
+        .catch(console.error);
+    } else {
+      window.addEventListener('deviceorientation', handleOrientation);
+    }
+
+    // Get compass heading if available
+    if (window.navigator.geolocation) {
+      window.addEventListener('deviceorientationabsolute', handleCompass);
+    }
+
+    // Generate navigation steps (in real app, this would come from a navigation API)
+    generateNavigationSteps();
+
+    // Update distance calculation
+    const distanceInterval = setInterval(() => {
+      if (userPosition && destination) {
+        const distance = calculateDistance(userPosition, destination.position);
+        setRemainingDistance(distance);
+      }
+    }, 1000);
+
+    return () => {
+      const stream = videoRef.current?.srcObject;
+      if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+      }
+      window.removeEventListener('deviceorientation', handleOrientation);
+      window.removeEventListener('deviceorientationabsolute', handleCompass);
+      clearInterval(distanceInterval);
+    };
+  }, [destination, userPosition]);
+
+  const handleOrientation = (event) => {
+    setDeviceOrientation({
+      alpha: event.alpha, // z-axis rotation
+      beta: event.beta,   // x-axis rotation
+      gamma: event.gamma  // y-axis rotation
+    });
+  };
+
+  const handleCompass = (event) => {
+    if (event.webkitCompassHeading) {
+      setCompassHeading(event.webkitCompassHeading);
+    } else {
+      setCompassHeading(360 - event.alpha);
     }
   };
-  
+
+  // Simulate navigation steps (would use a routing API in production)
+  const generateNavigationSteps = () => {
+    // Sample directions
+    setArDirections([
+      { type: 'straight', distance: 50, instruction: 'Walk straight for 50m' },
+      { type: 'right', distance: 100, instruction: 'Turn right at the Science Building' },
+      { type: 'straight', distance: 75, instruction: 'Continue straight for 75m' },
+      { type: 'left', distance: 30, instruction: 'Turn left towards the Library' },
+      { type: 'destination', instruction: `Destination: ${destination.name}` }
+    ]);
+  };
+
+  // Calculate direction arrow angle based on compass and destination
+  const calculateDirectionAngle = () => {
+    if (!userPosition || !destination) return 0;
+    
+    const lat1 = userPosition[0] * Math.PI / 180;
+    const lon1 = userPosition[1] * Math.PI / 180;
+    const lat2 = destination.position[0] * Math.PI / 180;
+    const lon2 = destination.position[1] * Math.PI / 180;
+    
+    const y = Math.sin(lon2 - lon1) * Math.cos(lat2);
+    const x = Math.cos(lat1) * Math.sin(lat2) -
+              Math.sin(lat1) * Math.cos(lat2) * Math.cos(lon2 - lon1);
+    
+    let bearing = Math.atan2(y, x) * 180 / Math.PI;
+    bearing = (bearing + 360) % 360;
+    
+    // Adjust based on compass heading
+    return (bearing - compassHeading + 360) % 360;
+  };
+
+  const toggleObjectDetection = () => {
+    setObjectDetectionActive(!objectDetectionActive);
+  };
+
+  if (permissionStatus === 'denied') {
+    return (
+      <div className="fixed inset-0 z-50 bg-background flex flex-col items-center justify-center p-4">
+        <div className="bg-destructive/10 text-destructive p-4 rounded-md mb-4">
+          Camera access is required for AR navigation
+        </div>
+        <button onClick={onClose} className="bg-primary text-primary-foreground px-4 py-2 rounded-md">
+          Return to Map
+        </button>
+      </div>
+    );
+  }
+
+  if (indoorModeActive) {
+    return (
+      <div className="fixed inset-0 z-50 bg-black">
+        <video 
+          ref={videoRef} 
+          autoPlay 
+          playsInline 
+          muted
+          className="absolute inset-0 h-full w-full object-cover opacity-30"
+        />
+        <MilitaryIndoorNavigation 
+          buildingId={destination.id} 
+          onExit={() => setIndoorModeActive(false)} 
+        />
+      </div>
+    );
+  }
+
   return (
-    <div className="fixed inset-0 bg-black z-50 flex flex-col">
-      {/* Mock camera view */}
-      <div 
-        className="flex-1 relative bg-gradient-to-b from-sky-400 to-gray-900 overflow-hidden"
-        style={{ backgroundImage: "url('/images/campus-ar-bg.jpg')", backgroundSize: 'cover' }}
-      >
-        {/* AR overlays */}
-        <div className="absolute inset-0 flex flex-col items-center justify-center">
-          {/* Direction indicators */}
-          <div className="mb-8 relative">
-            {getDirectionIcon()}
-            
-            {/* Degree indicator */}
-            <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-black/50 px-3 py-1 rounded-full text-white">
-              {Math.round(Math.abs(heading - deviceOrientation))}°
+    <div className="fixed inset-0 z-50 bg-black">
+      {/* Camera view */}
+      <video 
+        ref={videoRef} 
+        autoPlay 
+        playsInline 
+        className="absolute inset-0 h-full w-full object-cover"
+      />
+
+      {/* Object Recognition layer - added new! */}
+      {objectDetectionActive && permissionStatus === 'granted' && (
+        <ObjectRecognition videoRef={videoRef} />
+      )}
+      
+      {/* AR overlays */}
+      <div className="absolute inset-0 pointer-events-none">
+        {/* Direction indicator */}
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+          <motion.div 
+            className="bg-primary/80 rounded-full p-4 shadow-glow"
+            style={{ rotate: `${calculateDirectionAngle()}deg` }}
+            animate={{ scale: [1, 1.1, 1], opacity: [0.8, 1, 0.8] }}
+            transition={{ duration: 2, repeat: Infinity }}
+          >
+            <Navigation size={48} className="text-primary-foreground" />
+          </motion.div>
+        </div>
+        
+        {showTacticalOverlay && (
+          <div className="absolute inset-0">
+            {/* Grid overlay */}
+            <div className="absolute inset-0 grid grid-cols-8 grid-rows-8 pointer-events-none">
+              {Array.from({length: 64}).map((_, i) => (
+                <div key={i} className="border border-green-500/20"></div>
+              ))}
             </div>
-          </div>
-          
-          {/* Distance marker */}
-          <div className="bg-primary text-white px-6 py-3 rounded-full text-xl font-bold">
-            {userPosition && destination ? 
-              `${Math.round(calculateDistance(userPosition, destination.position)/10)/100} km` : 
-              'Calculating...'}
-          </div>
-          
-          {/* AR path visualization */}
-          <div className="absolute inset-0 pointer-events-none">
-            <div className="w-full h-full flex items-center justify-center">
-              <div className="perspective-[800px] transform-gpu">
-                {/* Visualize a path on the ground */}
-                <div className="w-40 h-[400px] bg-primary/30 rounded-md border-2 border-primary transform-gpu rotateX(60deg) translate-y-60 flex flex-col justify-end items-center">
-                  <div className="w-full h-2 bg-primary"></div>
-                  <div className="w-full h-2 bg-primary mt-20"></div>
-                  <div className="w-full h-2 bg-primary mt-20"></div>
-                </div>
+            
+            {/* Compass rose */}
+            <div className="absolute top-4 left-1/2 transform -translate-x-1/2 opacity-60">
+              <div className="relative h-16 w-16">
+                <div className="absolute inset-0 rounded-full border border-green-500"></div>
+                <div 
+                  className="absolute top-1/2 left-1/2 h-14 w-1 bg-green-500 origin-bottom transform -translate-x-1/2 -translate-y-1/2"
+                  style={{ rotate: `${compassHeading}deg` }}
+                ></div>
+                <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1 text-xs text-green-500 font-mono">N</div>
+                <div className="absolute right-0 top-1/2 transform translate-y-1/2 translate-x-1 text-xs text-green-500 font-mono">E</div>
+                <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1 text-xs text-green-500 font-mono">S</div>
+                <div className="absolute left-0 top-1/2 transform translate-y-1/2 -translate-x-1 text-xs text-green-500 font-mono">W</div>
               </div>
             </div>
-          </div>
-        </div>
-        
-        {/* Top banner - current action */}
-        {actionRequired && (
-          <div className="absolute top-4 left-4 right-4 bg-red-500 text-white p-2 rounded-md text-center font-bold animate-bounce">
-            {currentDirection.includes('right') ? 'Turn right now!' : 'Turn left now!'}
+            
+            {/* Coordinates display */}
+            <div className="absolute bottom-24 right-4 bg-black/40 p-2 rounded font-mono text-xs text-green-500">
+              <div>LAT: {userPosition?.[0].toFixed(6) || "00.000000"}</div>
+              <div>LON: {userPosition?.[1].toFixed(6) || "00.000000"}</div>
+              <div>HDG: {Math.round(compassHeading)}°</div>
+            </div>
           </div>
         )}
-        
-        {/* Instructions panel */}
-        <div className="absolute bottom-0 left-0 right-0 bg-black/80 text-white p-4">
-          <h3 className="text-xl font-bold mb-2 flex items-center">
-            <Navigation className="mr-2" /> 
-            {destination?.name || 'Navigating...'}
-          </h3>
-          <div className="flex items-center">
-            {/* Visual direction indicator */}
-            <div className="mr-3">
-              {currentDirection.includes('right') ? 
-                <ArrowRight className="text-primary" size={24} /> : 
-                currentDirection.includes('left') ? 
-                <ArrowLeft className="text-primary" size={24} /> : 
-                <ArrowUp className="text-primary" size={24} />
-              }
+
+        {/* Use the ARWaypoints component for dynamic waypoints */}
+        <ARWaypoints 
+          userPosition={userPosition}
+          destination={destination}
+          deviceOrientation={deviceOrientation}
+          compassHeading={compassHeading}
+        />
+        </div>
+        {/* UI Elements */}
+      <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/70 to-transparent p-4">
+        {/* Current direction step */}
+        <div className="bg-background/90 rounded-lg p-4 mb-4 shadow-lg">
+          <div className="flex items-center mb-2">
+            {arDirections[currentStep]?.type === 'straight' && <ArrowUp className="mr-2" />}
+            {arDirections[currentStep]?.type === 'right' && <CornerUpRight className="mr-2" />}
+            {arDirections[currentStep]?.type === 'left' && <CornerDownLeft className="mr-2" />}
+            {arDirections[currentStep]?.type === 'destination' && <MapPin className="mr-2" />}
+            <h3 className="font-semibold">{arDirections[currentStep]?.instruction}</h3>
+          </div>
+          
+          {remainingDistance > 0 && (
+            <div className="text-sm text-muted-foreground">
+              {Math.round(remainingDistance / 10) / 100} km to destination
             </div>
-            <p>{instructions || 'Getting directions...'}</p>
+          )}
+          
+          {/* Steps indicator */}
+          <div className="flex justify-center mt-2 space-x-1">
+            {arDirections.map((_, i) => (
+              <div 
+                key={i} 
+                className={`h-1.5 w-6 rounded-full ${i === currentStep ? 'bg-primary' : 'bg-muted'}`}
+              />
+            ))}
           </div>
         </div>
-      </div>
-      
-      {/* Controls */}
-      <div className="bg-black text-white p-4 flex justify-between items-center">
-        <button 
-          onClick={onClose}
-          className="flex items-center justify-center w-12 h-12 rounded-full bg-gray-800"
-        >
-          <X size={24} />
-        </button>
-        <div className="text-center">AR Navigation (Demo)</div>
-        <div className="w-12"></div>
+        
+        <div className="flex justify-between items-center">
+          <button 
+            onClick={() => setCurrentStep(prev => Math.max(0, prev - 1))}
+            disabled={currentStep === 0}
+            className="bg-muted/80 p-2 rounded-full disabled:opacity-50"
+          >
+            Previous
+          </button>
+          
+          <button 
+            onClick={onClose} 
+            className="bg-primary text-primary-foreground px-4 py-2 rounded-md"
+          >
+            Exit AR Mode
+          </button>
+          
+          <button 
+            onClick={() => setCurrentStep(prev => Math.min(arDirections.length - 1, prev + 1))}
+            disabled={currentStep === arDirections.length - 1}
+            className="bg-muted/80 p-2 rounded-full disabled:opacity-50"
+          >
+            Next
+          </button>
+        </div>
       </div>
     </div>
   );
