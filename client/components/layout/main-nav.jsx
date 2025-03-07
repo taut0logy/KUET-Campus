@@ -120,7 +120,7 @@ const getRoutes = (user) => {
       requireAuth: true,
     },
     {
-      href: "/clubs-and-events",
+      href: "/clubs",
       label: "Clubs & Events",
       requireAuth: true,
     },
@@ -153,6 +153,11 @@ const getRoutes = (user) => {
     {
       href: "/report",
       label: "Reports",
+      requireAuth: true,
+    },
+    {
+      href: "/emergency",
+      label: "Emergency",
       requireAuth: true,
     },
     {

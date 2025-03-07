@@ -153,7 +153,7 @@ export default function ObjectRecognition({ videoRef }) {
                 cancelAnimationFrame(animationFrame);
             }
         };
-    }, [model, videoRef, showChairWarning]);
+    }, [model, videoRef, showChairWarning, detectedObjects, ALERT_OBJECTS]);
 
     const handleCloseWarning = () => {
         setShowChairWarning(false);

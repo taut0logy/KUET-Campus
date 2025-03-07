@@ -45,13 +45,13 @@ async function main() {
   await prisma.studentInfo.deleteMany({});
   await prisma.facultyInfo.deleteMany({});
   await prisma.employeeInfo.deleteMany({});
-  await prisma.announcement.deleteMany({});
+  //await prisma.announcement.deleteMany({});
   await prisma.routine.deleteMany({});
   await prisma.exam.deleteMany({});
   await prisma.notification.deleteMany({});
   await prisma.course.deleteMany({});
   await prisma.assignment.deleteMany({});
-  await prisma.report.deleteMany({});
+  //await prisma.report.deleteMany({});
   await prisma.user.deleteMany({});
   
 
