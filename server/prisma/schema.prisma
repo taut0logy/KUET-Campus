@@ -87,6 +87,7 @@ model User {
   eventFollowUnfollowLogs EventFollowUnfollowLog[]
   Assignment        Assignment[]
   Exam              Exam[]
+  reports           Report[]
 
   @@map("users")
 }
@@ -620,3 +621,18 @@ model EventFollowUnfollowLog {
   user        User     @relation(fields: [userId], references: [id])
   event       Event    @relation(fields: [eventId], references: [id])
 }
+
+model Report {
+  id          Int      @id @default(autoincrement())
+  userId      Int
+  title       String   // Title of the report
+  reportType  String   // e.g., "Lost Item" or "Security Concern"
+  description String    @db.Text
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("reports")
+}
+
+
