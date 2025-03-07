@@ -3,10 +3,10 @@ name: CI/CD Pipeline
 on:
   push:
     branches:
-      - main
+      - test
   pull_request:
     branches:
-      - main
+      - test
 
 jobs:
   build:
@@ -29,7 +29,7 @@ jobs:
         run: |
           docker build -t ${{ secrets.DOCKER_USERNAME }}/kuet-client:latest \
             --file client/Dockerfile \
-            --build-arg NEXT_PUBLIC_API_URL=https://api.kuet.taut0logy.tech \
+            --build-arg NEXT_PUBLIC_API_URL=https://api.kuet.taut0logy.tech/api/v1 \
             --build-arg NEXT_PUBLIC_SOCKET_URL=https://api.kuet.taut0logy.tech \
             --build-arg NEXT_PUBLIC_HCAPTCHA_SITE_KEY=${{ secrets.NEXT_PUBLIC_HCAPTCHA_SITE_KEY }} \
             --build-arg NEXT_PUBLIC_SUPABASE_URL=${{ secrets.SUPABASE_URL }} \
@@ -43,6 +43,7 @@ jobs:
             --build-arg CLIENT_URL=https://kuet.taut0logy.tech \
             --build-arg DATABASE_URL=${{ secrets.DATABASE_URL }} \
             --build-arg DIRECT_URL=${{ secrets.DIRECT_URL }} \
+            --build-arg GEMINI_API_KEY=
             --build-arg SUPABASE_URL=${{ secrets.SUPABASE_URL }} \
             --build-arg SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY }} \
             --build-arg SUPABASE_SERVICE_KEY=${{ secrets.SUPABASE_SERVICE_KEY }} \
@@ -105,7 +106,7 @@ jobs:
             # Run kuet-client container
             docker run -d \
               --name kuet-client \
-              -p 80:80 \
+              -p 3000:3000 \
               --network kuet-network \
               ${{ secrets.DOCKER_USERNAME }}/kuet-client:latest
 

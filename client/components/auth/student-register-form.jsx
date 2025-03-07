@@ -32,7 +32,7 @@ const StudentRegisterSchema = z
       ),
     confirmPassword: z.string(),
     studentId: z.string().min(1, "Student ID is required"),
-    section: z.string().min(1, "Section is required"),
+    section: z.string().min(1, "Section is required").max(10, "Section must be 10 characters or less"),
     batch: z.number().min(1974, "Batch must be at least 1974"),
     departmentId: z.number().min(1, "Department is required"),
     //captchaToken: z.string().min(1, "Please complete the captcha verification")

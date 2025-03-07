@@ -154,13 +154,13 @@ const studentRegister = async (userData) => {
     // Verify captcha
     //await verifyCaptcha(captchaToken);
     
-    // Check if user already exists
+    // Check if user already exists by email or studentId
     const existingUser = await prisma.user.findUnique({
-      where: { email }
+      where: { OR: [{ email }, { studentInfo: { studentId } }] }
     });
 
     if (existingUser) {
-      throw new Error('A user with this email already exists');
+      throw new Error('A user with this data already exists');
     }
 
     // Hash password
