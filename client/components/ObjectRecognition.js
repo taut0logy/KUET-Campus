@@ -1,4 +1,4 @@
-import { useRef, useEffect, useState } from 'react';
+import { useRef, useEffect, useState, useMemo } from 'react';
 import * as tf from '@tensorflow/tfjs';
 import * as cocossd from '@tensorflow-models/coco-ssd';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -12,7 +12,9 @@ export default function ObjectRecognition({ videoRef }) {
     const [chairLocation, setChairLocation] = useState(null);
 
     // Objects that should trigger warnings
-    const ALERT_OBJECTS = ['chair'];
+    const ALERT_OBJECTS = useMemo(() => {
+        return ['chair'];
+    }, []);
 
     // Load object detection model
     useEffect(() => {

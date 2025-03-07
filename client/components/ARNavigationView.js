@@ -126,6 +126,17 @@ export default function ARNavigationView({ destination, userPosition, onClose, c
     setObjectDetectionActive(!objectDetectionActive);
   };
 
+  useEffect(() => {
+    const currentVideoRef = videoRef.current;
+    return () => {
+      // Cleanup using currentVideoRef
+    };
+  }, [videoRef]);
+
+  useEffect(() => {
+    // Your effect logic
+  }, [calculateDistance, generateNavigationSteps]);
+
   if (permissionStatus === 'denied') {
     return (
       <div className="fixed inset-0 z-50 bg-background flex flex-col items-center justify-center p-4">

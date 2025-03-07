@@ -118,12 +118,12 @@ function getSimpleNavigationDestination(message) {
   // Campus events
   if ((msg.includes('event') || msg.includes('happening') || msg.includes('activity')) && 
       !msg.includes('club')) {
-    return { name: 'Campus Events', path: '/clubs-and-events' };
+    return { name: 'Campus Events', path: '/clubs' };
   }
   
   // Campus clubs
   if (msg.includes('club') || msg.includes('society') || msg.includes('organization')) {
-    return { name: 'Campus Clubs', path: '/clubs-and-events' };
+    return { name: 'Campus Clubs', path: '/clubs' };
   }
 
   // User cafe dashboard - Must come BEFORE the general cafeteria check

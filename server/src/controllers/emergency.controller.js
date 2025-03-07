@@ -1,9 +1,9 @@
-const notificationService = require('../services/notification.service');
+const realtimeService = require('../services/realtime.service');
 
 const triggerEmergencyAlert = async (req, res, next) => {
   try {
     const { message } = req.body;
-    await notificationService.broadcastToRoles(['ADMIN', 'STUDENT', 'FACULTY', 'OFFICE_MANAGER', 'CAFE_MANAGER'], {
+    await realtimeService.broadcastToRoles(['ADMIN', 'STUDENT', 'FACULTY', 'OFFICE_MANAGER', 'CAFE_MANAGER'], {
       title: 'Emergency Alert',
       message: `Emergency alert triggered: ${message}`,
       type: 'EMERGENCY',

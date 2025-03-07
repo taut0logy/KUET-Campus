@@ -1,5 +1,5 @@
 const { prisma } = require('./database.service');
-const notificationService = require('./notification.service');
+const realtimeService = require('./realtime.service');
 const emailService = require('./email.service');
 const { logger } = require('../utils/logger.util');
 
@@ -27,7 +27,7 @@ const createAnnouncement = async (adminId, announcementData) => {
 
     // Create notifications for all users
     const notificationPromises = users.map(user => 
-      notificationService.createNotification({
+      realtimeService.createNotification({
         userId: user.id,
         title: `New Announcement: ${announcementData.title}`,
         message: announcementData.message.substring(0, 100) + (announcementData.message.length > 100 ? '...' : ''),
