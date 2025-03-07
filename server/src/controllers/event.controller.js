@@ -1,7 +1,7 @@
 const { validationResult } = require('express-validator');
 const eventService = require('../services/event.service');
 const clubService = require('../services/club.service');
-const notificationService = require('../services/notification.service');
+const realtimeService = require('../services/realtime.service');
 const { sendSuccess, sendError } = require('../utils/response.util');
 const { ValidationError, ForbiddenError } = require('../middleware/error.middleware');
 const { logger } = require('../utils/logger.util');
@@ -43,7 +43,7 @@ const createEvent = async (req, res, next) => {
     
     // Notify club followers about the new event
     try {
-      await notificationService.notifyClubFollowers({
+      await realtimeService.notifyClubFollowers({
         clubId,
         title: 'New Event',
         message: `${club.name} has created a new event: ${event.name}`,
@@ -153,7 +153,7 @@ const updateEvent = async (req, res, next) => {
     
     // Notify event followers about the update
     try {
-      await notificationService.notifyEventFollowers({
+      await realtimeService.notifyEventFollowers({
         eventId: id,
         title: 'Event Updated',
         message: `The event "${updatedEvent.name}" has been updated`,
@@ -199,7 +199,7 @@ const deleteEvent = async (req, res, next) => {
         const followerIds = event.followers.map(f => f.id).filter(id => id !== req.user.id);
         
         if (followerIds.length > 0) {
-          await notificationService.createNotificationForUsers({
+          await realtimeService.createNotificationForUsers({
             userIds: followerIds,
             title: 'Event Cancelled',
             message: `The event "${event.name}" has been cancelled`,
@@ -232,7 +232,7 @@ const followEvent = async (req, res, next) => {
     
     // Send notification to the user
     try {
-      await notificationService.createNotification({
+      await realtimeService.createNotification({
         userId,
         title: 'Event Followed',
         message: `You are now following the event "${result.event.name}"`,

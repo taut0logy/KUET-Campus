@@ -212,7 +212,7 @@ const notifyDeadline = async (userId, assignmentId) => {
     const emailService = require('./email.service');
     
     // Get the notification service
-    const notificationService = require('./notification.service');
+    const realtimeService = require('./realtime.service');
     
     // Format the deadline
     const deadline = new Date(assignment.deadline);
@@ -251,7 +251,7 @@ const notifyDeadline = async (userId, assignmentId) => {
     });
     
     // Create in-app notification
-    const notification = await notificationService.createNotification({
+    const notification = await realtimeService.createNotification({
       userId: assignment.userId,
       title: 'Assignment Deadline Approaching',
       message: `"${assignment.assignmentName}" is due within 24 hours (${formattedDeadline})`,

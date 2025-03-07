@@ -10,7 +10,7 @@ const routes = require('./routes');
 const busRoutes = require('./routes/bus.routes');
 const { connect } = require('./services/database.service');
 const { verifyConnection: verifyEmailConnection } = require('./services/email.service');
-const notificationService = require('./services/notification.service');
+const realtimeService = require('./services/realtime.service');
 const { errorHandler, notFoundHandler } = require('./middleware/error.middleware');
 const { logger, stream } = require('./utils/logger.util');
 const { initializeDocumentStore } = require('./utils/document-loader.util');
@@ -21,7 +21,7 @@ const httpServer = createServer(app);
 const PORT = process.env.PORT || 8000;
 
 // Initialize Socket.io with notification service
-notificationService.initialize(httpServer);
+realtimeService.initialize(httpServer);
 
 // Initialize all required services before starting the server
 async function initializeServices() {

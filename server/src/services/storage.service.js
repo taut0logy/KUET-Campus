@@ -3,7 +3,7 @@ const path = require('path');
 const { v4: uuidv4 } = require('uuid');
 const { logger } = require('../utils/logger.util');
 const { ValidationError, NotFoundError } = require('../middleware/error.middleware');
-const notificationService = require('./notification.service');
+const realtimeService = require('./realtime.service');
 
 // Connection status constants
 const CONNECTION_STATUS = {
@@ -236,7 +236,7 @@ class StorageService {
 
       // Send notification to uploader
       if (userId) {
-        await notificationService.createNotification({
+        await realtimeService.createNotification({
           userId,
           title: 'File Upload Success',
           message: `${file.originalname} has been uploaded successfully`,
@@ -254,7 +254,7 @@ class StorageService {
       // Share with users if specified
       if (shareWithUsers.length > 0) {
         await Promise.all(shareWithUsers.map(shareUserId =>
-          notificationService.createNotification({
+          realtimeService.createNotification({
             userId: shareUserId,
             title: 'File Shared With You',
             message: `A file has been shared with you: ${file.originalname}`,
@@ -302,7 +302,7 @@ class StorageService {
       const fileUrl = this.getFileUrl(fileKey);
       
       await Promise.all(userIds.map(userId =>
-        notificationService.createNotification({
+        realtimeService.createNotification({
           userId,
           title: 'New File Shared',
           message: 'A file has been shared with you',
@@ -385,7 +385,7 @@ class StorageService {
 
       // Notify user of successful deletion
       if (userId) {
-        await notificationService.createNotification({
+        await realtimeService.createNotification({
           userId,
           title: 'File Deleted',
           message: `File ${path.basename(filePath)} has been deleted successfully`,
@@ -397,7 +397,7 @@ class StorageService {
     } catch (error) {
       // Notify user of deletion failure
       if (userId) {
-        await notificationService.createNotification({
+        await realtimeService.createNotification({
           userId,
           title: 'File Deletion Failed',
           message: `Failed to delete ${path.basename(filePath)}: ${error.message}`,

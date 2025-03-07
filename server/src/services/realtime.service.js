@@ -2,8 +2,9 @@ const { Server } = require('socket.io');
 const { prisma } = require('./database.service');
 const { logger } = require('../utils/logger.util');
 const jwt = require('jsonwebtoken');
+//const { pubsub } = require('../pubsub'); // Assuming you have a pubsub setup
 
-class NotificationService {
+class RealtimeService {
   constructor() {
     this.io = null;
     this.userSockets = new Map(); // userId -> Set of socket ids
@@ -22,6 +23,8 @@ class NotificationService {
 
     // Create notifications namespace
     const notificationsNamespace = this.io.of('/notifications');
+
+    const chatNamespace = this.io.of('/chat');
 
     // Middleware to handle authentication
     notificationsNamespace.use(async (socket, next) => {
@@ -424,5 +427,16 @@ class NotificationService {
   }
 }
 
-const notificationService = new NotificationService();
-module.exports = notificationService; 
+const realtimeService = new RealtimeService();
+
+// Subscribe to a channel
+const subscribeToChannel = (channelId, callback) => {
+    pubsub.subscribe(channelId, callback);
+};
+
+// Send a message to a channel
+const sendMessageToChannel = (channelId, message) => {
+    pubsub.publish(channelId, { message });
+};
+
+module.exports = realtimeService;

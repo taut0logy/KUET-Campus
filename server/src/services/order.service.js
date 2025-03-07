@@ -1,7 +1,7 @@
 const { PrismaClient } = require("@prisma/client");
 const crypto = require('crypto');
 const prisma = new PrismaClient();
-const notificationService = require('./notification.service');
+const realtimeService = require('./realtime.service');
 
 exports.createOrder = async (userId, cartItems) => {
   try {
@@ -132,7 +132,7 @@ exports.updateOrderStatus = async (orderId, status, pickupTime = null) => {
   });
 
   // Send notification to user
-  await notificationService.createNotification({
+  await realtimeService.createNotification({
     userId: updatedOrder.user.id,
     title: 'Order status updated',
     message: `Your order has been updated to ${status}`
@@ -195,7 +195,7 @@ exports.verifyOrder = async (verificationCode) => {
     });
 
     // Send notification to user
-    await notificationService.createNotification({
+    await realtimeService.createNotification({
       userId: updatedOrder.user.id,
       title: 'Order picked up',
       message: `Your order has been picked up at ${updatedOrder.pickupTime}`
@@ -277,7 +277,7 @@ exports.approveOrder = async (orderId) => {
 
     // Send notification to user with proper error handling
     try {
-      await notificationService.createNotification({
+      await realtimeService.createNotification({
         userId: order.userId,
         title: 'Order approved',
         message: 'Your order has been approved and is being prepared'
@@ -326,7 +326,7 @@ exports.rejectOrder = async (orderId, rejectionReason) => {
 
     // Send notification with error handling
     try {
-      await notificationService.createNotification({
+      await realtimeService.createNotification({
         userId: order.userId,
         title: 'Order rejected',
         message: `Your order has been rejected. Reason: ${rejectionReason}`

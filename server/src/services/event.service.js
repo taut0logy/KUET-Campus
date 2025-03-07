@@ -2,7 +2,7 @@ const { prisma } = require('./database.service');
 const { NotFoundError, ForbiddenError, ConflictError } = require('../middleware/error.middleware');
 const { logger } = require('../utils/logger.util');
 const slugify = require('../utils/slugify.util');
-const notificationService = require('./notification.service');
+const realtimeService = require('./realtime.service');
 
 /**
  * Generate a unique slug for an event
@@ -101,7 +101,7 @@ const createEvent = async (eventData) => {
       if (followers && followers.followers.length > 0) {
         // Create notifications for followers
         const notificationPromises = followers.followers.map(follower => 
-          notificationService.createNotification({
+          realtimeService.createNotification({
             userId: follower.id,
             title: `New Event: ${event.name}`,
             message: `${club.name} has created a new event: ${event.name}`,
@@ -304,7 +304,7 @@ const updateEvent = async (id, eventData) => {
       
       if (followers && followers.followers.length > 0) {
         const notificationPromises = followers.followers.map(follower =>
-          notificationService.createNotification({
+          realtimeService.createNotification({
             userId: follower.id,
             title: `Event Updated: ${updatedEvent.name}`,
             message: `An event you're following has been updated: ${updatedEvent.name}`,
@@ -357,7 +357,7 @@ const deleteEvent = async (id) => {
     try {
       if (existingEvent.followers && existingEvent.followers.length > 0) {
         const notificationPromises = existingEvent.followers.map(follower =>
-          notificationService.createNotification({
+          realtimeService.createNotification({
             userId: follower.id,
             title: `Event Cancelled: ${existingEvent.name}`,
             message: `An event you were following has been cancelled: ${existingEvent.name}`,

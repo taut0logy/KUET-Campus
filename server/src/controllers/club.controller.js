@@ -1,7 +1,7 @@
 const { validationResult } = require('express-validator');
 const clubService = require('../services/club.service');
 const eventService = require('../services/event.service');
-const notificationService = require('../services/notification.service');
+const realtimeService = require('../services/realtime.service');
 const { sendSuccess, sendError } = require('../utils/response.util');
 const { ValidationError, ForbiddenError, NotFoundError } = require('../middleware/error.middleware');
 const { logger } = require('../utils/logger.util');
@@ -31,7 +31,7 @@ const createClub = async (req, res, next) => {
     // Notify the moderator about club creation (if different from creator)
     if (req.user.id !== clubData.moderatorId) {
       try {
-        await notificationService.createNotification({
+        await realtimeService.createNotification({
           userId: clubData.moderatorId,
           title: 'You are now a club moderator',
           message: `You have been assigned as moderator of ${club.name}`,
@@ -108,7 +108,7 @@ const updateClub = async (req, res, next) => {
     if (clubData.moderatorId && clubData.moderatorId !== existingClub.moderatorId) {
       try {
         // Notify the new moderator
-        await notificationService.createNotification({
+        await realtimeService.createNotification({
           userId: clubData.moderatorId,
           title: 'Club Moderator Assignment',
           message: `You have been assigned as moderator of ${existingClub.name}`,
@@ -124,7 +124,7 @@ const updateClub = async (req, res, next) => {
     
     // Notify club followers about the update
     try {
-      await notificationService.notifyClubFollowers({
+      await realtimeService.notifyClubFollowers({
         clubId: id,
         title: 'Club Updated',
         message: `${club.name} has been updated`,
@@ -160,7 +160,7 @@ const deleteClub = async (req, res, next) => {
       const userIds = [club.moderatorId, ...club.followers.map(f => f.id)].filter(uid => uid !== req.user.id);
       
       if (userIds.length > 0) {
-        await notificationService.createNotificationForUsers({
+        await realtimeService.createNotificationForUsers({
           userIds,
           title: 'Club Deleted',
           message: `The club "${club.name}" has been deleted by an administrator`,
@@ -192,7 +192,7 @@ const followClub = async (req, res, next) => {
     // Send notification to the club moderator
     try {
       const club = await clubService.getClubById(id, false);
-      await notificationService.createNotification({
+      await realtimeService.createNotification({
         userId: club.moderatorId,
         title: 'New Club Follower',
         message: `${req.user.name} is now following your club`,
@@ -240,7 +240,7 @@ const addUserToClub = async (req, res, next) => {
     // Send notification to the user
     try {
       const club = await clubService.getClubById(id, false);
-      await notificationService.createNotification({
+      await realtimeService.createNotification({
         userId,
         title: 'Club Membership',
         message: `You have been added to ${club.name} as a ${role.toLowerCase()}`,
@@ -272,7 +272,7 @@ const removeUserFromClub = async (req, res, next) => {
     
     // Send notification to the user
     try {
-      await notificationService.createNotification({
+      await realtimeService.createNotification({
         userId,
         title: 'Club Membership Removed',
         message: `You have been removed from ${club.name}`,
@@ -305,7 +305,7 @@ const changeUserRoleInClub = async (req, res, next) => {
     
     // Send notification to the user
     try {
-      await notificationService.createNotification({
+      await realtimeService.createNotification({
         userId,
         title: 'Club Role Updated',
         message: `Your role in ${club.name} has been changed to ${role.toLowerCase()}`,
@@ -338,7 +338,7 @@ const changeUserStatusInClub = async (req, res, next) => {
     
     // Send notification to the user
     try {
-      await notificationService.createNotification({
+      await realtimeService.createNotification({
         userId,
         title: 'Club Membership Status Updated',
         message: `Your status in ${club.name} has been changed to ${status.toLowerCase()}`,

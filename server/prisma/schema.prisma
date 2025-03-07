@@ -87,7 +87,8 @@ model User {
   eventFollowUnfollowLogs EventFollowUnfollowLog[]
   Assignment              Assignment[]
   Exam                    Exam[]
-  announcements           Announcement[]
+  studentChats      Chat[]          @relation("StudentChats")
+  facultyChats      Chat[]          @relation("FacultyChats")  announcements           Announcement[]
   reports           Report[]
 
   @@map("users")
@@ -158,18 +159,52 @@ model Session {
   @@map("sessions")
 }
 
+enum ChatStatus {
+  ACTIVE
+  INACTIVE
+  BLOCKED
+}
+
+model Chat {
+  id        String   @id @default(uuid())
+  studentId Int
+  student   User     @relation(name: "StudentChats", fields: [studentId], references: [id], onDelete: Cascade)
+  facultyId Int
+  faculty   User     @relation(name: "FacultyChats", fields: [facultyId], references: [id], onDelete: Cascade)
+  channelId String
+  messages  Message[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  status    ChatStatus @default(ACTIVE)
+  @@map("chats")
+}
+
 model Message {
   id         String   @id @default(uuid())
   content    String
+  chatId     String
+  chat       Chat     @relation(fields: [chatId], references: [id], onDelete: Cascade)
   senderId   Int
   receiverId Int?
-  isRead     Boolean  @default(false)
+  isDeleted  Boolean  @default(false)
+  readAt     DateTime?
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
   sender     User     @relation("MessageSender", fields: [senderId], references: [id], onDelete: Cascade)
   receiver   User?    @relation("MessageReceiver", fields: [receiverId], references: [id], onDelete: SetNull)
-
+  attachments MessageAttachment[]
+  replyTo     Message?  @relation("MessageReplies", fields: [replyToId], references: [id])
+  replyToId   String?      // Optional field for replies
+  replies     Message[]    @relation("MessageReplies")
   @@map("messages")
+}
+
+model MessageAttachment {
+  id        String   @id @default(uuid())
+  messageId String
+  message   Message  @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  url       String
+  type      String
 }
 
 model Notification {

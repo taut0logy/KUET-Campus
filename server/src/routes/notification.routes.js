@@ -1,14 +1,14 @@
 const express = require('express');
 const router = express.Router();
 const { authenticate, authorize } = require('../middleware/auth.middleware');
-const notificationService = require('../services/notification.service');
+const realtimeService = require('../services/realtime.service');
 const { logger } = require('../utils/logger.util');
 
 // Get user's notifications with pagination
 router.get('/', authenticate, async (req, res) => {
   try {
     const { page = 1, limit = 10, unreadOnly = false } = req.query;
-    const result = await notificationService.getUserNotifications(req.user.id, {
+    const result = await realtimeService.getUserNotifications(req.user.id, {
       page: parseInt(page),
       limit: parseInt(limit),
       unreadOnly: unreadOnly === 'true'
@@ -23,7 +23,7 @@ router.get('/', authenticate, async (req, res) => {
 // Delete a notification
 router.delete('/:id', authenticate, async (req, res) => {
   try {
-    await notificationService.deleteNotification(req.user.id, req.params.id);
+    await realtimeService.deleteNotification(req.user.id, req.params.id);
     res.json({ message: 'Notification deleted successfully' });
   } catch (error) {
     logger.error('Failed to delete notification:', error);
@@ -34,7 +34,7 @@ router.delete('/:id', authenticate, async (req, res) => {
 // Get unread notifications count
 router.get('/unread/count', authenticate, async (req, res) => {
   try {
-    const count = await notificationService.getUnreadCount(req.user.id);
+    const count = await realtimeService.getUnreadCount(req.user.id);
     res.json({ count });
   } catch (error) {
     logger.error('Failed to get unread count:', error);
@@ -45,7 +45,7 @@ router.get('/unread/count', authenticate, async (req, res) => {
 // Mark a notification as read
 router.patch('/:id/read', authenticate, async (req, res) => {
   try {
-    await notificationService.markAsRead(req.user.id, req.params.id);
+    await realtimeService.markAsRead(req.user.id, req.params.id);
     res.json({ message: 'Notification marked as read' });
   } catch (error) {
     logger.error('Failed to mark notification as read:', error);
@@ -56,7 +56,7 @@ router.patch('/:id/read', authenticate, async (req, res) => {
 // Mark all notifications as read
 router.patch('/read/all', authenticate, async (req, res) => {
   try {
-    await notificationService.markAllAsRead(req.user.id);
+    await realtimeService.markAllAsRead(req.user.id);
     res.json({ message: 'All notifications marked as read' });
   } catch (error) {
     logger.error('Failed to mark all notifications as read:', error);
@@ -68,7 +68,7 @@ router.patch('/read/all', authenticate, async (req, res) => {
 router.post('/', authenticate, authorize(['ADMIN']), async (req, res) => {
   try {
     const { userId, title, message, type, metadata } = req.body;
-    const notification = await notificationService.createNotification({
+    const notification = await realtimeService.createNotification({
       userId,
       title,
       message,
@@ -86,7 +86,7 @@ router.post('/', authenticate, authorize(['ADMIN']), async (req, res) => {
 router.post('/broadcast', authenticate, authorize(['ADMIN']), async (req, res) => {
   try {
     const { roles, title, message, type, metadata } = req.body;
-    const notifications = await notificationService.broadcastToRoles(roles, {
+    const notifications = await realtimeService.broadcastToRoles(roles, {
       title,
       message,
       type,
@@ -103,7 +103,7 @@ router.post('/broadcast', authenticate, authorize(['ADMIN']), async (req, res) =
 router.post('/test', authenticate, async (req, res) => {
   try {
     const { title, message, type } = req.body;
-    const notification = await notificationService.createNotification({
+    const notification = await realtimeService.createNotification({
       userId: req.user.id,
       title,
       message,
@@ -125,10 +125,10 @@ router.post('/test/channel', authenticate, async (req, res) => {
     const { channelName, title, message, type } = req.body;
     
     // First subscribe the user to the channel if not already subscribed
-    await notificationService.subscribeToChannel(req.user.id, channelName);
+    await realtimeService.subscribeToChannel(req.user.id, channelName);
     
     // Then broadcast to the channel
-    const notifications = await notificationService.broadcastToChannel(channelName, {
+    const notifications = await realtimeService.broadcastToChannel(channelName, {
       title,
       message,
       type,
@@ -148,7 +148,7 @@ router.post('/test/channel', authenticate, async (req, res) => {
 // Subscribe to a channel
 router.post('/channels/:channelName/subscribe', authenticate, async (req, res) => {
   try {
-    await notificationService.subscribeToChannel(req.user.id, req.params.channelName);
+    await realtimeService.subscribeToChannel(req.user.id, req.params.channelName);
     res.json({ success: true });
   } catch (error) {
     console.error('Error subscribing to channel:', error);
@@ -159,7 +159,7 @@ router.post('/channels/:channelName/subscribe', authenticate, async (req, res) =
 // Unsubscribe from a channel
 router.post('/channels/:channelName/unsubscribe', authenticate, async (req, res) => {
   try {
-    await notificationService.unsubscribeFromChannel(req.user.id, req.params.channelName);
+    await realtimeService.unsubscribeFromChannel(req.user.id, req.params.channelName);
     res.json({ success: true });
   } catch (error) {
     console.error('Error unsubscribing from channel:', error);
