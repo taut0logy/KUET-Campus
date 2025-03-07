@@ -135,6 +135,11 @@ const getRoutes = (user) => {
       label: "Preorder",
       requireAuth: true,
     },
+    {
+      href: "/map",
+      label: "Navigation",
+      requireAuth: true,
+    },
   ];
 };
 
