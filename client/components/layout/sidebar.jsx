@@ -20,7 +20,8 @@ import {
   Menu,
   X,
   BookOpen,
-  GraduationCap
+  GraduationCap,
+  FileText
 } from "lucide-react";
 
 // Reuse the route generation logic from main-nav.jsx
@@ -73,6 +74,12 @@ const getRoutes = (user) => {
         icon: GraduationCap,
         requireAuth: true,
       },
+      {
+        href: "/report",
+        label: "Reports",
+        icon: FileText,
+        requireAuth: true,
+      },
     ];
   }
 
@@ -114,6 +121,12 @@ const getRoutes = (user) => {
         icon: GraduationCap,
         requireAuth: true,
       },
+      {
+        href: "/report",
+        label: "Reports",
+        icon: FileText,
+        requireAuth: true,
+      },
     ];
   }
 
@@ -147,6 +160,12 @@ const getRoutes = (user) => {
       href: "/schedules",
       label: "Academic Schedules",
       icon: GraduationCap,
+      requireAuth: true,
+    },
+    {
+      href: "/report",
+      label: "Reports",
+      icon: FileText,
       requireAuth: true,
     },
   ];
