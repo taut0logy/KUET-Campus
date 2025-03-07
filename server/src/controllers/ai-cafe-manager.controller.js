@@ -2,6 +2,7 @@ const { PrismaClient } = require('@prisma/client');
 const { logger } = require('../utils/logger.util');
 const { sendSuccess, sendError } = require('../utils/response.util');
 const { findFaqAnswer } = require('../utils/kuet-faqs.util');
+const { vectorStore } = require('../utils/vector-store.util');
 require('dotenv').config();
 
 const prisma = new PrismaClient();
@@ -23,52 +24,52 @@ try {
   console.error('❌ Failed to initialize Gemini AI:', error.message);
 }
 
-/**
- * Process queries from cafe managers and provide insights or navigation assistance
- */
 exports.processCafeManagerQuery = async (req, res) => {
   try {
-    console.log('📝 Received request to AI assistant');
     const { message, history } = req.body;
-
+    
     if (!message) {
       return sendError(res, 'Message is required', 400);
     }
 
-    console.log('📝 Processing message:', message);
+    logger.info(`Processing cafe manager query: ${message}`);
 
-    // Simple navigation logic (works without Gemini)
-    const destination = getSimpleNavigationDestination(message);
-    if (destination) {
-      console.log('🧭 Navigation destination found:', destination.path);
+    // Check for navigation requests first
+    const navigationDestination = getSimpleNavigationDestination(message);
+    if (navigationDestination) {
       return sendSuccess(res, {
-        response: `I'll take you to ${destination.name}`,
+        response: `I'll take you to ${navigationDestination.name}.`,
         action: 'navigate',
-        destination: destination.path
+        destination: navigationDestination.path,
+        enhanced: false,
+        sources: []
       });
     }
 
-    // Try to use specialized functions first
-    let response = await safelyRunFunction(() =>
-      handleWithSpecializedFunctions(message.toLowerCase())
-    );
-
-    // If no specialized function handled it and Gemini is available, use it
-    if (!response && genAI) {
-      response = await safelyRunFunction(() =>
-        askGemini(message, history)
-      );
+    // Then check for specialized data functions
+    const specializedResponse = await handleWithSpecializedFunctions(message);
+    if (specializedResponse) {
+      return sendSuccess(res, {
+        response: specializedResponse,
+        action: 'display',
+        enhanced: false,
+        sources: []
+      });
     }
 
-    // Default fallback response if nothing else worked
-    if (!response) {
-      response = "I understand you're asking about something, but I'm currently limited in my capabilities. Try asking about orders, sales, or navigation.";
-    }
-
-    return sendSuccess(res, { response });
+    // Finally, use RAG-enhanced Gemini for general queries
+    const ragResponse = await askGeminiWithRAG(message, history || []);
+    
+    return sendSuccess(res, {
+      response: ragResponse.text,
+      enhanced: ragResponse.enhanced,
+      sources: ragResponse.sources,
+      action: 'display'
+    });
   } catch (error) {
     console.error('❌ Error in AI assistant:', error);
-    return sendError(res, 'Failed to process your request', 500);
+    logger.error(`AI assistant error: ${error.message}`);
+    return sendError(res, `Error in AI assistant: ${error.message}`, 500);
   }
 };
 
@@ -215,6 +216,66 @@ async function handleWithSpecializedFunctions(query) {
 }
 
 
+async function askGeminiWithRAG(message, history) {
+  try {
+    if (!genAI) {
+      return "I'm sorry, my AI capabilities are currently limited. Please try again later.";
+    }
+
+    console.log('🔍 Using RAG to find relevant information...');
+    
+    // Retrieve relevant documents based on the query
+    const searchResults = await vectorStore.similaritySearch(message, 3);
+    
+    // Format the retrieved context
+    let retrievedContext = '';
+    if (searchResults && searchResults.length > 0) {
+      retrievedContext = 'Here is some relevant information:\n\n';
+      
+      searchResults.forEach(result => {
+        retrievedContext += `${result.document.text}\n\n`;
+        console.log(`📄 Retrieved document: ${result.document.id} (score: ${result.score.toFixed(3)})`);
+      });
+    } else {
+      console.log('⚠️ No relevant documents found in vector store');
+    }
+
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+
+    // Format the prompt with retrieved information
+    const prompt = `You are a helpful AI assistant for the Khulna University of Engineering & Technology (KUET) campus application.
+
+The user has asked: "${message}"
+
+${retrievedContext ? retrievedContext : "I don't have specific information about this query in my knowledge base."}
+
+Based on the above information and your general knowledge, provide a helpful, concise, and accurate response. If the retrieved information doesn't fully answer the query, be honest about what you don't know.`;
+
+    console.log('🚀 Sending RAG-enhanced prompt to Gemini');
+    const result = await model.generateContent(prompt);
+    const response = result.response.text();
+    
+    // Return detailed information about the RAG process
+    return {
+      text: response,
+      enhanced: searchResults && searchResults.length > 0,
+      sources: searchResults ? searchResults.map(r => ({
+        id: r.document.id,
+        text: r.document.text.substring(0, 150) + '...',  // Preview of content
+        metadata: r.document.metadata,
+        score: r.score.toFixed(3)
+      })) : []
+    };
+  } catch (error) {
+    console.error('❌ Error with RAG-enhanced Gemini:', error);
+    return {
+      text: "I'm having trouble processing your request with my enhanced knowledge system.",
+      enhanced: false,
+      sources: []
+    };
+  }
+}
+
 // Update the askGemini function to provide more context about the application
 async function askGemini(message, history) {
   try {
@@ -252,7 +313,14 @@ The user has asked: "${message}"
 Provide a helpful, concise response. If you're not sure about specific details, be honest about what you don't know.`;
 
     const result = await model.generateContent(prompt);
-    return result.response.text();
+    return {
+  text: response,
+  enhanced: searchResults && searchResults.length > 0,
+  sources: searchResults ? searchResults.map(r => ({
+    id: r.document.id,
+    score: r.score.toFixed(3)
+  })) : []
+};
   } catch (error) {
     console.error('Error with Gemini AI:', error);
     return "I'm having trouble connecting to my AI capabilities right now.";

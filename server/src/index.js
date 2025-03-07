@@ -13,6 +13,7 @@ const { verifyConnection: verifyEmailConnection } = require('./services/email.se
 const notificationService = require('./services/notification.service');
 const { errorHandler, notFoundHandler } = require('./middleware/error.middleware');
 const { logger, stream } = require('./utils/logger.util');
+const { initializeDocumentStore } = require('./utils/document-loader.util');
 
 // Initialize Express app
 const app = express();
@@ -22,28 +23,49 @@ const PORT = process.env.PORT || 8000;
 // Initialize Socket.io with notification service
 notificationService.initialize(httpServer);
 
-// Connect to database service
-connect()
-  .then(() => {
-    logger.info('Database service is ready');
-  })
-  .catch((error) => {
-    logger.error('Database service is not ready:', error);
-    process.exit(1);
-  });
-
-// Verify email service connection
-verifyEmailConnection()
-  .then((connected) => {
-    if (connected) {
-      logger.info('Email service is ready');
+// Initialize all required services before starting the server
+async function initializeServices() {
+  logger.info('Initializing services...');
+  
+  try {
+    // Connect to database
+    logger.info('Connecting to database...');
+    await connect();
+    logger.info('✅ Database service is ready');
+    
+    // Verify email connection
+    logger.info('Verifying email service connection...');
+    const emailConnected = await verifyEmailConnection();
+    if (emailConnected) {
+      logger.info('✅ Email service is ready');
     } else {
-      logger.warn('Email service is not ready. Emails will not be sent.');
+      logger.warn('⚠️ Email service is not ready. Emails will not be sent.');
     }
-  })
-  .catch((error) => {
-    logger.error('Email service is not ready:', error);
+    
+    // Initialize RAG system
+    logger.info('Initializing RAG (Retrieval Augmented Generation) system...');
+    const ragInitialized = await initializeDocumentStore();
+    if (ragInitialized) {
+      logger.info('✅ RAG system initialized successfully');
+    } else {
+      logger.warn('⚠️ RAG system initialization had issues - AI responses may have limited knowledge');
+    }
+    
+    // Start the server after all services are initialized
+    startServer();
+  } catch (error) {
+    logger.error('❌ Failed to initialize services:', error);
+    process.exit(1);
+  }
+}
+
+// Function to start the HTTP server
+function startServer() {
+  httpServer.listen(PORT, () => {
+    logger.info(`✅ Server running on port ${PORT} in ${process.env.NODE_ENV} mode`);
+    logger.info('✅ Socket.io server initialized');
   });
+}
 
 // Middleware
 app.use(helmet()); // Security headers
@@ -74,11 +96,8 @@ app.use(notFoundHandler);
 // Centralized error handler
 app.use(errorHandler);
 
-// Start server with Socket.io
-httpServer.listen(PORT, () => {
-  logger.info(`Server running on port ${PORT} in ${process.env.NODE_ENV} mode`);
-  logger.info('Socket.io server initialized');
-});
+// Start the initialization process
+initializeServices();
 
 // Handle unhandled promise rejections
 process.on('unhandledRejection', (err) => {
@@ -94,4 +113,4 @@ process.on('uncaughtException', (err) => {
   logger.error(`${err.name}: ${err.message}`);
   logger.error(err.stack);
   process.exit(1);
-}); 
+});
