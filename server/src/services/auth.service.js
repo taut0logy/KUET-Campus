@@ -156,7 +156,7 @@ const studentRegister = async (userData) => {
     
     // Check if user already exists by email or studentId
     const existingUser = await prisma.user.findUnique({
-      where: { OR: [{ email }, { studentInfo: { studentId } }] }
+      where: { email }
     });
 
     if (existingUser) {
