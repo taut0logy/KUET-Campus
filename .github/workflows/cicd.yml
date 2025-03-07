@@ -43,6 +43,7 @@ jobs:
             --build-arg CLIENT_URL=https://kuet.taut0logy.tech \
             --build-arg DATABASE_URL=${{ secrets.DATABASE_URL }} \
             --build-arg DIRECT_URL=${{ secrets.DIRECT_URL }} \
+            --build-arg GEMINI_API_KEY=
             --build-arg SUPABASE_URL=${{ secrets.SUPABASE_URL }} \
             --build-arg SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY }} \
             --build-arg SUPABASE_SERVICE_KEY=${{ secrets.SUPABASE_SERVICE_KEY }} \

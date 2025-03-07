@@ -1,75 +1,281 @@
 const express = require('express');
 const router = express.Router();
 const clubController = require('../controllers/club.controller');
-const { authenticate, authorizeAdmin, authorizeModeratorOrManager } = require('../middleware/auth.middleware');
+const { authenticate } = require('../middleware/auth.middleware');
+const { authorize } = require('../middleware/auth.middleware');
 const { 
-  createClubValidation,
-  updateClubValidation,
-  followClubValidation,
-  unfollowClubValidation,
-  addAlbumPhotoValidation,
-  removeAlbumPhotoValidation,
-  addUserToClubValidation,
-  changeUserRoleValidation,
-  changeUserStatusValidation,
-  searchClubsValidation
+  validateCreateClub,
+  validateUpdateClub,
+  validateClubId,
+  validateClubSlug,
+  validateClubRoleChange,
+  validateClubStatusChange,
+  validateAddUserToClub,
+  validateListClubs,
+  validateClubAnalytics,
+  validateFollowClub,
+  validateUnfollowClub,
+  validateVisitClub
 } = require('../middleware/validators/club.validator');
+const { validateListEvents } = require('../middleware/validators/event.validator');
 
-// Create a new club
-router.post('/', authorizeAdmin, createClubValidation, clubController.createClub);
+/**
+ * @route   POST /api/v1/clubs
+ * @desc    Create a new club
+ * @access  Private - Admins and faculty
+ */
+router.post(
+  '/',
+  authenticate,
+  authorize(['ADMIN', 'FACULTY']),
+  validateCreateClub,
+  clubController.createClub
+);
 
-// Update an existing club
-router.put('/:id', authorizeModeratorOrManager, updateClubValidation, clubController.updateClub);
+/**
+ * @route   GET /api/v1/clubs
+ * @desc    Get all clubs with pagination and filters
+ * @access  Public
+ */
+router.get(
+  '/',
+  validateListClubs,
+  clubController.getAllClubs
+);
 
-// Delete a club
-router.delete('/:id', authorizeAdmin, clubController.deleteClub);
+/**
+ * @route   GET /api/v1/clubs/search
+ * @desc    Search for clubs
+ * @access  Public
+ */
+router.get(
+  '/search',
+  validateListClubs,
+  clubController.searchClubs
+);
 
-// Follow a club
-router.post('/:clubId/follow', followClubValidation, clubController.followClub);
+/**
+ * @route   GET /api/v1/clubs/tags
+ * @desc    Get all club tags
+ * @access  Public
+ */
+router.get(
+  '/tags',
+  clubController.getAllClubTags
+);
 
-// Unfollow a club
-router.delete('/:clubId/unfollow', unfollowClubValidation, clubController.unfollowClub);
+/**
+ * @route   GET /api/v1/clubs/tags/:tagId
+ * @desc    Get clubs by tag
+ * @access  Public
+ */
+router.get(
+  '/tags/:tagId',
+  validateListClubs,
+  clubController.getClubsByTag
+);
 
-// Add album photo
-router.post('/:clubId/album', addAlbumPhotoValidation, clubController.addAlbumPhoto);
+/**
+ * @route   GET /api/v1/clubs/followed
+ * @desc    Get clubs followed by current user
+ * @access  Private
+ */
+router.get(
+  '/followed',
+  authenticate,
+  validateListClubs,
+  clubController.getUserFollowedClubs
+);
 
-// Remove album photo
-router.delete('/album/:photoId', removeAlbumPhotoValidation, clubController.removeAlbumPhoto);
+/**
+ * @route   GET /api/v1/clubs/member
+ * @desc    Get clubs where current user is a member
+ * @access  Private
+ */
+router.get(
+  '/member',
+  authenticate,
+  validateListClubs,
+  clubController.getUserMemberClubs
+);
 
-// Add a user to a club
-router.post('/:clubId/users', authorizeModeratorOrManager, addUserToClubValidation, clubController.addUserToClub);
+/**
+ * @route   GET /api/v1/clubs/managed
+ * @desc    Get clubs managed by current user
+ * @access  Private
+ */
+router.get(
+  '/managed',
+  authenticate,
+  clubController.getUserManagedClubs
+);
 
-// Remove a user from a club
-router.delete('/:clubId/users/:userId', authorizeModeratorOrManager, clubController.removeUserFromClub);
+/**
+ * @route   GET /api/v1/clubs/:id
+ * @desc    Get club by ID
+ * @access  Public
+ */
+router.get(
+  '/:id',
+  validateClubId,
+  //trackClubVisit(),
+  clubController.getClubById
+);
 
-// Change a user's role in a club
-router.put('/:clubId/users/:userId/role', authorizeModeratorOrManager, changeUserRoleValidation, clubController.changeUserRoleInClub);
+/**
+ * @route   GET /api/v1/clubs/slug/:slug
+ * @desc    Get club by slug
+ * @access  Public
+ */
+router.get(
+  '/slug/:slug',
+  validateClubSlug,
+  //trackClubVisit('slug'),
+  clubController.getClubBySlug
+);
 
-// Change a user's status in a club
-router.put('/:clubId/users/:userId/status', authorizeModeratorOrManager, changeUserStatusValidation, clubController.changeUserStatusInClub);
+/**
+ * @route   PUT /api/v1/clubs/:id
+ * @desc    Update a club
+ * @access  Private - Club moderator or Admin
+ */
+router.put(
+  '/:id',
+  authenticate,
+  validateClubId,
+  validateUpdateClub,
+  //authorize(['MODERATOR']),
+  clubController.updateClub
+);
 
-// Get concise info of a club
-router.get('/:clubId/info', clubController.getClubInfo);
+/**
+ * @route   DELETE /api/v1/clubs/:id
+ * @desc    Delete a club
+ * @access  Private - Admin only
+ */
+router.delete(
+  '/:id',
+  authenticate,
+  authorize(['ADMIN']),
+  validateClubId,
+  clubController.deleteClub
+);
 
-// Get detailed info of a club
-router.get('/:clubId/details', clubController.getClubDetails);
+/**
+ * @route   POST /api/v1/clubs/:id/follow
+ * @desc    Follow a club
+ * @access  Private
+ */
+router.post(
+  '/:id/follow',
+  authenticate,
+  validateFollowClub,
+  clubController.followClub
+);
 
-// Get events of a club with pagination and filtering
-router.get('/:clubId/events', clubController.getClubEvents);
+/**
+ * @route   DELETE /api/v1/clubs/:id/follow
+ * @desc    Unfollow a club
+ * @access  Private
+ */
+router.delete(
+  '/:id/follow',
+  authenticate,
+  validateUnfollowClub,
+  clubController.unfollowClub
+);
 
-// Get analytics data for a club
-router.get('/:clubId/analytics', authenticate, authorizeModeratorOrManager, clubController.getClubAnalytics);
+/**
+ * @route   POST /api/v1/clubs/:id/members
+ * @desc    Add a user to a club
+ * @access  Private - Club moderator and managers
+ */
+router.post(
+  '/:id/members',
+  authenticate,
+  validateClubId,
+  validateAddUserToClub,
+  authorize(['MODERATOR', 'MANAGER']),
+  clubController.addUserToClub
+);
 
-// Log a user's visit to a club page
-router.post('/:clubId/visit', clubController.logUserVisit);
+/**
+ * @route   DELETE /api/v1/clubs/:id/members/:userId
+ * @desc    Remove a user from a club
+ * @access  Private - Club moderator and managers
+ */
+router.delete(
+  '/:id/members/:userId',
+  authenticate,
+  validateClubId,
+  //authorize(['MODERATOR', 'MANAGER']),
+  clubController.removeUserFromClub
+);
 
-// Search for clubs
-router.get('/search', searchClubsValidation, clubController.searchClubs);
+/**
+ * @route   PUT /api/v1/clubs/:id/members/:userId/role
+ * @desc    Change a user's role in a club
+ * @access  Private - Club moderator
+ */
+router.put(
+  '/:id/members/:userId/role',
+  authenticate,
+  validateClubId,
+  validateClubRoleChange,
+  //authorize(['MODERATOR']),
+  clubController.changeUserRoleInClub
+);
 
-// Get short details of a club
-router.get('/:clubId/short', clubController.getClubShortDetails);
+/**
+ * @route   PUT /api/v1/clubs/:id/members/:userId/status
+ * @desc    Change a user's status in a club
+ * @access  Private - Club moderator and managers
+ */
+router.put(
+  '/:id/members/:userId/status',
+  authenticate,
+  validateClubId,
+  validateClubStatusChange,
+  //checkClubPermission(['MODERATOR', 'MANAGER']),
+  clubController.changeUserStatusInClub
+);
 
-// Get paginated and sortable list of clubs
-router.get('/list', clubController.getPaginatedClubs);
+/**
+ * @route   POST /api/v1/clubs/:id/visit
+ * @desc    Log a visit to a club
+ * @access  Private
+ */
+router.post(
+  '/:id/visit',
+  authenticate,
+  validateVisitClub,
+  clubController.logUserVisit
+);
 
-module.exports = router; 
+/**
+ * @route   GET /api/v1/clubs/:id/analytics
+ * @desc    Get club analytics
+ * @access  Private - Club moderator and managers, Admins
+ */
+router.get(
+  '/:id/analytics',
+  authenticate,
+  validateClubId,
+  validateClubAnalytics,
+  //checkClubPermission(['MODERATOR', 'MANAGER']),
+  clubController.getClubAnalytics
+);
+
+/**
+ * @route   GET /api/v1/clubs/:id/events
+ * @desc    Get events for a specific club
+ * @access  Public
+ */
+router.get(
+  '/:id/events',
+  validateClubId,
+  validateListEvents,
+  clubController.getClubEvents
+);
+
+module.exports = router;

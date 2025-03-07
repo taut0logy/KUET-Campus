@@ -30,6 +30,7 @@ ARG PORT
 ARG CLIENT_URL
 ARG DATABASE_URL
 ARG DIRECT_URL
+ARG GEMINI_API_KEY
 ARG SUPABASE_URL
 ARG SUPABASE_ANON_KEY
 ARG SUPABASE_SERVICE_KEY
@@ -54,6 +55,7 @@ RUN echo "NODE_ENV=${NODE_ENV}" > .env && \
     echo "CLIENT_URL=${CLIENT_URL}" >> .env && \
     echo "DATABASE_URL=${DATABASE_URL}" >> .env && \
     echo "DIRECT_URL=${DIRECT_URL}" >> .env && \
+    echo "GEMINI_API_KEY=${GEMINI_API_KEY}" >> .env && \
     echo "SUPABASE_URL=${SUPABASE_URL}" >> .env && \
     echo "SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}" >> .env && \
     echo "SUPABASE_SERVICE_KEY=${SUPABASE_SERVICE_KEY}" >> .env && \

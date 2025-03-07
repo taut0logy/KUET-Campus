@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useEffect, useState } from 'react';
 import useClubStore from '../../stores/club-store';
 import { useParams } from 'react-router-dom';
