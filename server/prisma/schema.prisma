@@ -50,43 +50,43 @@ enum FacultyStatus {
 }
 
 model User {
-  id                Int            @id @default(autoincrement())
-  email             String         @unique @db.VarChar(255)
-  password          String
-  name              String         @db.VarChar(255)
-  cart              Cart?
-  roles             UserRole[]     @default([STUDENT])
-  employeeInfo      EmployeeInfo?  @relation("UserEmployeeInfo")
-  studentInfo       StudentInfo?   @relation("UserStudentInfo")
-  facultyInfo       FacultyInfo?   @relation("UserFacultyInfo")
-  works             Work[]         @relation("UserWorks")
-  status            UserStatus     @default(ACTIVE)
-  emailVerified     Boolean        @default(false)
-  verificationToken String?
-  resetToken        String?
-  resetTokenExpiry  DateTime?
-  createdAt         DateTime       @default(now())
-  updatedAt         DateTime       @updatedAt
-  sessions          Session[]
-  messages          Message[]      @relation("MessageSender")
-  receivedMessages  Message[]      @relation("MessageReceiver")
-  notifications     Notification[]
-  preorders         Preorder[]
-  routine           Routine[]
-  course            Course[]
-  clubs             UserClub[]      @relation("UserClubs")
-  managedClubs      UserClubManager[]      @relation("ClubManagers")
-  moderatedClubs    Club[]          @relation("ClubModerator")
-  eventFollowers    Event[]         @relation("EventFollowers")
-  clubFollowers     Club[]          @relation("ClubFollowers")
-  clubTags          ClubTag[]       @relation("ClubTagFollowers")
-  eventTags         EventTag[]      @relation("EventTagFollowers")
-  userVisits        UserVisit[]
-  followUnfollowLogs FollowUnfollowLog[]
-  eventVisits       EventVisit[]
+  id                      Int                      @id @default(autoincrement())
+  email                   String                   @unique @db.VarChar(255)
+  password                String
+  name                    String                   @db.VarChar(255)
+  cart                    Cart?
+  roles                   UserRole[]               @default([STUDENT])
+  employeeInfo            EmployeeInfo?            @relation("UserEmployeeInfo")
+  studentInfo             StudentInfo?             @relation("UserStudentInfo")
+  facultyInfo             FacultyInfo?             @relation("UserFacultyInfo")
+  works                   Work[]                   @relation("UserWorks")
+  status                  UserStatus               @default(ACTIVE)
+  emailVerified           Boolean                  @default(false)
+  verificationToken       String?
+  resetToken              String?
+  resetTokenExpiry        DateTime?
+  createdAt               DateTime                 @default(now())
+  updatedAt               DateTime                 @updatedAt
+  sessions                Session[]
+  messages                Message[]                @relation("MessageSender")
+  receivedMessages        Message[]                @relation("MessageReceiver")
+  notifications           Notification[]
+  preorders               Preorder[]
+  routine                 Routine[]
+  course                  Course[]
+  clubs                   UserClub[]               @relation("UserClubs")
+  managedClubs            UserClubManager[]        @relation("ClubManagers")
+  moderatedClubs          Club[]                   @relation("ClubModerator")
+  eventFollowers          Event[]                  @relation("EventFollowers")
+  clubFollowers           Club[]                   @relation("ClubFollowers")
+  clubTags                ClubTag[]                @relation("ClubTagFollowers")
+  eventTags               EventTag[]               @relation("EventTagFollowers")
+  userVisits              UserVisit[]
+  followUnfollowLogs      FollowUnfollowLog[]
+  eventVisits             EventVisit[]
   eventFollowUnfollowLogs EventFollowUnfollowLog[]
-  Assignment        Assignment[]
-  Exam              Exam[]
+  Assignment              Assignment[]
+  Exam                    Exam[]
 
   @@map("users")
 }
@@ -186,48 +186,48 @@ model Notification {
 }
 
 model Meal {
-  id          Int        @id @default(autoincrement()) @map("meal_id")
-  name        String
-  description String?    @db.Text
-  price       Decimal
-  category    String
-  isVegan     Boolean    @default(false)
-  isGlutenFree Boolean   @default(false)
-  isSugarFree Boolean    @default(false)
-  isLowFat    Boolean    @default(false)
-  isOrganic   Boolean    @default(false)
-  calories    Int?
-  protein     Int?
-  carbs       Int?
-  fat         Int?
-  fiber       Int?
-  sugar       Int?
-  sodium      Int?
-  vitaminA    Int?
-  vitaminC    Int?
-  calcium     Int?
-  iron        Int?
-  allergens   Json?
-  cartItems   CartItem[]
-  preorders   Preorder[]
+  id           Int        @id @default(autoincrement()) @map("meal_id")
+  name         String
+  description  String?    @db.Text
+  price        Decimal
+  category     String
+  isVegan      Boolean    @default(false)
+  isGlutenFree Boolean    @default(false)
+  isSugarFree  Boolean    @default(false)
+  isLowFat     Boolean    @default(false)
+  isOrganic    Boolean    @default(false)
+  calories     Int?
+  protein      Int?
+  carbs        Int?
+  fat          Int?
+  fiber        Int?
+  sugar        Int?
+  sodium       Int?
+  vitaminA     Int?
+  vitaminC     Int?
+  calcium      Int?
+  iron         Int?
+  allergens    Json?
+  cartItems    CartItem[]
+  preorders    Preorder[]
 
   @@map("meals")
 }
 
 model Preorder {
-  id               Int      @id @default(autoincrement())
+  id               Int       @id @default(autoincrement())
   userId           Int
-  user             User     @relation(fields: [userId], references: [id])
+  user             User      @relation(fields: [userId], references: [id])
   mealId           Int
-  meal             Meal     @relation(fields: [mealId], references: [id])
-  quantity         Int      @default(1)
-  status           String   @default("pending_approval")
-  orderTime        DateTime @default(now())
+  meal             Meal      @relation(fields: [mealId], references: [id])
+  quantity         Int       @default(1)
+  status           String    @default("pending_approval")
+  orderTime        DateTime  @default(now())
   pickupTime       DateTime?
-  verificationCode String   @unique
+  verificationCode String    @unique
   rejectionReason  String?
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
 
   @@map("preorders")
 }
@@ -244,14 +244,14 @@ model Cart {
 }
 
 model CartItem {
-  id         Int      @id @default(autoincrement()) @map("cart_item_id")
-  cartId     Int
-  cart       Cart     @relation(fields: [cartId], references: [id])
-  mealId     Int
-  meal       Meal     @relation(fields: [mealId], references: [id])
-  quantity   Int      @default(1)
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id        Int      @id @default(autoincrement()) @map("cart_item_id")
+  cartId    Int
+  cart      Cart     @relation(fields: [cartId], references: [id])
+  mealId    Int
+  meal      Meal     @relation(fields: [mealId], references: [id])
+  quantity  Int      @default(1)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@unique([cartId, mealId])
   @@map("cart_items")
@@ -321,7 +321,6 @@ model Exam {
 
   @@map("exams")
 }
-
 
 // Bus related models
 enum ScheduleStatus {
@@ -490,23 +489,23 @@ model Reminder {
 }
 
 model Club {
-  id           Int        @id @default(autoincrement())
-  name         String     @db.VarChar(255)
-  coverPhoto   String?    @db.VarChar(255)
-  slug         String     @unique @db.VarChar(255)
-  description  String?    @db.Text
-  foundingDate DateTime
-  moderatorId  Int
-  moderator    User       @relation("ClubModerator", fields: [moderatorId], references: [id])
-  managers     UserClubManager[]
-  tags         Json
-  members      UserClub[] @relation
-  events       Event[]    @relation
-  clubTag      ClubTag?   @relation(fields: [clubTagId], references: [id])
-  clubTagId    Int?
-  followers    User[]     @relation("ClubFollowers")
-  clubAlbums   ClubAlbum[]
-  userVisits   UserVisit[]
+  id                 Int                 @id @default(autoincrement())
+  name               String              @db.VarChar(255)
+  coverPhoto         String?             @db.VarChar(255)
+  slug               String              @unique @db.VarChar(255)
+  description        String?             @db.Text
+  foundingDate       DateTime
+  moderatorId        Int
+  moderator          User                @relation("ClubModerator", fields: [moderatorId], references: [id])
+  managers           UserClubManager[]
+  tags               Json
+  members            UserClub[]          @relation
+  events             Event[]             @relation
+  clubTag            ClubTag?            @relation(fields: [clubTagId], references: [id])
+  clubTagId          Int?
+  followers          User[]              @relation("ClubFollowers")
+  clubAlbums         ClubAlbum[]
+  userVisits         UserVisit[]
   followUnfollowLogs FollowUnfollowLog[]
 }
 
@@ -522,13 +521,13 @@ model UserClub {
 }
 
 model UserClubManager {
-  id       Int        @id @default(autoincrement())
+  id       Int      @id @default(autoincrement())
   userId   Int
   clubId   Int
-  joinDate DateTime   @default(now())
-  role     ClubRole   @default(MANAGER)
-  user     User       @relation("ClubManagers", fields: [userId], references: [id], map: "UserClubManager_userId_fkey")
-  club     Club       @relation(fields: [clubId], references: [id], map: "UserClubManager_clubId_fkey")
+  joinDate DateTime @default(now())
+  role     ClubRole @default(MANAGER)
+  user     User     @relation("ClubManagers", fields: [userId], references: [id], map: "UserClubManager_userId_fkey")
+  club     Club     @relation(fields: [clubId], references: [id], map: "UserClubManager_clubId_fkey")
 }
 
 model ClubTag {
@@ -548,12 +547,12 @@ model EventTag {
 }
 
 model ClubAlbum {
-  id          Int       @id @default(autoincrement())
-  clubId      Int
-  club        Club      @relation(fields: [clubId], references: [id])
-  photos      Json
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  id              Int              @id @default(autoincrement())
+  clubId          Int
+  club            Club             @relation(fields: [clubId], references: [id])
+  photos          Json
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
   clubAlbumPhotos ClubAlbumPhoto[]
 }
 
@@ -567,19 +566,19 @@ model ClubAlbumPhoto {
 }
 
 model Event {
-  id          Int       @id @default(autoincrement())
-  name        String    @db.VarChar(255)
-  coverPhoto  String?   @db.VarChar(255)
-  slug        String    @unique @db.VarChar(255)
-  description String?   @db.Text
-  startTime   DateTime
-  endTime     DateTime
-  eventLinks  Json
-  tags        EventTag[]
-  clubId      Int
-  club        Club      @relation(fields: [clubId], references: [id])
-  followers   User[]    @relation("EventFollowers")
-  eventVisits EventVisit[]
+  id                      Int                      @id @default(autoincrement())
+  name                    String                   @db.VarChar(255)
+  coverPhoto              String?                  @db.VarChar(255)
+  slug                    String                   @unique @db.VarChar(255)
+  description             String?                  @db.Text
+  startTime               DateTime
+  endTime                 DateTime
+  eventLinks              Json
+  tags                    EventTag[]
+  clubId                  Int
+  club                    Club                     @relation(fields: [clubId], references: [id])
+  followers               User[]                   @relation("EventFollowers")
+  eventVisits             EventVisit[]
   eventFollowUnfollowLogs EventFollowUnfollowLog[]
 }
 
@@ -593,13 +592,13 @@ model UserVisit {
 }
 
 model FollowUnfollowLog {
-  id          Int      @id @default(autoincrement())
-  userId      Int
-  clubId      Int
-  action      String
-  actionAt    DateTime @default(now())
-  user        User     @relation(fields: [userId], references: [id])
-  club        Club     @relation(fields: [clubId], references: [id])
+  id       Int      @id @default(autoincrement())
+  userId   Int
+  clubId   Int
+  action   String
+  actionAt DateTime @default(now())
+  user     User     @relation(fields: [userId], references: [id])
+  club     Club     @relation(fields: [clubId], references: [id])
 }
 
 model EventVisit {
@@ -612,11 +611,11 @@ model EventVisit {
 }
 
 model EventFollowUnfollowLog {
-  id          Int      @id @default(autoincrement())
-  userId      Int
-  eventId     Int
-  action      String
-  actionAt    DateTime @default(now())
-  user        User     @relation(fields: [userId], references: [id])
-  event       Event    @relation(fields: [eventId], references: [id])
+  id       Int      @id @default(autoincrement())
+  userId   Int
+  eventId  Int
+  action   String
+  actionAt DateTime @default(now())
+  user     User     @relation(fields: [userId], references: [id])
+  event    Event    @relation(fields: [eventId], references: [id])
 }
