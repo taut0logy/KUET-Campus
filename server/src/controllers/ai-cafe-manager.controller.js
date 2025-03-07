@@ -1,6 +1,7 @@
 const { PrismaClient } = require('@prisma/client');
 const { logger } = require('../utils/logger.util');
 const { sendSuccess, sendError } = require('../utils/response.util');
+const { findFaqAnswer } = require('../utils/kuet-faqs.util');
 require('dotenv').config();
 
 const prisma = new PrismaClient();
@@ -111,10 +112,7 @@ function getSimpleNavigationDestination(message) {
     return { name: 'Bus Schedule', path: '/bus' };
   }
   
-  // Department related pages
-  if (msg.includes('department') || msg.includes('faculty') || msg.includes('school of')) {
-    return { name: 'Departments', path: '/departments' };
-  }
+
 
   // Campus events
   if ((msg.includes('event') || msg.includes('happening') || msg.includes('activity')) && 
@@ -139,13 +137,6 @@ function getSimpleNavigationDestination(message) {
     return { name: 'Home Page', path: '/dashboard' };
   }
 
-  if (msg.includes('profile') || msg.includes('account') || msg.includes('my info')) {
-    return { name: 'Your Profile', path: '/profile' };
-  }
-
-  if (msg.includes('settings') || msg.includes('preferences') || msg.includes('config')) {
-    return { name: 'Settings', path: '/settings' };
-  }
 
   // Cart and order related pages
   if ((msg.includes('cart') || msg.includes('basket') || msg.includes('shopping')) &&
@@ -153,13 +144,7 @@ function getSimpleNavigationDestination(message) {
     return { name: 'Shopping Cart', path: '/cart' };
   }
 
-  if (msg.includes('checkout') || msg.includes('payment')) {
-    return { name: 'Checkout', path: '/checkout' };
-  }
-
-  if (msg.includes('order history') || msg.includes('previous orders') || msg.includes('my orders')) {
-    return { name: 'Order History', path: '/preorders/history' };
-  }
+  
 
   if ((msg.includes('order') || msg.includes('delivery')) &&
     !msg.includes('history') && !msg.includes('manage')) {
@@ -188,23 +173,9 @@ function getSimpleNavigationDestination(message) {
     return { name: 'Order Management', path: '/cafe-order-control' };
   }
 
-  // New features
-  if (msg.includes('food court') || msg.includes('ar') || msg.includes('virtual')) {
-    return { name: 'Virtual Food Court', path: '/virtual-food-court' };
-  }
 
-  if (msg.includes('marketplace')) {
-    return { name: 'Campus Food Marketplace', path: '/campus-food-marketplace' };
-  }
 
-  // User authentication
-  if (msg.includes('login') || msg.includes('sign in')) {
-    return { name: 'Login', path: '/login' };
-  }
 
-  if (msg.includes('register') || msg.includes('sign up') || msg.includes('create account')) {
-    return { name: 'Register', path: '/register' };
-  }
 
   if (msg.includes('map') || 
       (msg.includes('campus') && msg.includes('navigation')) ||
@@ -212,24 +183,23 @@ function getSimpleNavigationDestination(message) {
       msg.includes('direction') || 
       msg.includes('navigate to') || 
       msg.includes('where is')) {
-    return { name: 'Campus Map', path: '/campus-map' };
+    return { name: 'Campus Map', path: '/map' };
   }
 
-  // Help and support
-  if (msg.includes('help') || msg.includes('support') || msg.includes('faq')) {
-    return { name: 'Help & Support', path: '/help' };
-  }
 
   return null;
 }
 
-// Simplified version of handleWithSpecializedFunctions
+
 async function handleWithSpecializedFunctions(query) {
   try {
-    // Stub implementation
-    return null;
-
-
+    // Check for KUET FAQ matches first
+    const faqAnswer = findFaqAnswer(query);
+    if (faqAnswer) {
+      return faqAnswer;
+    }
+    
+    // Continue with existing specialized functions
     if (query.includes('pending') || query.includes('approval')) {
       return await getPendingApprovalCount();
     }
@@ -237,6 +207,7 @@ async function handleWithSpecializedFunctions(query) {
       return await getRevenueInfo();
     }
 
+    return null;
   } catch (error) {
     console.error('Error in specialized functions:', error);
     return null;
@@ -254,15 +225,28 @@ async function askGemini(message, history) {
     const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
     // Provide context about the entire application, not just cafe management
-    const prompt = `You are a helpful AI assistant for a university campus application that includes:
+    const prompt = `You are a helpful AI assistant for Khulna University of Engineering & Technology (KUET) campus application that includes:
 - Cafeteria service with meal ordering
 - User profiles and accounts
-- Shopping cart and checkout
+- Cafeteria food including cart and preorder
 - Order history and tracking
 - Admin features for cafe managers
-- Virtual Food Court with AR menu
-- Campus Food Marketplace
+- Provide Bus Scheduling
+- Provide assignment update and routine
+- Provide managing campus club events
 
+About KUET:
+- A leading public engineering university in Bangladesh
+- Founded in 1967 (initially as Khulna Engineering College)
+- Located in Khulna, Bangladesh
+- Offers various undergraduate and graduate engineering programs
+- Known for academic excellence and research
+- Has strong alumni network
+- Has a strong research culture
+- Has a strong industry collaboration
+- Has a strong international collaboration
+- Has a strong national collaboration
+- Has a strong regional collaboration
 The user has asked: "${message}"
 
 Provide a helpful, concise response. If you're not sure about specific details, be honest about what you don't know.`;
