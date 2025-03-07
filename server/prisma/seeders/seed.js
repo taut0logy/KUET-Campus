@@ -45,6 +45,13 @@ async function main() {
   await prisma.studentInfo.deleteMany({});
   await prisma.facultyInfo.deleteMany({});
   await prisma.employeeInfo.deleteMany({});
+  await prisma.announcement.deleteMany({});
+  await prisma.routine.deleteMany({});
+  await prisma.exam.deleteMany({});
+  await prisma.notification.deleteMany({});
+  await prisma.course.deleteMany({});
+  await prisma.assignment.deleteMany({});
+  await prisma.report.deleteMany({});
   await prisma.user.deleteMany({});
   
 
@@ -723,6 +730,352 @@ async function main() {
       clubId: clubHACK.id,
     }
   });
+
+  // Seed courses for students
+  async function seedCourses() {
+    // Create courses for student1
+    const student1Courses = [
+      {
+        courseId: 'CSE101',
+        courseName: 'Introduction to Computer Science',
+        courseType: 'Theory',
+        userId: student1.id
+      },
+      {
+        courseId: 'CSE102',
+        courseName: 'Programming Fundamentals',
+        courseType: 'Lab',
+        userId: student1.id
+      },
+      {
+        courseId: 'MATH101',
+        courseName: 'Calculus I',
+        courseType: 'Theory',
+        userId: student1.id
+      }
+    ];
+
+    // Create courses for student2
+    const student2Courses = [
+      {
+        courseId: 'CSE201',
+        courseName: 'Data Structures',
+        courseType: 'Theory',
+        userId: student2.id
+      },
+      {
+        courseId: 'CSE202',
+        courseName: 'Algorithms',
+        courseType: 'Theory',
+        userId: student2.id
+      },
+      {
+        courseId: 'EEE101',
+        courseName: 'Basic Electrical Engineering',
+        courseType: 'Theory',
+        userId: student2.id
+      }
+    ];
+
+    const allCourses = [...student1Courses, ...student2Courses];
+    
+    for (const course of allCourses) {
+      await prisma.course.create({ data: course });
+    }
+    
+    console.log('Courses seeded successfully!');
+    return { student1Courses, student2Courses };
+  }
+
+  const { student1Courses, student2Courses } = await seedCourses();
+
+  // Seed assignments
+  async function seedAssignments() {
+    // Create assignments for student1
+    const student1Assignments = [
+      {
+        userId: student1.id,
+        courseId: student1Courses[0].courseId,
+        assignmentName: 'CS Fundamentals Quiz',
+        assignmentContent: 'Complete the quiz on basic computer science concepts.',
+        deadline: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days from now
+        status: 'due'
+      },
+      {
+        userId: student1.id,
+        courseId: student1Courses[1].courseId,
+        assignmentName: 'Programming Project',
+        assignmentContent: 'Build a simple calculator application using Java.',
+        deadline: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000), // 14 days from now
+        status: 'due'
+      }
+    ];
+
+    // Create assignments for student2
+    const student2Assignments = [
+      {
+        userId: student2.id,
+        courseId: student2Courses[0].courseId,
+        assignmentName: 'Linked List Implementation',
+        assignmentContent: 'Implement a doubly linked list with all operations.',
+        deadline: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000), // 5 days from now
+        status: 'due'
+      },
+      {
+        userId: student2.id,
+        courseId: student2Courses[1].courseId,
+        assignmentName: 'Sorting Algorithms',
+        assignmentContent: 'Implement and compare the performance of 3 sorting algorithms.',
+        deadline: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000), // 10 days from now
+        status: 'due'
+      }
+    ];
+
+    const allAssignments = [...student1Assignments, ...student2Assignments];
+    
+    for (const assignment of allAssignments) {
+      await prisma.assignment.create({ data: assignment });
+    }
+    
+    console.log('Assignments seeded successfully!');
+  }
+
+  await seedAssignments();
+
+  // Seed exams
+  async function seedExams() {
+    // Create exams for student1
+    const student1Exams = [
+      {
+        userId: student1.id,
+        courseId: student1Courses[0].courseId,
+        examType: 'term-final',
+        syllabus: 'Chapters 1-5: Introduction to Computer Science, Binary Systems, Logic Gates',
+        examDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // 30 days from now
+      },
+      {
+        userId: student1.id,
+        courseId: student1Courses[2].courseId,
+        examType: 'class-test',
+        syllabus: 'Limits and Continuity',
+        examDate: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000) // 15 days from now
+      }
+    ];
+
+    // Create exams for student2
+    const student2Exams = [
+      {
+        userId: student2.id,
+        courseId: student2Courses[0].courseId,
+        examType: 'lab-test',
+        syllabus: 'Implementation of Stack, Queue, and Linked List',
+        examDate: new Date(Date.now() + 20 * 24 * 60 * 60 * 1000) // 20 days from now
+      },
+      {
+        userId: student2.id,
+        courseId: student2Courses[2].courseId,
+        examType: 'term-final',
+        syllabus: 'DC Circuits, AC Circuits, Transformers',
+        examDate: new Date(Date.now() + 45 * 24 * 60 * 60 * 1000) // 45 days from now
+      }
+    ];
+
+    const allExams = [...student1Exams, ...student2Exams];
+    
+    for (const exam of allExams) {
+      await prisma.exam.create({ data: exam });
+    }
+    
+    console.log('Exams seeded successfully!');
+  }
+
+  await seedExams();
+
+  // Seed routines
+  async function seedRoutines() {
+    // Create routines for student1
+    const student1Routines = [
+      {
+        userId: student1.id,
+        weekday: 'Sunday',
+        period1: 'CSE101',
+        period2: 'MATH101',
+        period3: null,
+        period4: 'CSE102',
+        period5: null,
+        period6: null,
+        period7: null,
+        period8: null,
+        period9: null
+      },
+      {
+        userId: student1.id,
+        weekday: 'Monday',
+        period1: null,
+        period2: 'CSE101',
+        period3: 'MATH101',
+        period4: null,
+        period5: 'CSE102',
+        period6: null,
+        period7: null,
+        period8: null,
+        period9: null
+      },
+      {
+        userId: student1.id,
+        weekday: 'Tuesday',
+        period1: 'MATH101',
+        period2: null,
+        period3: null,
+        period4: 'CSE101',
+        period5: null,
+        period6: 'CSE102',
+        period7: null,
+        period8: null,
+        period9: null
+      }
+    ];
+
+    // Create routines for student2
+    const student2Routines = [
+      {
+        userId: student2.id,
+        weekday: 'Sunday',
+        period1: 'CSE201',
+        period2: null,
+        period3: 'EEE101',
+        period4: null,
+        period5: 'CSE202',
+        period6: null,
+        period7: null,
+        period8: null,
+        period9: null
+      },
+      {
+        userId: student2.id,
+        weekday: 'Wednesday',
+        period1: null,
+        period2: 'CSE201',
+        period3: null,
+        period4: 'CSE202',
+        period5: null,
+        period6: 'EEE101',
+        period7: null,
+        period8: null,
+        period9: null
+      },
+      {
+        userId: student2.id,
+        weekday: 'Thursday',
+        period1: 'EEE101',
+        period2: null,
+        period3: 'CSE201',
+        period4: null,
+        period5: null,
+        period6: 'CSE202',
+        period7: null,
+        period8: null,
+        period9: null
+      }
+    ];
+
+    const allRoutines = [...student1Routines, ...student2Routines];
+    
+    for (const routine of allRoutines) {
+      await prisma.routine.create({ data: routine });
+    }
+    
+    console.log('Routines seeded successfully!');
+  }
+
+  await seedRoutines();
+
+  // Seed notifications
+  async function seedNotifications() {
+    // Create notifications for student1
+    const student1Notifications = [
+      {
+        userId: student1.id,
+        title: 'Assignment Due Soon',
+        message: 'Your CS Fundamentals Quiz is due in 3 days.',
+        isRead: false,
+        type: 'REMINDER',
+        metadata: JSON.stringify({ assignmentId: '1', courseId: student1Courses[0].courseId })
+      },
+      {
+        userId: student1.id,
+        title: 'New Announcement',
+        message: 'Check out the latest announcement from SGIPC club.',
+        isRead: true,
+        type: 'INFO',
+        metadata: JSON.stringify({ clubId: clubSGIPC.id })
+      }
+    ];
+
+    // Create notifications for student2
+    const student2Notifications = [
+      {
+        userId: student2.id,
+        title: 'Exam Coming Up',
+        message: 'Your Data Structures lab test is scheduled in 2 weeks.',
+        isRead: false,
+        type: 'ALERT',
+        metadata: JSON.stringify({ examId: '1', courseId: student2Courses[0].courseId })
+      },
+      {
+        userId: student2.id,
+        title: 'Event Reminder',
+        message: 'Bit2byte Hackathon 2023 starts tomorrow!',
+        isRead: false,
+        type: 'EVENT',
+        metadata: JSON.stringify({ eventId: eventBit2byte.id })
+      }
+    ];
+
+    const allNotifications = [...student1Notifications, ...student2Notifications];
+    
+    for (const notification of allNotifications) {
+      await prisma.notification.create({ data: notification });
+    }
+    
+    console.log('Notifications seeded successfully!');
+  }
+
+  await seedNotifications();
+
+  // Seed announcements
+  async function seedAnnouncements() {
+    const announcements = [
+      {
+        title: 'Welcome to Fall Semester 2023',
+        message: 'We are excited to welcome all students to the new academic semester. Please check your course schedules and attend orientation sessions.',
+        createdBy: facultyUserSGIPC.id
+      },
+      {
+        title: 'Campus Maintenance Notice',
+        message: 'The main library will be closed for renovations from October 15-20. Alternative study spaces will be available in the Student Center.',
+        createdBy: employeeUser.id
+      },
+      {
+        title: 'Programming Contest Registration Open',
+        message: 'Registration for the annual programming contest is now open. Visit the SGIPC club page for more details and to sign up.',
+        createdBy: facultyUserSGIPC.id
+      },
+      {
+        title: 'New Cafeteria Menu',
+        message: 'Check out our new cafeteria menu with healthier options and extended hours starting next week.',
+        createdBy: employeeUser.id
+      }
+    ];
+    
+    for (const announcement of announcements) {
+      await prisma.announcement.create({ data: announcement });
+    }
+    
+    console.log('Announcements seeded successfully!');
+  }
+
+  await seedAnnouncements();
 
   console.log('Seeding finished.');
 

@@ -163,13 +163,19 @@ const getRoutes = (user) => {
   ];
 };
 
-export function MainNav() {
+export function MainNav({ className, ...props }) {
   const pathname = usePathname();
   const user = useAuthStore(state => state.user);
   const routes = getRoutes(user);
+  
+  // Check if user has admin role
+  const isAdmin = user?.roles?.includes("ADMIN");
 
   return (
-    <nav className="hidden lg:flex items-center space-x-4 lg:space-x-6">
+    <nav
+      className={cn("flex items-center space-x-4 lg:space-x-6", className)}
+      {...props}
+    >
       {routes
         .filter((route) => !route.requireAuth || user)
         .map((route) => (
@@ -186,6 +192,21 @@ export function MainNav() {
             {route.label}
           </Link>
         ))}
+      
+      {/* Admin Dashboard link - only visible to admins */}
+      {isAdmin && (
+        <Link
+          href="/admin-dashboard"
+          className={cn(
+            "text-sm font-medium transition-colors hover:text-primary",
+            pathname === "/admin-dashboard"
+              ? "text-black dark:text-white"
+              : "text-muted-foreground"
+          )}
+        >
+          Admin Dashboard
+        </Link>
+      )}
     </nav>
   );
 }
