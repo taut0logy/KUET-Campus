@@ -1,6 +1,8 @@
 const { PrismaClient } = require('@prisma/client');
 const { logger } = require('../utils/logger.util');
 const { sendSuccess, sendError } = require('../utils/response.util');
+const { findFaqAnswer } = require('../utils/kuet-faqs.util');
+const { vectorStore } = require('../utils/vector-store.util');
 require('dotenv').config();
 
 const prisma = new PrismaClient();
@@ -22,52 +24,52 @@ try {
   console.error('❌ Failed to initialize Gemini AI:', error.message);
 }
 
-/**
- * Process queries from cafe managers and provide insights or navigation assistance
- */
 exports.processCafeManagerQuery = async (req, res) => {
   try {
-    console.log('📝 Received request to AI assistant');
     const { message, history } = req.body;
-
+    
     if (!message) {
       return sendError(res, 'Message is required', 400);
     }
 
-    console.log('📝 Processing message:', message);
+    logger.info(`Processing cafe manager query: ${message}`);
 
-    // Simple navigation logic (works without Gemini)
-    const destination = getSimpleNavigationDestination(message);
-    if (destination) {
-      console.log('🧭 Navigation destination found:', destination.path);
+    // Check for navigation requests first
+    const navigationDestination = getSimpleNavigationDestination(message);
+    if (navigationDestination) {
       return sendSuccess(res, {
-        response: `I'll take you to ${destination.name}`,
+        response: `I'll take you to ${navigationDestination.name}.`,
         action: 'navigate',
-        destination: destination.path
+        destination: navigationDestination.path,
+        enhanced: false,
+        sources: []
       });
     }
 
-    // Try to use specialized functions first
-    let response = await safelyRunFunction(() =>
-      handleWithSpecializedFunctions(message.toLowerCase())
-    );
-
-    // If no specialized function handled it and Gemini is available, use it
-    if (!response && genAI) {
-      response = await safelyRunFunction(() =>
-        askGemini(message, history)
-      );
+    // Then check for specialized data functions
+    const specializedResponse = await handleWithSpecializedFunctions(message);
+    if (specializedResponse) {
+      return sendSuccess(res, {
+        response: specializedResponse,
+        action: 'display',
+        enhanced: false,
+        sources: []
+      });
     }
 
-    // Default fallback response if nothing else worked
-    if (!response) {
-      response = "I understand you're asking about something, but I'm currently limited in my capabilities. Try asking about orders, sales, or navigation.";
-    }
-
-    return sendSuccess(res, { response });
+    // Finally, use RAG-enhanced Gemini for general queries
+    const ragResponse = await askGeminiWithRAG(message, history || []);
+    
+    return sendSuccess(res, {
+      response: ragResponse.text,
+      enhanced: ragResponse.enhanced,
+      sources: ragResponse.sources,
+      action: 'display'
+    });
   } catch (error) {
     console.error('❌ Error in AI assistant:', error);
-    return sendError(res, 'Failed to process your request', 500);
+    logger.error(`AI assistant error: ${error.message}`);
+    return sendError(res, `Error in AI assistant: ${error.message}`, 500);
   }
 };
 
@@ -111,10 +113,7 @@ function getSimpleNavigationDestination(message) {
     return { name: 'Bus Schedule', path: '/bus' };
   }
   
-  // Department related pages
-  if (msg.includes('department') || msg.includes('faculty') || msg.includes('school of')) {
-    return { name: 'Departments', path: '/departments' };
-  }
+
 
   // Campus events
   if ((msg.includes('event') || msg.includes('happening') || msg.includes('activity')) && 
@@ -139,13 +138,6 @@ function getSimpleNavigationDestination(message) {
     return { name: 'Home Page', path: '/dashboard' };
   }
 
-  if (msg.includes('profile') || msg.includes('account') || msg.includes('my info')) {
-    return { name: 'Your Profile', path: '/profile' };
-  }
-
-  if (msg.includes('settings') || msg.includes('preferences') || msg.includes('config')) {
-    return { name: 'Settings', path: '/settings' };
-  }
 
   // Cart and order related pages
   if ((msg.includes('cart') || msg.includes('basket') || msg.includes('shopping')) &&
@@ -153,13 +145,7 @@ function getSimpleNavigationDestination(message) {
     return { name: 'Shopping Cart', path: '/cart' };
   }
 
-  if (msg.includes('checkout') || msg.includes('payment')) {
-    return { name: 'Checkout', path: '/checkout' };
-  }
-
-  if (msg.includes('order history') || msg.includes('previous orders') || msg.includes('my orders')) {
-    return { name: 'Order History', path: '/preorders/history' };
-  }
+  
 
   if ((msg.includes('order') || msg.includes('delivery')) &&
     !msg.includes('history') && !msg.includes('manage')) {
@@ -188,23 +174,9 @@ function getSimpleNavigationDestination(message) {
     return { name: 'Order Management', path: '/cafe-order-control' };
   }
 
-  // New features
-  if (msg.includes('food court') || msg.includes('ar') || msg.includes('virtual')) {
-    return { name: 'Virtual Food Court', path: '/virtual-food-court' };
-  }
 
-  if (msg.includes('marketplace')) {
-    return { name: 'Campus Food Marketplace', path: '/campus-food-marketplace' };
-  }
 
-  // User authentication
-  if (msg.includes('login') || msg.includes('sign in')) {
-    return { name: 'Login', path: '/login' };
-  }
 
-  if (msg.includes('register') || msg.includes('sign up') || msg.includes('create account')) {
-    return { name: 'Register', path: '/register' };
-  }
 
   if (msg.includes('map') || 
       (msg.includes('campus') && msg.includes('navigation')) ||
@@ -212,24 +184,23 @@ function getSimpleNavigationDestination(message) {
       msg.includes('direction') || 
       msg.includes('navigate to') || 
       msg.includes('where is')) {
-    return { name: 'Campus Map', path: '/campus-map' };
+    return { name: 'Campus Map', path: '/map' };
   }
 
-  // Help and support
-  if (msg.includes('help') || msg.includes('support') || msg.includes('faq')) {
-    return { name: 'Help & Support', path: '/help' };
-  }
 
   return null;
 }
 
-// Simplified version of handleWithSpecializedFunctions
+
 async function handleWithSpecializedFunctions(query) {
   try {
-    // Stub implementation
-    return null;
-
-
+    // Check for KUET FAQ matches first
+    const faqAnswer = findFaqAnswer(query);
+    if (faqAnswer) {
+      return faqAnswer;
+    }
+    
+    // Continue with existing specialized functions
     if (query.includes('pending') || query.includes('approval')) {
       return await getPendingApprovalCount();
     }
@@ -237,12 +208,73 @@ async function handleWithSpecializedFunctions(query) {
       return await getRevenueInfo();
     }
 
+    return null;
   } catch (error) {
     console.error('Error in specialized functions:', error);
     return null;
   }
 }
 
+
+async function askGeminiWithRAG(message, history) {
+  try {
+    if (!genAI) {
+      return "I'm sorry, my AI capabilities are currently limited. Please try again later.";
+    }
+
+    console.log('🔍 Using RAG to find relevant information...');
+    
+    // Retrieve relevant documents based on the query
+    const searchResults = await vectorStore.similaritySearch(message, 3);
+    
+    // Format the retrieved context
+    let retrievedContext = '';
+    if (searchResults && searchResults.length > 0) {
+      retrievedContext = 'Here is some relevant information:\n\n';
+      
+      searchResults.forEach(result => {
+        retrievedContext += `${result.document.text}\n\n`;
+        console.log(`📄 Retrieved document: ${result.document.id} (score: ${result.score.toFixed(3)})`);
+      });
+    } else {
+      console.log('⚠️ No relevant documents found in vector store');
+    }
+
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+
+    // Format the prompt with retrieved information
+    const prompt = `You are a helpful AI assistant for the Khulna University of Engineering & Technology (KUET) campus application.
+
+The user has asked: "${message}"
+
+${retrievedContext ? retrievedContext : "I don't have specific information about this query in my knowledge base."}
+
+Based on the above information and your general knowledge, provide a helpful, concise, and accurate response. If the retrieved information doesn't fully answer the query, be honest about what you don't know.`;
+
+    console.log('🚀 Sending RAG-enhanced prompt to Gemini');
+    const result = await model.generateContent(prompt);
+    const response = result.response.text();
+    
+    // Return detailed information about the RAG process
+    return {
+      text: response,
+      enhanced: searchResults && searchResults.length > 0,
+      sources: searchResults ? searchResults.map(r => ({
+        id: r.document.id,
+        text: r.document.text.substring(0, 150) + '...',  // Preview of content
+        metadata: r.document.metadata,
+        score: r.score.toFixed(3)
+      })) : []
+    };
+  } catch (error) {
+    console.error('❌ Error with RAG-enhanced Gemini:', error);
+    return {
+      text: "I'm having trouble processing your request with my enhanced knowledge system.",
+      enhanced: false,
+      sources: []
+    };
+  }
+}
 
 // Update the askGemini function to provide more context about the application
 async function askGemini(message, history) {
@@ -254,21 +286,41 @@ async function askGemini(message, history) {
     const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
     // Provide context about the entire application, not just cafe management
-    const prompt = `You are a helpful AI assistant for a university campus application that includes:
+    const prompt = `You are a helpful AI assistant for Khulna University of Engineering & Technology (KUET) campus application that includes:
 - Cafeteria service with meal ordering
 - User profiles and accounts
-- Shopping cart and checkout
+- Cafeteria food including cart and preorder
 - Order history and tracking
 - Admin features for cafe managers
-- Virtual Food Court with AR menu
-- Campus Food Marketplace
+- Provide Bus Scheduling
+- Provide assignment update and routine
+- Provide managing campus club events
 
+About KUET:
+- A leading public engineering university in Bangladesh
+- Founded in 1967 (initially as Khulna Engineering College)
+- Located in Khulna, Bangladesh
+- Offers various undergraduate and graduate engineering programs
+- Known for academic excellence and research
+- Has strong alumni network
+- Has a strong research culture
+- Has a strong industry collaboration
+- Has a strong international collaboration
+- Has a strong national collaboration
+- Has a strong regional collaboration
 The user has asked: "${message}"
 
 Provide a helpful, concise response. If you're not sure about specific details, be honest about what you don't know.`;
 
     const result = await model.generateContent(prompt);
-    return result.response.text();
+    return {
+  text: response,
+  enhanced: searchResults && searchResults.length > 0,
+  sources: searchResults ? searchResults.map(r => ({
+    id: r.document.id,
+    score: r.score.toFixed(3)
+  })) : []
+};
   } catch (error) {
     console.error('Error with Gemini AI:', error);
     return "I'm having trouble connecting to my AI capabilities right now.";

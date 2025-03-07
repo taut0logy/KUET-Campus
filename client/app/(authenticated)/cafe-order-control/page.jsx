@@ -48,26 +48,26 @@ export default function CafeManagerPage() {
     const fetchOrders = async () => {
         setLoading(true);
         try {
-          console.log("Fetching orders for cafe manager...");
-          const response = await axios.get('/order/manage');
-          console.log(`Received ${response.data.orders.length} orders from server`);
-          setOrders(response.data.orders);
+            console.log("Fetching orders for cafe manager...");
+            const response = await axios.get('/order/manage');
+            console.log(`Received ${response.data.orders.length} orders from server`);
+            setOrders(response.data.orders);
         } catch (error) {
-          console.error("Error fetching orders:", error);
-          let errorMessage = 'Failed to fetch orders';
-          
-          if (error.response) {
-            errorMessage = error.response.data?.message || errorMessage;
-            if (error.response.data?.details) {
-              console.error("Error details:", error.response.data.details);
+            console.error("Error fetching orders:", error);
+            let errorMessage = 'Failed to fetch orders';
+
+            if (error.response) {
+                errorMessage = error.response.data?.message || errorMessage;
+                if (error.response.data?.details) {
+                    console.error("Error details:", error.response.data.details);
+                }
             }
-          }
-          
-          toast.error(errorMessage);
+
+            toast.error(errorMessage);
         } finally {
-          setLoading(false);
+            setLoading(false);
         }
-      };
+    };
 
     useEffect(() => {
         fetchOrders();
@@ -227,6 +227,11 @@ export default function CafeManagerPage() {
                 </div>
 
                 <div className="flex gap-2">
+
+                    <Button variant="outline" onClick={() => router.push('/cafe-dashboard')}>
+                        Cafe Manager Dashboard
+                    </Button>
+
                     <Button variant="outline" onClick={() => router.push('/cafe-meal-control')}>
                         <Utensils className="h-4 w-4" />
                         Manage Meals

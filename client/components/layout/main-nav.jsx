@@ -146,6 +146,11 @@ const getRoutes = (user) => {
       requireAuth: true,
     },
     {
+      href: "/map",
+      label: "Navigation",
+      requireAuth: true,
+    },
+    {
       href: "/report",
       label: "Reports",
       requireAuth: true,

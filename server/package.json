@@ -27,6 +27,8 @@
   "license": "ISC",
   "dependencies": {
     "@google/generative-ai": "^0.23.0",
+    "@langchain/core": "^0.3.42",
+    "@langchain/google-genai": "^0.1.10",
     "@prisma/client": "^5.10.2",
     "@socket.io/redis-adapter": "^8.3.0",
     "@supabase/supabase-js": "^2.49.1",
@@ -41,6 +43,7 @@
     "helmet": "^7.1.0",
     "http-errors": "^2.0.0",
     "jsonwebtoken": "^9.0.2",
+    "langchain": "^0.3.19",
     "morgan": "^1.10.0",
     "multer": "^1.4.5-lts.1",
     "nodemailer": "^6.9.8",

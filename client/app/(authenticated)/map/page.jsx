@@ -24,12 +24,14 @@ const locationIcon = new Icon({
 
 // Sample campus POIs - Replace with actual KUET coordinates
 const campusLocations = [
-  { id: 1, name: 'Main Library', position: [22.8996, 89.5024], description: 'Central Library Building' },
-  { id: 2, name: 'Computer Science Building', position: [22.8999, 89.5030], description: 'Department of CSE' },
-  { id: 3, name: 'Engineering Building', position: [22.9001, 89.5022], description: 'Engineering Departments' },
-  { id: 4, name: 'Admin Block', position: [22.8993, 89.5018], description: 'Administrative Offices' },
-  { id: 5, name: 'Cafeteria', position: [22.8998, 89.5015], description: 'Main Cafeteria' },
-  { id: 6, name: 'Student Center', position: [22.8995, 89.5028], description: 'Student Activities' },
+  { id: 1, name: 'Main Academic Building', position: [23.7730, 90.4047], description: 'Central Academic Complex' },
+  { id: 2, name: 'Military Training Ground', position: [23.7733, 90.4055], description: 'Field Training Area' },
+  { id: 3, name: 'Engineering Labs', position: [23.7735, 90.4046], description: 'Advanced Engineering Laboratories' },
+  { id: 4, name: 'Command Center', position: [23.7726, 90.4042], description: 'Administrative Headquarters' },
+  { id: 5, name: 'Mess Hall', position: [23.7732, 90.4039], description: 'Dining Facility' },
+  { id: 6, name: 'Barracks', position: [23.7728, 90.4051], description: 'Student Accommodation' },
+  { id: 7, name: 'Parade Ground', position: [23.7738, 90.4050], description: 'Ceremonial Area' },
+  { id: 8, name: 'Tactical Simulator', position: [23.7732, 90.4058], description: 'Simulation Training Center' },
 ];
 
 // Component to re-center the map on user's position

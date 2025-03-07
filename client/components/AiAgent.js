@@ -15,10 +15,17 @@ export default function AiAgent() {
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
+  const [expandedMessageIndex, setExpandedMessageIndex] = useState(null);
   const [messages, setMessages] = useState([
     {
       role: 'assistant',
       content: "I'm your KUET Campus assistant. How can I help you today?"
+    },
+    {
+      role: 'assistant',
+      content: "I'm powered by Retrieval Augmented Generation (RAG), which means I can retrieve specific information about KUET from our knowledge base to give you more accurate answers. Try asking me about departments, facilities, or other KUET-specific questions!",
+      enhanced: true,
+      demoInfo: true
     }
   ]);
   const [input, setInput] = useState('');
@@ -42,114 +49,104 @@ export default function AiAgent() {
     setIsMinimized(!isMinimized);
   };
 
-// Update the handleRefreshData function:
+  // Update the handleRefreshData function:
 
-const handleRefreshData = async () => {
-  try {
-    // Add a refreshing message
-    setMessages(prev => [
-      ...prev,
-      { role: 'assistant', content: "Refreshing data from database..." }
-    ]);
+  const handleRefreshData = async () => {
+    try {
+      // Add a refreshing message
+      setMessages(prev => [
+        ...prev,
+        { role: 'assistant', content: "Refreshing data from database..." }
+      ]);
 
-    // Simple ping to wake up the API if it's sleeping
-    await axios.get('/health'); // Changed from '/healthcheck'
-    
-    // Add a success message
-    setMessages(prev => [
-      ...prev,
-      { role: 'assistant', content: "Data refreshed! What would you like to know?" }
-    ]);
-  } catch (error) {
-    console.error("Error refreshing data:", error);
-    setMessages(prev => [
-      ...prev,
-      { role: 'assistant', content: "I couldn't refresh the data. The server might be unavailable." }
-    ]);
-  }
-};
+      // Simple ping to wake up the API if it's sleeping
+      await axios.get('/health'); // Changed from '/healthcheck'
+
+      // Add a success message
+      setMessages(prev => [
+        ...prev,
+        { role: 'assistant', content: "Data refreshed! What would you like to know?" }
+      ]);
+    } catch (error) {
+      console.error("Error refreshing data:", error);
+      setMessages(prev => [
+        ...prev,
+        { role: 'assistant', content: "I couldn't refresh the data. The server might be unavailable." }
+      ]);
+    }
+  };
 
 
   const navigateTo = (path, description) => {
     setMessages((prev) => [
-      ...prev, 
-      { 
-        role: 'assistant', 
+      ...prev,
+      {
+        role: 'assistant',
         content: description || `Navigating to ${path}...`
       }
     ]);
-    
+
     setTimeout(() => {
       router.push(path);
     }, 800);
   };
 
-// Update the handleSendMessage function:
+  const handleSendMessage = async (e) => {
+    e.preventDefault();
+    if (!input.trim() || isLoading) return;
 
-const handleSendMessage = async (e) => {
-  e.preventDefault();
-  if (!input.trim() || isLoading) return;
+    // Add user message to chat
+    const userMessage = { role: 'user', content: input };
+    setMessages((prev) => [...prev, userMessage]);
+    const currentInput = input; // Save the input before clearing
+    setInput('');
+    setIsLoading(true);
 
-  // Add user message to chat
-  const userMessage = { role: 'user', content: input };
-  setMessages((prev) => [...prev, userMessage]);
-  const currentInput = input; // Save the input before clearing
-  setInput('');
-  setIsLoading(true);
+    try {
+      console.log('Sending request to AI assistant:', currentInput);
 
-  try {
-    console.log('Sending request to AI assistant:', currentInput);
-    
-    // Use the correct endpoint path - ensure it matches your route configuration
-    const response = await axios.post('/ai/cafe-assistant', { 
-      message: currentInput,
-      history: messages.slice(-5) // Send last 5 messages for context
-    });
+      // Use the correct endpoint path
+      const response = await axios.post('/ai/cafe-assistant', {
+        message: currentInput,
+        history: messages.slice(-5) // Send last 5 messages for context
+      });
 
-    console.log('Response from AI assistant:', response.data);
+      console.log('Response from AI assistant:', response.data);
 
-    if (response.data && response.data.data) {
-      // Add the AI response to messages
-      setMessages((prev) => [
-        ...prev,
-        { role: 'assistant', content: response.data.data.response }
-      ]);
+      if (response.data && response.data.data) {
+        // Add the AI response to messages with RAG info
+        const aiMessage = {
+          role: 'assistant',
+          content: response.data.data.response,
+          enhanced: response.data.data.enhanced === true,
+          sources: response.data.data.sources || []
+        };
 
-      // If it's a navigation request, navigate to the destination
-      if (response.data.data.action === 'navigate' && response.data.data.destination) {
-        setTimeout(() => {
-          router.push(response.data.data.destination);
-        }, 800);
+        setMessages((prev) => [...prev, aiMessage]);
+
+        // If it's a navigation request, navigate to the destination
+        if (response.data.data.action === 'navigate' && response.data.data.destination) {
+          setTimeout(() => {
+            router.push(response.data.data.destination);
+          }, 800);
+        }
+      } else {
+        throw new Error("Invalid response structure from server");
       }
+    } catch (error) {
+      // Error handling code...
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const toggleExpandedMessage = (index) => {
+    if (expandedMessageIndex === index) {
+      setExpandedMessageIndex(null);
     } else {
-      throw new Error("Invalid response structure from server");
+      setExpandedMessageIndex(index);
     }
-  } catch (error) {
-    console.error('Error sending message to AI assistant:', error);
-    
-    // More detailed error handling
-    let errorMessage = "I'm sorry, I encountered an error processing your request.";
-    
-    if (error.response) {
-      console.log('Error response:', error.response);
-      // Handle server errors
-      if (error.response.status === 404) {
-        errorMessage = "I couldn't connect to the server. The endpoint might be missing.";
-      } else if (error.response.status === 500) {
-        errorMessage = "There was a problem with the server. Please try again later.";
-      }
-    } else if (error.request) {
-      errorMessage = "Network error. Please check your connection and try again.";
-    }
-    
-    setMessages((prev) => [
-      ...prev,
-      { role: 'assistant', content: errorMessage }
-    ]);
-  } finally {
-    setIsLoading(false);
-  }
-};
+  };
 
   return (
     <>
@@ -165,20 +162,21 @@ const handleSendMessage = async (e) => {
 
       {/* Chat window */}
       {isOpen && (
-        <Card className={`fixed z-50 bottom-4 right-4 w-80 ${isMinimized ? 'h-14' : 'h-96'} shadow-lg transition-all duration-200`}>
+        <Card className={`fixed z-50 bottom-4 right-4 w-96 ${isMinimized ? 'h-14' : 'h-[550px]'} shadow-lg transition-all duration-200`}>
           <CardHeader className="p-3 border-b flex flex-row justify-between items-center cursor-pointer" onClick={handleToggleMinimize}>
             <div className="flex items-center">
               <Avatar className="h-6 w-6 mr-2">
                 <Bot className="h-4 w-4" />
               </Avatar>
               <span className="font-medium">KUET Campus Assistant</span>
+              
             </div>
             <div className="flex items-center space-x-1">
               {!isMinimized && (
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  className="h-6 w-6" 
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-6 w-6"
                   onClick={(e) => {
                     e.stopPropagation();
                     handleRefreshData();
@@ -187,48 +185,89 @@ const handleSendMessage = async (e) => {
                   <RefreshCw className="h-3.5 w-3.5" />
                 </Button>
               )}
-              
+
               {isMinimized ? (
                 <Maximize2 className="h-4 w-4" />
               ) : (
                 <Minimize2 className="h-4 w-4" />
               )}
-              <X 
-                className="h-4 w-4 ml-2" 
+              <X
+                className="h-4 w-4 ml-2"
                 onClick={(e) => {
                   e.stopPropagation();
                   setIsOpen(false);
-                }} 
+                }}
               />
             </div>
           </CardHeader>
-          
+
           {!isMinimized && (
             <>
+
               <CardContent className="p-0">
-                <ScrollArea className="h-[calc(384px-110px)] p-4">
+              <ScrollArea className="h-[calc(550px-130px)] p-4">
                   <div className="space-y-4">
-                    {messages.map((msg, idx) => (
+                    {messages.map((message, index) => (
                       <div
-                        key={idx}
-                        className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                        key={index}
+                        className={`flex flex-col ${message.role === 'user' ? 'items-end' : 'items-start'} mb-4 w-full`}
                       >
                         <div
-                          className={`max-w-[80%] rounded-lg px-3 py-2 ${
-                            msg.role === 'user'
+                          className={`p-3 rounded-lg ${message.role === 'user'
                               ? 'bg-primary text-primary-foreground'
                               : 'bg-muted'
-                          }`}
+                            } ${message.role === 'assistant' ? 'max-w-[95%]' : ''}`}
                         >
-                          {msg.content.split('\n').map((line, i) => (
-                            <span key={i}>
-                              {line}
-                              {i < msg.content.split('\n').length - 1 && <br />}
-                            </span>
-                          ))}
+                          {message.content}
+
+                          {/* Show badge for RAG-enhanced responses */}
+                          {message.role === 'assistant' && message.enhanced && (
+                            <div className="mt-2">
+                              <button
+                                onClick={() => toggleExpandedMessage(index)}
+                                className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-blue-500 text-white hover:bg-blue-600"
+                              >
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                                </svg>
+                                RAG Enhanced • View Sources ({message.sources?.length || 0})
+                              </button>
+                            </div>
+                          )}
                         </div>
+
+                        {/* Expanded RAG Information - MOVED INSIDE THE MAP LOOP */}
+                        {message.role === 'assistant' &&
+                          message.enhanced &&
+                          expandedMessageIndex === index &&
+                          message.sources && (
+                            <div className="mt-3 p-3 bg-blue-50 rounded-md border border-blue-200">
+                              <div className="text-sm font-medium text-blue-800 mb-2">
+                                RAG Retrieval Details (Hackathon Demo)
+                              </div>
+
+                              {message.sources.map((source, i) => (
+                                <div key={i} className="mb-3 pb-3 border-b border-blue-100 last:border-b-0">
+                                  <div className="flex justify-between">
+                                    <span className="text-xs font-semibold text-blue-700">Source {i + 1}: {source.id}</span>
+                                    <span className="text-xs font-medium bg-blue-200 px-1 rounded">
+                                      Relevance: {source.score}
+                                    </span>
+                                  </div>
+                                  <div className="text-xs mt-1 text-gray-700 bg-white p-2 rounded">
+                                    {source.text}
+                                  </div>
+                                </div>
+                              ))}
+
+                              <div className="text-xs text-blue-600 italic mt-2">
+                                This response was generated using Retrieval Augmented Generation (RAG), which enhances the AI's knowledge with specific information from the KUET knowledge base.
+                              </div>
+                            </div>
+                          )}
                       </div>
                     ))}
+
                     {isLoading && (
                       <div className="flex justify-start">
                         <div className="max-w-[80%] rounded-lg px-3 py-2 bg-muted">
@@ -245,7 +284,7 @@ const handleSendMessage = async (e) => {
                   </div>
                 </ScrollArea>
               </CardContent>
-              
+
               <CardFooter className="p-2 border-t">
                 <form onSubmit={handleSendMessage} className="flex w-full gap-2">
                   <Input

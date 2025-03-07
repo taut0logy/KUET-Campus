@@ -324,7 +324,11 @@ export default function MealsManagementPage() {
         </div>
 
         <div className="flex gap-4">
+          <Button variant="outline" onClick={() => router.push('/cafe-dashboard')}>
+            Cafe Manager Dashboard
+          </Button>
           <Button
+
             variant="outline"
             onClick={() => router.push('/cafe-order-control')}
             className="gap-2"
