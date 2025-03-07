@@ -155,6 +155,11 @@ const getRoutes = (user) => {
       label: "Reports",
       requireAuth: true,
     },
+    {
+      href: "/chat",
+      label: "Chat",
+      requireAuth: true,
+    },
   ];
 };
 
