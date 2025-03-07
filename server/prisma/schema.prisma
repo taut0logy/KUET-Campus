@@ -87,6 +87,7 @@ model User {
   eventFollowUnfollowLogs EventFollowUnfollowLog[]
   Assignment              Assignment[]
   Exam                    Exam[]
+  announcements           Announcement[]
 
   @@map("users")
 }
@@ -618,4 +619,14 @@ model EventFollowUnfollowLog {
   actionAt DateTime @default(now())
   user     User     @relation(fields: [userId], references: [id])
   event    Event    @relation(fields: [eventId], references: [id])
+}
+
+model Announcement {
+  id        String   @id @default(uuid())
+  title     String
+  message   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  createdBy Int // Changed from String to Int to match User.id type
+  user      User     @relation(fields: [createdBy], references: [id])
 }

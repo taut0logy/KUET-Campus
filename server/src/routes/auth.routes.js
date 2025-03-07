@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const authController = require('../controllers/auth.controller');
 const { authenticate } = require('../middleware/auth.middleware');
-const {  } = require('../middleware/rate-limit.middleware');
+//const {  } = require('../middleware/rate-limit.middleware');
 const {
   registerEmployeeValidator,
   registerStudentValidator,

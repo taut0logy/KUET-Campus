@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 
-const { standardLimiter } = require('../middleware/rate-limit.middleware');
+//const { standardLimiter } = require('../middleware/rate-limit.middleware');
 
 const authRoutes = require('./auth.routes');
 const cafeteriaRoutes = require('./cafeteria.routes');
@@ -17,9 +17,10 @@ const cartRoutes = require('./cart.routes');
 const orderRoutes = require('./order.routes');
 const aiCafeManagerRoutes = require('./ai-cafe-manager.routes');
 const busRoutes = require('./bus.routes');
+const adminRoutes = require('./admin.routes');
 
 // Apply standard rate limit to all routes
-router.use(standardLimiter);
+//router.use(standardLimiter);
 
 // Health check route
 router.get('/health', (req, res) => {
@@ -44,7 +45,7 @@ router.use('/bus', busRoutes);  // This will make the routes available at /api/v
 router.use('/events', eventRoutes);
 router.use('/clubs', clubRoutes);
 router.use('/assignments', assignmentRoutes);router.use('/ai', aiCafeManagerRoutes); 
-router.use('/ai', aiCafeManagerRoutes); 
+router.use('/admin', adminRoutes);
 
 // Catch-all 404 handler
 router.use('*', (req, res) => {
