@@ -12,6 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { motion } from "framer-motion";
 import { AlertTriangle, Bell, Info } from "lucide-react";
 import { toast } from "sonner";
+import axios from '@/lib/axios';
 
 export function EmergencyAlert() {
   const [isActive, setIsActive] = React.useState(true);
@@ -19,10 +20,11 @@ export function EmergencyAlert() {
 
   const handleEmergencyAlert = async () => {
     try {
+      await axios.post("/emergency/alert", { message: alertMessage });
       // API call to trigger alert would go here
       toast.success("Emergency alert triggered successfully");
     } catch (error) {
-      toast.error("Failed to trigger alert");
+      toast.error("Failed to trigger alert: " + error.message);
     }
   };
 

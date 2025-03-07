@@ -18,6 +18,7 @@ const orderRoutes = require('./order.routes');
 const aiCafeManagerRoutes = require('./ai-cafe-manager.routes');
 const busRoutes = require('./bus.routes');
 const reportRoutes = require('./report.routes');
+const emergencyRoutes = require('./emergency.routes');
 
 // Apply standard rate limit to all routes
 router.use(standardLimiter);
@@ -47,6 +48,7 @@ router.use('/clubs', clubRoutes);
 router.use('/assignments', assignmentRoutes);
 router.use('/ai', aiCafeManagerRoutes);
 router.use('/reports', reportRoutes);
+router.use('/emergency', emergencyRoutes);
 
 // Catch-all 404 handler
 router.use('*', (req, res) => {
