@@ -11,22 +11,17 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { useToast } from '@/components/ui/use-toast';
 
 import EventCard from '@/components/clubs/EventCard';
 import MembersList from '@/components/clubs/MembersList';
 import ClubAnalytics from '@/components/clubs/ClubAnalytics';
 
-import { getClubBySlug, followClub, unfollowClub, getClubAnalytics } from '@/lib/api/clubsApi';
-import { fetchEvents } from '@/lib/api/clubsApi';
-import { Club, Event } from '@/types/clubs';
-import { useSession } from 'next-auth/react';
+import useClubStore from '@/stores/club-store';
+
 
 export default function ClubDetailsPage() {
   const { slug } = useParams();
   const router = useRouter();
-  const { toast } = useToast();
-  const { data: session } = useSession();
   
   const [club, setClub] = useState<Club | null>(null);
   const [events, setEvents] = useState([]);
@@ -35,6 +30,8 @@ export default function ClubDetailsPage() {
   const [isLoadingFollow, setIsLoadingFollow] = useState(false);
   const [analyticsData, setAnalyticsData] = useState(null);
   const [isLoadingAnalytics, setIsLoadingAnalytics] = useState(false);
+
+  const { clubs, clubState, getClubBySlug, getClubAnalytics, followClub, unfollowClub, fetchEvents } = useClubStore();
   
   const userId = session?.user?.id;
   
@@ -51,11 +48,7 @@ export default function ClubDetailsPage() {
         setIsFollowing(clubData.isFollowing || false);
       } catch (error) {
         console.error('Error loading club data:', error);
-        toast({
-          title: "Error",
-          description: "Failed to load club information",
-          variant: "destructive"
-        });
+        toast.error("Failed to load club information");
       } finally {
         setIsLoading(false);
       }
@@ -102,24 +95,14 @@ export default function ClubDetailsPage() {
       if (isFollowing) {
         await unfollowClub(club.id);
         setIsFollowing(false);
-        toast({
-          title: "Club unfollowed",
-          description: `You are no longer following ${club.name}`,
-        });
+        toast.success(`You are no longer following ${club.name}`);
       } else {
         await followClub(club.id);
         setIsFollowing(true);
-        toast({
-          title: "Club followed",
-          description: `You are now following ${club.name}`,
-        });
+        toast.success(`You are now following ${club.name}`);
       }
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to update follow status. Please try again.",
-        variant: "destructive",
-      });
+      toast.error("Failed to update follow status. Please try again.");
       console.error("Error toggling follow status:", error);
     } finally {
       setIsLoadingFollow(false);
@@ -137,10 +120,7 @@ export default function ClubDetailsPage() {
     } else {
       // Fallback for browsers that don't support navigator.share
       navigator.clipboard.writeText(window.location.href);
-      toast({
-        title: "Link copied",
-        description: "Link copied to clipboard"
-      });
+      toast.success("Link copied to clipboard");
     }
   };
   

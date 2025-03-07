@@ -28,12 +28,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { useToast } from '@/components/ui/use-toast';
+import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 
-import { getClubBySlug, getEventTags, createEvent } from '@/lib/api/clubsApi';
-import { useSession } from 'next-auth/react';
+import useClubStore from '@/stores/club-store';
 
 // Validation schema
 const eventFormSchema = z.object({
@@ -55,13 +54,13 @@ const eventFormSchema = z.object({
 export default function CreateEventPage() {
   const { slug } = useParams();
   const router = useRouter();
-  const { toast } = useToast();
-  const { data: session } = useSession();
   
   const [club, setClub] = useState<any>(null);
   const [tags, setTags] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const { clubs, clubState, getClubBySlug, getEventTags, createEvent } = useClubStore();
   
   // Initialize form with default values
   const form = useForm<EventFormValues>({
@@ -98,12 +97,8 @@ export default function CreateEventPage() {
         setClub(clubData.club);
         setTags(tagsData.tags || []);
       } catch (error) {
-        console.error('Error loading data:', error);
-        toast({
-          title: "Error",
-          description: "Failed to load required data. Please try again.",
-          variant: "destructive"
-        });
+        //console.error('Error loading data:', error);
+        toast.error("Failed to load required data. Please try again.");
       } finally {
         setIsLoading(false);
       }
@@ -122,11 +117,7 @@ export default function CreateEventPage() {
       
       // Validate end time is after start time
       if (endDateTime <= startDateTime) {
-        toast({
-          title: "Invalid time range",
-          description: "End time must be after start time",
-          variant: "destructive"
-        });
+        toast.error("Invalid time range. End time must be after start time.");
         setIsSubmitting(false);
         return;
       }
@@ -149,21 +140,14 @@ export default function CreateEventPage() {
       
       const result = await createEvent(eventData);
       
-      toast({
-        title: "Event Created",
-        description: `${data.name} has been scheduled successfully`
-      });
+      toast.success(`${data.name} has been scheduled successfully`);
       
       // Redirect to the event page
       router.push(`/events/${result.event.slug}`);
       
     } catch (error) {
       console.error('Error creating event:', error);
-      toast({
-        title: "Error",
-        description: "Failed to create event. Please try again.",
-        variant: "destructive"
-      });
+      toast.error("Failed to create event. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -179,11 +163,7 @@ export default function CreateEventPage() {
         (session.user.roles && session.user.roles.includes('ADMIN'));
       
       if (!isModeratorOrManager) {
-        toast({
-          title: "Access denied",
-          description: "You don't have permission to create events for this club",
-          variant: "destructive"
-        });
+        toast.error("You don't have permission to create events for this club");
         router.push(`/clubs/${slug}`);
       }
     }

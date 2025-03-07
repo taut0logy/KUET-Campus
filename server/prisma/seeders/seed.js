@@ -6,6 +6,47 @@ const prisma = new PrismaClient();
 async function main() {
   // Clear existing meals
   await prisma.meal.deleteMany({});
+  await prisma.department.deleteMany({});
+  await prisma.user.deleteMany({});
+  await prisma.club.deleteMany({});
+  await prisma.event.deleteMany({});
+  await prisma.userClubManager.deleteMany({});
+  await prisma.studentInfo.deleteMany({});
+  await prisma.facultyInfo.deleteMany({});
+  await prisma.employeeInfo.deleteMany({});
+
+  async function seedDepartments() {
+    const departments = [
+      { name: 'Department of Civil Engineering', alias: 'CE', faculty: 'Faculty of Civil Engineering' },
+      { name: 'Department of Urban and Regional Planning', alias: 'URP', faculty: 'Faculty of Civil Engineering' },
+      { name: 'Department of Building Engineering and Construction Management', alias: 'BECM', faculty: 'Faculty of Civil Engineering' },
+      { name: 'Department of Architecture', alias: 'ARCH', faculty: 'Faculty of Civil Engineering' },
+      { name: 'Department of Mathematics', alias: 'MATH', faculty: 'Faculty of Science and Humanities' },
+      { name: 'Department of Physics', alias: 'PHY', faculty: 'Faculty of Science and Humanities' },
+      { name: 'Department of Chemistry', alias: 'CHEM', faculty: 'Faculty of Science and Humanities' },
+      { name: 'Department of Humanities and Business', alias: 'HUM', faculty: 'Faculty of Science and Humanities' },
+      { name: 'Department of Electrical and Electronic Engineering', alias: 'EEE', faculty: 'Faculty of Electrical and Electronic Engineering' },
+      { name: 'Department of Computer Science and Engineering', alias: 'CSE', faculty: 'Faculty of Electrical and Electronic Engineering' },
+      { name: 'Department of Electronics and Communication Engineering', alias: 'ECE', faculty: 'Faculty of Electrical and Electronic Engineering' },
+      { name: 'Department of Biomedical Engineering', alias: 'BME', faculty: 'Faculty of Electrical and Electronic Engineering' },
+      { name: 'Department of Materials Science and Engineering', alias: 'MSE', faculty: 'Faculty of Electrical and Electronic Engineering' },
+      { name: 'Department of Mechanical Engineering', alias: 'ME', faculty: 'Faculty of Mechanical Engineering' },
+      { name: 'Department of Industrial Engineering and Management', alias: 'IEM', faculty: 'Faculty of Mechanical Engineering' },
+      { name: 'Department of Energy Science and Engineering', alias: 'ESE', faculty: 'Faculty of Mechanical Engineering' },
+      { name: 'Department of Leather Engineering', alias: 'LE', faculty: 'Faculty of Mechanical Engineering' },
+      { name: 'Department of Textile Engineering', alias: 'TE', faculty: 'Faculty of Mechanical Engineering' },
+      { name: 'Department of Chemical Engineering', alias: 'CHE', faculty: 'Faculty of Mechanical Engineering' },
+      { name: 'Department of Mechatronics Engineering', alias: 'MTE', faculty: 'Faculty of Mechanical Engineering' }
+    ];
+  
+    for (const department of departments) {
+      await prisma.department.create({ data: department });
+    }
+  
+    console.log('Departments seeded successfully!');
+  }
+
+  await seedDepartments();
 
 
   console.log("Cleared existing meals");
@@ -451,7 +492,237 @@ async function main() {
         allergens: ["None"]
       }
     ],
+
+    
   });
+
+  const csDepartment = await prisma.department.create({
+    data: {
+      name: 'Computer Science',
+      alias: 'CS',
+      faculty: 'Engineering'
+    }
+  });
+
+  // Create faculty users (club moderators)
+  const facultyUserSGIPC = await prisma.user.create({
+    data: {
+      email: 'faculty.sgipc@example.com',
+      password: 'password', // use proper hashing in production
+      name: 'Dr. SGIPC Moderator',
+      roles: ['FACULTY'],
+      status: 'ACTIVE',
+      emailVerified: true,
+      facultyInfo: {
+        create: {
+          employeeId: 'F100',
+          status: 'PERMANENT',
+          designation: 'ASSISTANT_PROFESSOR',
+          departmentId: csDepartment.id
+        }
+      }
+    }
+  });
+
+  const facultyUserBit2byte = await prisma.user.create({
+    data: {
+      email: 'faculty.bit2byte@example.com',
+      password: 'password',
+      name: 'Dr. Bit2byte Moderator',
+      roles: ['FACULTY'],
+      status: 'ACTIVE',
+      emailVerified: true,
+      facultyInfo: {
+        create: {
+          employeeId: 'F101',
+          status: 'PERMANENT',
+          designation: 'ASSOCIATE_PROFESSOR',
+          departmentId: csDepartment.id
+        }
+      }
+    }
+  });
+
+  const facultyUserHACK = await prisma.user.create({
+    data: {
+      email: 'faculty.hack@example.com',
+      password: 'password',
+      name: 'Dr. HACK Moderator',
+      roles: ['FACULTY'],
+      status: 'ACTIVE',
+      emailVerified: true,
+      facultyInfo: {
+        create: {
+          employeeId: 'F102',
+          status: 'PERMANENT',
+          designation: 'PROFESSOR',
+          departmentId: csDepartment.id
+        }
+      }
+    }
+  });
+
+  // Create student users (to be assigned as club managers)
+  const student1 = await prisma.user.create({
+    data: {
+      email: 'student1@example.com',
+      password: 'password',
+      name: 'Student One',
+      roles: ['STUDENT'],
+      status: 'ACTIVE',
+      emailVerified: true,
+      studentInfo: {
+        create: {
+          studentId: 'S001',
+          section: 'A',
+          batch: 2023,
+          departmentId: csDepartment.id
+        }
+      }
+    }
+  });
+
+  const student2 = await prisma.user.create({
+    data: {
+      email: 'student2@example.com',
+      password: 'password',
+      name: 'Student Two',
+      roles: ['STUDENT'],
+      status: 'ACTIVE',
+      emailVerified: true,
+      studentInfo: {
+        create: {
+          studentId: 'S002',
+          section: 'B',
+          batch: 2023,
+          departmentId: csDepartment.id
+        }
+      }
+    }
+  });
+
+  // Create an employee user (example: Office Manager)
+  const employeeUser = await prisma.user.create({
+    data: {
+      email: 'employee@example.com',
+      password: 'password',
+      name: 'Employee User',
+      roles: ['OFFICE_MANAGER'],
+      status: 'ACTIVE',
+      emailVerified: true,
+      employeeInfo: {
+        create: {
+          employeeId: 'E001',
+          designation: 'Office Manager'
+        }
+      }
+    }
+  });
+
+  // Create Clubs
+  const clubSGIPC = await prisma.club.create({
+    data: {
+      name: 'SGIPC',
+      coverPhoto: 'https://example.com/sgipc.jpg',
+      slug: 'sgipc',
+      description: 'A club focused on programming contests.',
+      foundingDate: new Date('2020-01-01'),
+      moderatorId: facultyUserSGIPC.id,
+      tags: JSON.stringify(['programming', 'contests']),
+    }
+  });
+
+  const clubBit2byte = await prisma.club.create({
+    data: {
+      name: 'Bit2byte',
+      coverPhoto: 'https://example.com/bit2byte.jpg',
+      slug: 'bit2byte',
+      description: 'A club focused on software development and hackathons.',
+      foundingDate: new Date('2021-06-15'),
+      moderatorId: facultyUserBit2byte.id,
+      tags: JSON.stringify(['software', 'hackathons']),
+    }
+  });
+
+  const clubHACK = await prisma.club.create({
+    data: {
+      name: 'HACK',
+      coverPhoto: 'https://example.com/hack.jpg',
+      slug: 'hack',
+      description: 'A club interested in hardware and embedded programming.',
+      foundingDate: new Date('2019-09-10'),
+      moderatorId: facultyUserHACK.id,
+      tags: JSON.stringify(['hardware', 'embedded']),
+    }
+  });
+
+  // Create club manager assignments (using UserClubManager)
+  await prisma.userClubManager.create({
+    data: {
+      userId: student1.id,
+      clubId: clubSGIPC.id,
+      role: 'MANAGER'
+    }
+  });
+
+  await prisma.userClubManager.create({
+    data: {
+      userId: student2.id,
+      clubId: clubBit2byte.id,
+      role: 'MANAGER'
+    }
+  });
+
+  // Also assign a manager to HACK for diversity
+  await prisma.userClubManager.create({
+    data: {
+      userId: student1.id,
+      clubId: clubHACK.id,
+      role: 'MANAGER'
+    }
+  });
+
+  // Create Events for each Club
+  const eventSGIPC = await prisma.event.create({
+    data: {
+      name: 'SGIPC Annual Programming Contest',
+      coverPhoto: 'https://example.com/sgipc-event.jpg',
+      slug: 'sgipc-annual-programming-contest',
+      description: 'Join us for our annual programming contest to test your coding skills!',
+      startTime: new Date('2023-11-15T09:00:00Z'),
+      endTime: new Date('2023-11-15T17:00:00Z'),
+      eventLinks: JSON.stringify([{ name: 'Register', url: 'https://sgipc.com/register' }]),
+      clubId: clubSGIPC.id,
+    }
+  });
+
+  const eventBit2byte = await prisma.event.create({
+    data: {
+      name: 'Bit2byte Hackathon 2023',
+      coverPhoto: 'https://example.com/bit2byte-event.jpg',
+      slug: 'bit2byte-hackathon-2023',
+      description: 'A 24-hour hackathon focusing on innovative software solutions.',
+      startTime: new Date('2023-12-01T08:00:00Z'),
+      endTime: new Date('2023-12-02T08:00:00Z'),
+      eventLinks: JSON.stringify([{ name: 'Learn More', url: 'https://bit2byte.com/hackathon' }]),
+      clubId: clubBit2byte.id,
+    }
+  });
+
+  const eventHACK = await prisma.event.create({
+    data: {
+      name: 'HACK Embedded Systems Workshop',
+      coverPhoto: 'https://example.com/hack-event.jpg',
+      slug: 'hack-embedded-systems-workshop',
+      description: 'A hands-on workshop exploring hardware programming and embedded systems.',
+      startTime: new Date('2023-10-05T10:00:00Z'),
+      endTime: new Date('2023-10-05T16:00:00Z'),
+      eventLinks: JSON.stringify([{ name: 'Sign Up', url: 'https://hack.com/workshop' }]),
+      clubId: clubHACK.id,
+    }
+  });
+
+  console.log('Seeding finished.');
 
   console.log("New meals seeded successfully!");
 }

@@ -21,22 +21,19 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { useToast } from '@/components/ui/use-toast';
 
-import { getEventBySlug, followEvent, unfollowEvent } from '@/lib/api/clubsApi';
-import { Event } from '@/types/clubs';
-import { useSession } from 'next-auth/react';
+import useClubStore from '@/stores/club-store';
 
 export default function EventDetailsPage() {
   const { slug } = useParams();
   const router = useRouter();
-  const { toast } = useToast();
-  const { data: session } = useSession();
   
   const [event, setEvent] = useState<Event | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isFollowing, setIsFollowing] = useState(false);
   const [isLoadingFollow, setIsLoadingFollow] = useState(false);
+
+  const { events, eventState, getEventBySlug, followEvent, unfollowEvent } = useClubStore();
   
   useEffect(() => {
     const loadEventData = async () => {
@@ -47,11 +44,7 @@ export default function EventDetailsPage() {
         setIsFollowing(eventData.isFollowing || false);
       } catch (error) {
         console.error('Error loading event data:', error);
-        toast({
-          title: "Error",
-          description: "Failed to load event information",
-          variant: "destructive"
-        });
+        toast.error("Failed to load event information");
       } finally {
         setIsLoading(false);
       }
@@ -70,17 +63,11 @@ export default function EventDetailsPage() {
       if (isFollowing) {
         await unfollowEvent(event.id);
         setIsFollowing(false);
-        toast({
-          title: "Event unfollowed",
-          description: `You are no longer following ${event.name}`,
-        });
+        toast.success(`You are no longer following ${event.name}`);
       } else {
         await followEvent(event.id);
         setIsFollowing(true);
-        toast({
-          title: "Event followed",
-          description: `You are now following ${event.name}`,
-        });
+        toast.success(`You are now following ${event.name}`);
       }
     } catch (error) {
       toast({
@@ -105,10 +92,7 @@ export default function EventDetailsPage() {
     } else {
       // Fallback for browsers that don't support navigator.share
       navigator.clipboard.writeText(window.location.href);
-      toast({
-        title: "Link copied",
-        description: "Link copied to clipboard"
-      });
+      toast.success("Link copied to clipboard");
     }
   };
   

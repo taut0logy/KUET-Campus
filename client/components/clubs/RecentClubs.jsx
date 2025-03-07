@@ -4,19 +4,21 @@ import { Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { fetchClubs } from '@/lib/api/clubsApi';
+import useClubStore from '@/stores/club-store';
 import { formatDistanceToNow } from 'date-fns';
 
 export default function RecentClubs() {
   const [clubs, setClubs] = useState([]);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
+
+  const { getAllClubs } = useClubStore();
   
   useEffect(() => {
     const loadClubs = async () => {
       setLoading(true);
       try {
-        const res = await fetchClubs({ 
+        const res = await getAllClubs({ 
           sort: 'recent', 
           limit: 3 
         });

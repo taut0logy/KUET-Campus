@@ -1,3 +1,5 @@
+"use client";
+
 import React from 'react';
 import { Search, X } from 'lucide-react';
 import { Input } from '@/components/ui/input';
@@ -11,13 +13,12 @@ export default function SearchComponent({
   isSearching,
   searchResults
 }) {
-  
   const handleClearSearch = () => {
     setSearchQuery('');
   };
-  
+
   return (
-    <div className="mb-8">
+    <div className="mb-8 px-4">
       <div className="flex flex-col sm:flex-row gap-4 items-center">
         <div className="relative flex-1 w-full">
           <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -25,7 +26,7 @@ export default function SearchComponent({
             placeholder={`Search ${searchType}...`}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 pr-10"
+            className="pl-10 pr-10 w-full"
           />
           {searchQuery && (
             <button 
@@ -36,7 +37,6 @@ export default function SearchComponent({
             </button>
           )}
         </div>
-        
         <div className="flex items-center gap-2 p-1 border rounded-lg">
           <Toggle
             aria-label="Search clubs"
@@ -46,7 +46,6 @@ export default function SearchComponent({
           >
             Clubs
           </Toggle>
-          
           <Toggle
             aria-label="Search events"
             pressed={searchType === 'events'}
@@ -57,7 +56,6 @@ export default function SearchComponent({
           </Toggle>
         </div>
       </div>
-      
       {searchQuery && !isSearching && searchResults.length > 0 && (
         <p className="text-sm text-muted-foreground mt-2">
           Found {searchResults.length} {searchType}

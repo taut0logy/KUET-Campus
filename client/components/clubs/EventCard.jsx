@@ -10,9 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
-import { Event } from '@/types/clubs';
-import { followEvent, unfollowEvent } from '@/lib/api/clubsApi';
-import { useToast } from '@/components/ui/use-toast';
+import useClubStore from '@/stores/club-store';
 import { cn } from '@/lib/utils';
 
 export default function EventCard({ event, className }) {
@@ -20,6 +18,8 @@ export default function EventCard({ event, className }) {
   const { toast } = useToast();
   const [isFollowing, setIsFollowing] = useState(event.isFollowing || false);
   const [isLoading, setIsLoading] = useState(false);
+
+  const { followEvent, unfollowEvent } = useClubStore();
   
   const handleNavigateToEvent = () => {
     router.push(`/events/${event.slug}`);

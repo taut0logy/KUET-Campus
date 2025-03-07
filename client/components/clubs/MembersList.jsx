@@ -38,19 +38,14 @@ import {
 } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { useToast } from '@/components/ui/use-toast';
+import { toast } from 'sonner';
 
-import { Club } from '@/types/clubs';
-import { 
-  addUserToClub, 
-  removeUserFromClub, 
-  changeUserRoleInClub, 
-  changeUserStatusInClub
-} from '@/lib/api/clubsApi';
+
+import useClubStore from '@/stores/club-store';
 
 
 export default function MembersList({ club, isManager, onMemberUpdate }) {
-  const { toast } = useToast();
+  const { addUserToClub, removeUserFromClub, changeUserRoleInClub, changeUserStatusInClub } = useClubStore();
   const [isAddMemberDialogOpen, setIsAddMemberDialogOpen] = useState(false);
   const [newMemberEmail, setNewMemberEmail] = useState('');
   const [newMemberRole, setNewMemberRole] = useState('MEMBER');
@@ -58,11 +53,7 @@ export default function MembersList({ club, isManager, onMemberUpdate }) {
   
   const handleAddMember = async () => {
     if (!newMemberEmail.trim()) {
-      toast({
-        title: "Error",
-        description: "Email is required",
-        variant: "destructive"
-      });
+      toast.error("Email is required");
       return;
     }
     
@@ -103,11 +94,7 @@ export default function MembersList({ club, isManager, onMemberUpdate }) {
       setNewMemberRole('MEMBER');
     } catch (error) {
       console.error("Error adding member:", error);
-      toast({
-        title: "Error",
-        description: "Failed to add member. Please try again.",
-        variant: "destructive"
-      });
+      toast.error("Failed to add member. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -131,11 +118,7 @@ export default function MembersList({ club, isManager, onMemberUpdate }) {
       });
     } catch (error) {
       console.error("Error removing member:", error);
-      toast({
-        title: "Error",
-        description: "Failed to remove member. Please try again.",
-        variant: "destructive"
-      });
+      toast.error("Failed to remove member. Please try again.");
     }
   };
   
@@ -155,17 +138,10 @@ export default function MembersList({ club, isManager, onMemberUpdate }) {
       
       onMemberUpdate(updatedClub);
       
-      toast({
-        title: "Role updated",
-        description: `${userName}'s role has been updated to ${newRole.toLowerCase()}.`
-      });
+      toast.success(`${userName}'s role has been updated to ${newRole.toLowerCase()}.`);
     } catch (error) {
       console.error("Error changing role:", error);
-      toast({
-        title: "Error",
-        description: "Failed to change role. Please try again.",
-        variant: "destructive"
-      });
+      toast.error("Failed to change role. Please try again.");
     }
   };
   
@@ -191,11 +167,7 @@ export default function MembersList({ club, isManager, onMemberUpdate }) {
       });
     } catch (error) {
       console.error("Error changing status:", error);
-      toast({
-        title: "Error",
-        description: "Failed to change status. Please try again.",
-        variant: "destructive"
-      });
+      toast.error("Failed to change status. Please try again.");
     }
   };
   
