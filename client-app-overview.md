@@ -20,45 +20,101 @@ The client application is built with:
 client/
 ├── app/                   # Next.js App Router structure
 │   ├── (authenticated)/   # Layout for authenticated routes
-│   │   ├── assignments/   # Assignment management
+│   │   ├── admin-dashboard/  # Admin dashboard
+│   │   ├── admin-qr/      # Admin QR code management
+│   │   ├── bus/           # Bus schedule and tracking
+│   │   ├── cafe-dashboard/ # Cafe management dashboard
+│   │   ├── cafe-meal-control/ # Meal management for cafe
+│   │   ├── cafe-order-control/ # Order management for cafe
+│   │   ├── cafe-user-dashboard/ # User dashboard for cafe
 │   │   ├── cafeteria/     # Cafeteria and food ordering
+│   │   ├── cart/          # Shopping cart
+│   │   ├── chat/          # Chat functionality between atudents and faculty
 │   │   ├── clubs/         # Club dashboard and details
 │   │   ├── dashboard/     # Main user dashboard
+│   │   ├── emergency/     # Emergency alerts and services
 │   │   ├── events/        # Event pages
-│   │   ├── notifications/ # Notification center
+│   │   ├── faculty-dashboard/       # Faculty dashboard and details
+│   │   ├── map/           # Campus map and navigation
+│   │   ├── office-manager/ # Office management
+│   │   ├── preorder/      # Food pre-ordering
 │   │   ├── profile/       # User profile
-│   │   ├── routine/       # Class schedule
-│   │   └── settings/      # App settings
-│   ├── (public)/          # Layout for public routes
+│   │   ├── report/        # Reporting functionality
+│   │   └── schedules/     # Class and event schedules
+│   ├── (auth)/            # Layout for authentication routes
+│   │   ├── forgot-password/ # Password recovery request
 │   │   ├── login/         # Login page
-│   │   ├── register/      # Registration
-│   │   ├── reset-password/ # Password recovery
+│   │   ├── register/      # User registration
+│   │   ├── resend-verification/ # Resend verification email
+│   │   ├── reset-password/ # Password reset
 │   │   └── verify-email/  # Email verification
-│   ├── api/               # API routes (for auth, etc.)
-│   └── layout.tsx         # Root layout
+│   │   └── layout.jsx     # Auth layout
+│   ├── (guest)/           # Layout for guest/public routes
+│   │   ├── cafeteria/     # Cafeteria and food ordering
+│   │   ├── page.jsx       # Home page
+│   │   └── layout.jsx     # Guest layout
+│   ├── api/               # API routes (current not used)
+│   └── layout.jsx         # Root layout
 ├── components/            # Reusable React components
-│   ├── ui/                # Shadcn UI components
+│   ├── auth/              # Authentication components
+│   ├── bus/               # Bus-related components
+│   ├── chat/              # Chat components
 │   ├── clubs/             # Club-related components
-│   ├── events/            # Event-related components
-│   ├── cafeteria/         # Cafeteria components
 │   ├── dashboard/         # Dashboard widgets
-│   ├── forms/             # Form components
 │   ├── layout/            # Layout components
-│   └── shared/            # Shared components
+│   ├── notifications/     # Notification components
+│   ├── providers/         # Context providers
+│   │   ├── auth-provider.js
+│   │   ├── socket-provider.jsx
+│   │   ├── theme-provider.jsx
+│   ├── schedules/         # Schedule components
+│   ├── ui/                # Shadcn UI components
+│   └── various feature components:
+│       ├── AiAgent.js
+│       ├── ARNavigationView.js
+│       ├── ARWaypoints.js
+│       ├── BarChart.js
+│       ├── BusRoutes.jsx
+│       ├── CampusMap.js
+│       ├── DataTable.js
+│       ├── emergency-alert.jsx
+│       ├── FoodRecognition.js
+│       ├── LineChart.js
+│       ├── MealChatbot.js
+│       ├── MilitaryIndoorNavigation.js
+│       ├── ObjectRecognition.js
+│       ├── PieChart.js
+│       ├── QRScanner.js
+│       └── theme-toggle.jsx
 ├── hooks/                 # Custom React hooks
-│   ├── api/               # API-related hooks
-│   └── state/             # State-related hooks
+│   ├── useChat.js         # Chat hook
+│   ├── useNotificationChannel.js # Notification hook for socket.io custom channel
+│   ├── useSocket.js       # Socket hook
+│   └── use-debounce.js     # Debounce hook
 ├── lib/                   # Utility functions and libraries
-│   ├── api/               # API utility functions
-│   ├── auth/              # Authentication utilities
-│   └── utils/             # General utilities
-├── providers/             # Context providers
+│   ├── axios.js           # Axios instance, used for all api calls
+│   ├── eventBus.js        # Event bus for communication between components
+│   ├── supabase.js        # Supabase client instance, currently not used
+│   └── utils.js           # Utility functions
 ├── public/                # Static assets
-├── store/                 # Zustand state stores
-│   ├── authStore.ts       # Authentication state
-│   ├── cartStore.ts       # Shopping cart state
-│   └── uiStore.ts         # UI/theme state
-└── types/                 # TypeScript type definitions
+├── stores/                # Zustand state stores
+│   ├── announcement-store.js      # Announcement state
+│   ├── assignment-store.js      # Assignment state
+│   ├── auth-store.js      # Authentication state
+│   ├── bus-store.js      # Bus state
+│   ├── cafeteria-store.js      # Cafe state
+│   ├── cart-store.js      # Shopping cart state
+│   ├── chat-store.js      # Chat state
+│   ├── club-store.js      # Club state
+│   ├── department-store.js      # Department state
+│   ├── event-store.js      # Event state
+│   ├── notification-store.js      # Notification state
+│   ├── order-store.js      # Order state
+│   ├── profile-store.js      # Profile state
+│   ├── routine-store.js      # Routine state
+│   └── user-store.js      # User state
+└── middleware.ts          # Middleware for authentication checks
+
 ```
 
 ## Authentication Flow
@@ -106,9 +162,29 @@ The app uses a secure authentication system:
 - **Order History**: View past orders
 - **Pre-ordering**: Schedule food pickup in advance
 
+### Map and Navigation
+
+- **Campus Map**: Interactive map of the campus
+- **AR Navigation**: Augmented reality navigation
+- **Indoor Navigation**: Military-grade indoor navigation
+- **Object Recognition**: AI-powered object recognition
+- **Waypoints**: Custom navigation waypoints
+
+### Emergency Services
+
+- **Alert System**: Emergency alerts and notifications
+- **Reporting**: Incident reporting functionality
+- **Emergency Contacts**: Quick access to emergency services
+
+### Bus System
+
+- **Bus Routes**: View and track bus routes
+- **Schedule**: Bus schedule information
+- **Real-time Tracking**: Live tracking of buses
+
 ### Academic Modules
 
-- **Routine**: Personal class schedule management
+- **Schedules**: Personal class schedule management
 - **Assignments**: Track and submit assignments
 - **Exams**: Exam schedule and preparation
 - **Course Materials**: Access learning resources
@@ -160,3 +236,11 @@ The application uses Next.js App Router with:
 - **useMealSearch()**: Search cafeteria meals
 - **useClubData()**: Fetch and manage club data
 - **useEventData()**: Fetch and manage event data
+
+## Advanced Features
+
+- **AI Agent**: Intelligent assistant for campus navigation and information
+- **Food Recognition**: AI-powered food recognition for cafeteria
+- **QR Scanner**: QR code scanning for various campus services
+- **Real-time Chat**: Socket.io based real-time chat functionality
+- **Data Visualization**: Charts and graphs for data representation

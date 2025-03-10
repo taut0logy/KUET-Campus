@@ -17,8 +17,9 @@ import { Menu } from "lucide-react";
 import useAuthStore from "@/stores/auth-store";
 
 const getRoutes = (user) => {
-  const isAdmin = user?.roles?.includes('admin');
-  const isManager = user?.roles?.includes('manager');
+  const isAdmin = user?.roles?.includes('ADMIN');
+  const isFaculty = user?.roles?.includes('FACULTY');
+  const isManager = user?.roles?.includes('CAFE_MANAGER') || user?.roles?.includes('OFFICE_MANAGER');
   const isStaff = isAdmin || isManager;
 
   if (isAdmin) {
@@ -101,6 +102,47 @@ const getRoutes = (user) => {
       {
         href: "/report",
         label: "Reports",
+        requireAuth: true,
+      },
+    ];
+  }
+
+  // Faculty-specific routes
+  if (isFaculty) {
+    return [
+      {
+        href: "/dashboard",
+        label: "Dashboard",
+        requireAuth: true,
+      },
+      {
+        href: "/faculty-dashboard",
+        label: "Faculty Dashboard",
+        requireAuth: true,
+      },
+      {
+        href: "/chat",
+        label: "Messages",
+        requireAuth: true,
+      },
+      {
+        href: "/schedules",
+        label: "Academic Schedules",
+        requireAuth: true,
+      },
+      {
+        href: "/clubs",
+        label: "Clubs",
+        requireAuth: true,
+      },
+      {
+        href: "/events",
+        label: "Events",
+        requireAuth: true,
+      },
+      {
+        href: "/profile",
+        label: "Profile",
         requireAuth: true,
       },
     ];

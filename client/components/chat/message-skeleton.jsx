@@ -1,44 +1,51 @@
+"use client";
+
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 
-export default function MessageSkeleton({ count = 3 }) {
+export default function MessageSkeleton({ isSelf = false }) {
   return (
-    <div className="space-y-4 p-4">
-      {Array(count).fill(0).map((_, index) => {
-        const isRight = index % 2 === 0;
-        return (
-          <div 
-            key={index} 
-            className={cn(
-              "flex",
-              isRight ? "justify-end" : "justify-start"
-            )}
-          >
-            <div 
-              className={cn(
-                "max-w-[75%] p-4 rounded-lg",
-                isRight ? "bg-primary/20" : "bg-muted"
-              )}
-            >
-              <Skeleton className={cn(
-                "h-4 mb-2",
-                isRight ? "w-24" : "w-32"
-              )} />
-              <Skeleton className={cn(
-                "h-4 mb-1",
-                isRight ? "w-48" : "w-56"
-              )} />
-              <Skeleton className={cn(
-                "h-4",
-                isRight ? "w-32" : "w-40"
-              )} />
-              <div className="flex justify-end mt-1">
-                <Skeleton className="w-10 h-3" />
-              </div>
-            </div>
+    <div 
+      className={cn(
+        "flex mb-4",
+        isSelf ? "justify-end" : "justify-start"
+      )}
+    >
+      <div 
+        className={cn(
+          "flex max-w-[80%]",
+          isSelf ? "flex-row-reverse" : "flex-row"
+        )}
+      >
+        {/* Avatar */}
+        {!isSelf && (
+          <div className="flex flex-col items-center mr-2">
+            <Skeleton className="h-8 w-8 rounded-full" />
           </div>
-        );
-      })}
+        )}
+        
+        {/* Message content */}
+        <div 
+          className={cn(
+            "flex flex-col",
+            isSelf ? "items-end mr-2" : "items-start ml-2"
+          )}
+        >
+          {/* Sender name and time */}
+          <div className="flex items-center gap-1 mb-1">
+            <Skeleton className="h-3 w-20" />
+            <Skeleton className="h-3 w-10" />
+          </div>
+          
+          {/* Message bubble */}
+          <Skeleton 
+            className={cn(
+              "h-16 w-48 rounded-lg",
+              isSelf ? "bg-primary/20" : "bg-accent/50"
+            )}
+          />
+        </div>
+      </div>
     </div>
   );
 }

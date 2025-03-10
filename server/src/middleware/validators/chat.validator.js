@@ -22,6 +22,23 @@ const validateSendMessage = [
         .optional()
         .isArray()
         .withMessage('Attachments must be an array'),
+    body('attachments.*.url')
+        .optional()
+        .isString()
+        .withMessage('Attachment URL must be a string'),
+    body('attachments.*.type')
+        .optional()
+        .isString()
+        .isIn(['image', 'file', 'audio', 'video'])
+        .withMessage('Attachment type must be one of: image, file, audio, video'),
+    body('attachments.*.name')
+        .optional()
+        .isString()
+        .withMessage('Attachment name must be a string'),
+    body('attachments.*.size')
+        .optional()
+        .isNumeric()
+        .withMessage('Attachment size must be a number'),
     body('replyTo')
         .optional()
         .isString()
@@ -102,6 +119,46 @@ const validateGetMessagesUpTo = [
         .withMessage('Message ID must be a string')
 ];
 
+// Validate faculty search
+const validateFacultySearch = [
+    query('query')
+        .isString()
+        .withMessage('Search query must be a string')
+];
+
+// Validate chat request rejection
+const validateRejectChatRequest = [
+    param('chatId')
+        .isString()
+        .withMessage('Chat ID must be a string')
+];
+
+// Validate pending chat requests
+const validatePendingRequests = [
+    query('page')
+        .optional()
+        .isInt({ min: 1 })
+        .withMessage('Page must be a positive integer'),
+    query('limit')
+        .optional()
+        .isInt({ min: 1, max: 100 })
+        .withMessage('Limit must be a positive integer between 1 and 100'),
+    query('sortBy')
+        .optional()
+        .isString()
+        .isIn(['createdAt', 'studentName', 'studentId'])
+        .withMessage('Sort by must be one of: createdAt, studentName, studentId'),
+    query('sortOrder')
+        .optional()
+        .isString()
+        .isIn(['asc', 'desc'])
+        .withMessage('Sort order must be one of: asc, desc'),
+    query('search')
+        .optional()
+        .isString()
+        .withMessage('Search query must be a string')
+];
+
 module.exports = {
     validateChatRequest,
     validateSendMessage,
@@ -112,5 +169,8 @@ module.exports = {
     validateLoadMoreMessages,
     validateLoadLastNMessages,
     validateSearchMessages,
-    validateGetMessagesUpTo
+    validateGetMessagesUpTo,
+    validateFacultySearch,
+    validateRejectChatRequest,
+    validatePendingRequests
 }; 

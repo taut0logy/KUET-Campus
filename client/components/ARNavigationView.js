@@ -130,12 +130,15 @@ export default function ARNavigationView({ destination, userPosition, onClose, c
     const currentVideoRef = videoRef.current;
     return () => {
       // Cleanup using currentVideoRef
+      if (currentVideoRef) {
+        currentVideoRef.srcObject = null;
+      }
     };
   }, [videoRef]);
 
-  useEffect(() => {
-    // Your effect logic
-  }, [calculateDistance, generateNavigationSteps]);
+  // useEffect(() => {
+  //   // Your effect logic
+  // }, [calculateDistance, generateNavigationSteps]);
 
   if (permissionStatus === 'denied') {
     return (

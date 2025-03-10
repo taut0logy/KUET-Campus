@@ -15,7 +15,7 @@ async function cleanDatabase() {
   console.log("Database cleaned successfully!");
 }
 
-async function main() {
+async function seedBusRoutes() {
   await cleanDatabase();
 
   // Create 12 buses
@@ -369,7 +369,7 @@ async function main() {
   console.log("Meals seeded successfully!");
 }
 
-main()
+seedBusRoutes()
   .catch((e) => {
     console.error(e);
     process.exit(1);

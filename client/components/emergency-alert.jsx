@@ -20,11 +20,23 @@ export function EmergencyAlert() {
 
   const handleEmergencyAlert = async () => {
     try {
+      // Validate message
+      if (!alertMessage.trim()) {
+        toast.error("Please provide emergency details");
+        return;
+      }
+      
+      // Send the emergency alert
       await axios.post("/emergency/alert", { message: alertMessage });
-      // API call to trigger alert would go here
+      
+      // Show success message
       toast.success("Emergency alert triggered successfully");
+      
+      // Reset the form
+      setAlertMessage("");
     } catch (error) {
-      toast.error("Failed to trigger alert: " + error.message);
+      console.error("Emergency alert error:", error);
+      toast.error("Failed to trigger alert: " + (error.response?.data?.message || error.message || "Unknown error"));
     }
   };
 

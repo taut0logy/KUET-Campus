@@ -1,6 +1,11 @@
-const { prisma } = require('../../src/services/database.service');
+import { PrismaClient } from "@prisma/client";
+
+
+const prisma = new PrismaClient();
 
 async function seedDepartments() {
+
+  await prisma.department.deleteMany({});
   const departments = [
     { name: 'Department of Civil Engineering', alias: 'CE', faculty: 'Faculty of Civil Engineering' },
     { name: 'Department of Urban and Regional Planning', alias: 'URP', faculty: 'Faculty of Civil Engineering' },
@@ -25,7 +30,10 @@ async function seedDepartments() {
   ];
 
   for (const department of departments) {
-    await prisma.department.create({ data: department });
+    const existingDepartment = await prisma.department.findUnique({ where: { alias: department.alias } });
+    if (!existingDepartment) {
+      await prisma.department.create({ data: department });
+    }
   }
 
   console.log('Departments seeded successfully!');

@@ -235,21 +235,21 @@ class StorageService {
       };
 
       // Send notification to uploader
-      if (userId) {
-        await realtimeService.createNotification({
-          userId,
-          title: 'File Upload Success',
-          message: `${file.originalname} has been uploaded successfully`,
-          type: 'SUCCESS',
-          metadata: {
-            fileInfo: {
-              name: file.originalname,
-              size: file.size,
-              type: file.mimetype
-            }
-          }
-        });
-      }
+      // if (userId) {
+      //   await realtimeService.createNotification({
+      //     userId,
+      //     title: 'File Upload Success',
+      //     message: `${file.originalname} has been uploaded successfully`,
+      //     type: 'SUCCESS',
+      //     metadata: {
+      //       fileInfo: {
+      //         name: file.originalname,
+      //         size: file.size,
+      //         type: file.mimetype
+      //       }
+      //     }
+      //   });
+      // }
 
       // Share with users if specified
       if (shareWithUsers.length > 0) {

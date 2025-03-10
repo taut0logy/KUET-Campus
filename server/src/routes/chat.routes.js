@@ -4,11 +4,20 @@ const chatController = require('../controllers/chat.controller');
 const chatValidator = require('../middleware/validators/chat.validator');
 const { authenticate } = require('../middleware/auth.middleware');
 
+// Search faculty members
+router.get('/faculty/search', authenticate, chatValidator.validateFacultySearch, chatController.searchFaculty);
+
 // Request a chat
 router.post('/request', authenticate, chatValidator.validateChatRequest, chatController.requestChat);
 
 // Approve a chat request
 router.post('/approve/:chatId', authenticate, chatController.approveChatRequest);
+
+// Reject a chat request
+router.post('/reject/:chatId', authenticate, chatValidator.validateRejectChatRequest, chatController.rejectChatRequest);
+
+// Get pending chat requests for faculty
+router.get('/requests/pending', authenticate, chatValidator.validatePendingRequests, chatController.getPendingRequests);
 
 // Send a message
 router.post('/message/send', authenticate, chatValidator.validateSendMessage, chatController.sendMessage);
@@ -36,5 +45,11 @@ router.get('/messages/up-to/:messageId', authenticate, chatValidator.validateGet
 
 // Load the last n messages from a chat
 router.get('/messages/last/:chatId/:n', authenticate, chatValidator.validateLoadLastNMessages, chatController.loadLastNMessages);
+
+// Get user online status
+router.get('/user/:userId/status', authenticate, chatController.getUserOnlineStatus);
+
+// Mark messages as seen
+router.post('/messages/seen/:chatId', authenticate, chatController.markMessagesSeen);
 
 module.exports = router;

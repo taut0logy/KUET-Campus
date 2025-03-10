@@ -2,7 +2,6 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner"
 import ThemeProvider from "@/components/providers/theme-provider";
-import QueryProvider from "@/components/providers/query-provider";
 import { AuthProvider } from "@/components/providers/auth-provider";
 import { SocketProvider } from "@/components/providers/socket-provider";
 import Footer from "@/components/layout/footer";
@@ -34,17 +33,14 @@ export default function RootLayout({ children }) {
           enableSystem
           disableTransitionOnChange
         >
-          {/* <QueryProvider> */}
             <AuthProvider>
               <SocketProvider>
                 <div className="flex min-h-screen flex-col">
                   <main className="flex-1">{children}</main>
-                  <Footer />
                 </div>
                 <Toaster richColors closeButton />
               </SocketProvider>
             </AuthProvider>
-          {/* </QueryProvider> */}
         </ThemeProvider>
       </body>
     </html>

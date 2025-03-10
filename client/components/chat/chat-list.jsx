@@ -1,14 +1,16 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Search, Plus } from 'lucide-react';
+import { Search, Plus, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 import NewChatDialog from './new-chat-dialog';
+import OnlineStatusIndicator from './online-status-indicator';
+
 
 export default function ChatList({ chats, loading, selectedChatId, onSelectChat, userId }) {
   const [searchQuery, setSearchQuery] = useState('');
@@ -23,6 +25,16 @@ export default function ChatList({ chats, loading, selectedChatId, onSelectChat,
   // Get the most recent message for a chat
   const getLastMessage = (chat) => {
     if (!chat.messages || chat.messages.length === 0) return null;
+    
+    // Find the last non-deleted message
+    for (let i = chat.messages.length - 1; i >= 0; i--) {
+      const message = chat.messages[i];
+      if (!message.deleted) {
+        return message;
+      }
+    }
+    
+    // If all messages are deleted, return the last one
     return chat.messages[chat.messages.length - 1];
   };
 
@@ -58,7 +70,7 @@ export default function ChatList({ chats, loading, selectedChatId, onSelectChat,
       <ScrollArea className="flex-1">
         {loading ? (
           <div className="flex items-center justify-center h-32">
-            <span className="animate-spin mr-2">⏳</span>
+            <Loader2 className="animate-spin mr-2" />
             Loading chats...
           </div>
         ) : filteredChats.length === 0 ? (
@@ -86,12 +98,15 @@ export default function ChatList({ chats, loading, selectedChatId, onSelectChat,
                     ${isActive ? 'bg-muted' : ''}`}
                   onClick={() => onSelectChat(chat.id)}
                 >
-                  <Avatar className="h-12 w-12 mr-4">
+                  <div className="relative w-12 h-12 mr-4">
+                  <Avatar className="h-12 w-12">
                     <AvatarImage src={otherUser?.profileImage} />
                     <AvatarFallback>
                       {otherUser?.name?.split(' ').map(n => n[0]).join('').toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
+                  <OnlineStatusIndicator className="absolute bottom-0 right-0" />
+                  </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between">
                       <h3 className="font-medium truncate">{otherUser?.name}</h3>
@@ -106,7 +121,7 @@ export default function ChatList({ chats, loading, selectedChatId, onSelectChat,
                         {lastMessage?.deleted ? (
                           <span className="italic">This message was deleted</span>
                         ) : (
-                          lastMessage?.content || "No messages yet"
+                          lastMessage?.content || lastMessage?.attachments?.length > 0 ? 'Sent Attachments' : 'No messages yet'
                         )}
                       </p>
                       {chat.unreadCount > 0 && (

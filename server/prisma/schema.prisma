@@ -88,7 +88,8 @@ model User {
   Assignment              Assignment[]
   Exam                    Exam[]
   studentChats      Chat[]          @relation("StudentChats")
-  facultyChats      Chat[]          @relation("FacultyChats")  announcements           Announcement[]
+  facultyChats      Chat[]          @relation("FacultyChats")  
+  announcements           Announcement[]
   reports           Report[]
 
   @@map("users")
@@ -163,6 +164,7 @@ enum ChatStatus {
   ACTIVE
   INACTIVE
   BLOCKED
+  PENDING
 }
 
 model Chat {
@@ -171,11 +173,11 @@ model Chat {
   student   User     @relation(name: "StudentChats", fields: [studentId], references: [id], onDelete: Cascade)
   facultyId Int
   faculty   User     @relation(name: "FacultyChats", fields: [facultyId], references: [id], onDelete: Cascade)
-  channelId String
+  channelId String   @unique
   messages  Message[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  status    ChatStatus @default(ACTIVE)
+  status    ChatStatus @default(PENDING)
   @@map("chats")
 }
 
@@ -187,9 +189,12 @@ model Message {
   senderId   Int
   receiverId Int?
   isDeleted  Boolean  @default(false)
+  seen       Boolean  @default(false)
+  seenAt     DateTime?
   readAt     DateTime?
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
+  editedAt   DateTime?
   sender     User     @relation("MessageSender", fields: [senderId], references: [id], onDelete: Cascade)
   receiver   User?    @relation("MessageReceiver", fields: [receiverId], references: [id], onDelete: SetNull)
   attachments MessageAttachment[]
@@ -203,8 +208,11 @@ model MessageAttachment {
   id        String   @id @default(uuid())
   messageId String
   message   Message  @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  name      String
   url       String
   type      String
+  createdAt DateTime @default(now())
+  size      Int
 }
 
 model Notification {

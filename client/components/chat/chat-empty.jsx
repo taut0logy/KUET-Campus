@@ -1,5 +1,4 @@
 import { MessageSquare } from "lucide-react";
-import { Button } from "@/components/ui/button";
 
 export default function ChatEmpty() {
 
@@ -14,7 +13,6 @@ export default function ChatEmpty() {
         Connect with faculty members and students through secure messaging.
         Select a chat from the list or start a new conversation.
       </p>
-      <Button>Start a new chat</Button>
     </div>
   );
 }

@@ -261,7 +261,7 @@ export default function AiAgent() {
                               ))}
 
                               <div className="text-xs text-blue-600 italic mt-2">
-                                This response was generated using Retrieval Augmented Generation (RAG), which enhances the AI's knowledge with specific information from the KUET knowledge base.
+                                This response was generated using Retrieval Augmented Generation (RAG), which enhances the AI`&apos;`s knowledge with specific information from the KUET knowledge base.
                               </div>
                             </div>
                           )}

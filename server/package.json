@@ -11,7 +11,9 @@
     "prisma:migrate": "prisma migrate dev",
     "lint": "eslint .",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "seed": "node prisma/seeders/seed.js"
+    "seed": "node prisma/seeders/seed.js",
+    "seed:users": "node prisma/seeders/userSeeder.js",
+    "seed:departments": "node prisma/seeders/departmentSeeder.js"
   },
   "prisma": {
     "seed": "node prisma/seeders/seed.js"
@@ -57,6 +59,7 @@
     "winston": "^3.17.0"
   },
   "devDependencies": {
+    "@faker-js/faker": "^8.4.1",
     "eslint": "^8.56.0",
     "nodemon": "^3.0.3",
     "prisma": "^5.10.2"
